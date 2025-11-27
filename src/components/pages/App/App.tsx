@@ -1,7 +1,8 @@
 import './App.css'
 import Map from '../../Map'
 import { useState } from 'react'
-import Sidebar from '../Sidebar'
+import Sidebar from '../../organisms/Sidebar'
+import Content from '../Content'
 
 export default function App() {
   const [address, setAddress] = useState<{ [key: string]: string }>({
@@ -21,13 +22,15 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-84px)] pt-3">
-      {/* <Sidebar /> */}
+    <div className="flex h-[calc(100vh-84px)]">
+      <Sidebar />
+      <Content />
       <Map 
         longitude={address.longitude}
         latitude={address.latitude}
         resetAddress={resetAddress} 
       />
+      
     </div>
   )
 }

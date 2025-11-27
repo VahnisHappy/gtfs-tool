@@ -1,9 +1,13 @@
-import type { Stop, Sidebar } from "../../types";
+import type { Stop, Content, Route } from "../../types";
 
 export type AppState ={
-    sidebarContent: Sidebar
+    content: Content
 }
 
 export type StopState = {
     data: Stop[],
+}
+
+export type RouteState = {
+    data: Route[]
 }

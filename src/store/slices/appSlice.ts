@@ -1,18 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { AppState } from "../states";
-import type { Sidebar } from "../../types";
+import type { Content } from "../../types";
 
 const initialState: AppState = {
-    sidebarContent: 'stops'
+    content: 'stops'
 }
 
 const appSlice = createSlice({
     name: "appState",
     initialState,
     reducers: {
-        setSidebarContent: (state, {payload}: PayloadAction<Sidebar>) => {
-            state.sidebarContent = payload;
+        setContent: (state, {payload}: PayloadAction<Content>) => {
+            state.content = payload;
         }
     }
 })
