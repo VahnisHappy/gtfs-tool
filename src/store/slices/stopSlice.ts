@@ -13,6 +13,9 @@ const stopSlice = createSlice({
     reducers: {
         setStops: (state, {payload}: PayloadAction<Stop[]>) => {
             state.data = payload;
+        },
+        addStop: (state, {payload}: PayloadAction<Stop>) => {
+            state.data = [...state.data, payload];
         }
     }
 })

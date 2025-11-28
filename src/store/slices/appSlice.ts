@@ -4,7 +4,9 @@ import type { AppState } from "../states";
 import type { Content } from "../../types";
 
 const initialState: AppState = {
-    content: 'stops'
+    content: 'stops',
+    isStopDetailOpen: false,
+    selectedStop: null
 }
 
 const appSlice = createSlice({
@@ -13,8 +15,18 @@ const appSlice = createSlice({
     reducers: {
         setContent: (state, {payload}: PayloadAction<Content>) => {
             state.content = payload;
+        },
+        openStopDetail: (state, action: PayloadAction<any>) => {
+            state.isStopDetailOpen = true;
+            state.selectedStop = action.payload || null;
+        },
+        closeStopDetail: (state) => {
+            state.isStopDetailOpen = false;
+            state.selectedStop = null;
         }
+        
     }
 })
 
+export const { openStopDetail, closeStopDetail } = appSlice.actions;
 export default appSlice

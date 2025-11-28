@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { useSelector } from 'react-redux'
 
 interface MapProps {
   latitude: string
@@ -14,6 +15,7 @@ export default function Map({ latitude, longitude, resetAddress }: MapProps) {
   const markerRef = useRef<mapboxgl.Marker | null>(null)
   const stationMarkersRef = useRef<mapboxgl.Marker[]>([])
   const searchControlRef = useRef<any>(null)
+
 
   const INITIAL_CENTER: [number, number] = [-78.8184, 13.0287]
   const INITIAL_ZOOM = 2

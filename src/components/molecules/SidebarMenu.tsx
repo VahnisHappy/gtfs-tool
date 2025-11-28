@@ -19,7 +19,6 @@ export default function SidebarMenu<T extends string>({
     React.useEffect(() => {
         const sidebarSel = sidebarSelRef.current
         if (!sidebarSel) return
-        // Add your logic here for what should happen when value changes
 
     }, [value, items, disableSidebarSel])
 
@@ -32,7 +31,7 @@ export default function SidebarMenu<T extends string>({
         <>
             <aside 
                 id="default-sidebar" 
-                className="relative flex h-screen w-full max-w-[4rem] flex-col rounded-xl bg-white bg-clip-border p-1 text-gray-700 shadow-xl shadow-blue-gray-900/5 overflow-auto" 
+                className="relative flex h-screen w-full max-w-[4rem] flex-col rounded-xl bg-white bg-clip-border p-1 text-gray-700 shadow-xl shadow-blue-gray-900/5" 
                 aria-label="Sidebar"
             >
                 <div className="">
@@ -44,7 +43,7 @@ export default function SidebarMenu<T extends string>({
                                     onClick={handleItemClick(item)}
                                     className={`flex flex-col items-center px-2 py-2 rounded-base group ${
                                         value === item 
-                                            ? 'bg-[#B6EBFF] text-[#00A8E8] rounded-sm' 
+                                            ? 'bg-[#B6EBFF] text-[#00A8E8] rounded-5xl' 
                                             : 'text-body hover:bg-neutral-tertiary hover:text-fg-brand'
                                     }`}
                                 >   

@@ -1,8 +1,11 @@
 import './App.css'
 import Map from '../../Map'
 import { useState } from 'react'
+import { useSelector } from 'react-redux'
+import type { RootState } from '../../../store'
 import Sidebar from '../../organisms/Sidebar'
 import Content from '../Content'
+import StopContentDetail from '../../organisms/StopContentDetail'
 
 export default function App() {
   const [address, setAddress] = useState<{ [key: string]: string }>({
@@ -11,6 +14,8 @@ export default function App() {
     latitude: '',
     longitude: ''
   })
+  
+  const isDetailOpen = useSelector((state: RootState) => state.appState.isStopDetailOpen)
 
   const resetAddress = () => {
     setAddress({
@@ -24,13 +29,15 @@ export default function App() {
   return (
     <div className="flex h-[calc(100vh-84px)]">
       <Sidebar />
-      <Content />
-      <Map 
-        longitude={address.longitude}
-        latitude={address.latitude}
-        resetAddress={resetAddress} 
-      />
       
+        <Content />
+      <div className={`flex flex-1 duration-300 ${isDetailOpen ? 'mr-[292px]' : 'mr-0'}`}>
+        <Map 
+          longitude={address.longitude}
+          latitude={address.latitude}
+          resetAddress={resetAddress} 
+        />
+      </div>
     </div>
   )
 }
