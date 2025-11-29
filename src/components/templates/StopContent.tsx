@@ -3,7 +3,6 @@ import type { RootState } from "../../store";
 import { openStopDetail } from "../../store/slices/appSlice";
 import ButtonAction from "../atoms/ButtonAction";
 import StopContentDetail from "../organisms/StopContentDetail";
-import { useEffect } from "react";
 
 export default function StopContent() {
     const stops = useSelector((state: RootState) => state.stopState.data);

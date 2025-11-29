@@ -5,8 +5,6 @@ import { useSelector } from 'react-redux'
 import type { RootState } from '../../../store'
 import Sidebar from '../../organisms/Sidebar'
 import Content from '../Content'
-import StopContentDetail from '../../organisms/StopContentDetail'
-
 export default function App() {
   const [address, setAddress] = useState<{ [key: string]: string }>({
     country: '',
@@ -29,8 +27,7 @@ export default function App() {
   return (
     <div className="flex h-[calc(100vh-84px)]">
       <Sidebar />
-      
-        <Content />
+      <Content />
       <div className={`flex flex-1 duration-300 ${isDetailOpen ? 'mr-[292px]' : 'mr-0'}`}>
         <Map 
           longitude={address.longitude}

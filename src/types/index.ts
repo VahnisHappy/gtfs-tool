@@ -18,6 +18,8 @@ export type Stop = {
     lng: number
 }
 
+export type StopIndex = number
+
 export type Route = {
     id: Field<string>,
     name: Field<string>

@@ -1,12 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { AppState } from "../states";
-import type { Content } from "../../types";
+import type { Content, Mode } from "../../types";
 
 const initialState: AppState = {
     content: 'stops',
     isStopDetailOpen: false,
-    selectedStop: null
+    selectedStop: null,
+    mode: 'drag',
 }
 
 const appSlice = createSlice({
@@ -23,6 +24,9 @@ const appSlice = createSlice({
         closeStopDetail: (state) => {
             state.isStopDetailOpen = false;
             state.selectedStop = null;
+        }
+        , setMode: (state, {payload}: PayloadAction<Mode>) => {
+            state.mode = payload;
         }
         
     }

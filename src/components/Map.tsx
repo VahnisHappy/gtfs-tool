@@ -1,7 +1,11 @@
 import { useRef, useEffect, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import type { RootState } from '../store'
+import { StopActions } from '../store/actions'
+import type { Point } from '../types'
+import { createStop } from './/../factory'
 
 interface MapProps {
   latitude: string
@@ -16,6 +20,12 @@ export default function Map({ latitude, longitude, resetAddress }: MapProps) {
   const stationMarkersRef = useRef<mapboxgl.Marker[]>([])
   const searchControlRef = useRef<any>(null)
 
+  const dispatch = useDispatch()
+  const stops= useSelector((state: RootState) => state.stopState.data)
+  const {mode} = useSelector((state: RootState) => state.appState)
+
+  const handleMark = (point: Point) => dispatch(StopActions.addStop(createStop(point)))
+
 
   const INITIAL_CENTER: [number, number] = [-78.8184, 13.0287]
   const INITIAL_ZOOM = 2
@@ -23,6 +33,13 @@ export default function Map({ latitude, longitude, resetAddress }: MapProps) {
   const [center, setCenter] = useState<[number, number]>(INITIAL_CENTER)
   const [zoom, setZoom] = useState(INITIAL_ZOOM)
   const [searchError, setSearchError] = useState<string>('')
+
+  const handleMapDisplayClick = (e: mapboxgl.MapMouseEvent) => {
+    const target = e.originalEvent.target as HTMLElement;
+    if (target !== e.target.getCanvas()) return;
+    const point = e.lngLat as Point
+    if (mode === 'mark') handleMark(point)
+  }
 
   useEffect(() => {
     mapboxgl.accessToken = import.meta.env.VITE_APP_MAPBOX_ACCESS_TOKEN || ''
@@ -437,95 +454,6 @@ export default function Map({ latitude, longitude, resetAddress }: MapProps) {
 
   return (
     <>
-      {/* <style>{`
-        .sidebar {
-          background-color: rgba(35, 55, 75, 0.9);
-          color: #fff;
-          padding: 6px 12px;
-          font-family: monospace;
-          z-index: 1;
-          position: absolute;
-          top: 0;
-          left: 0;
-          margin: 12px;
-          border-radius: 4px;
-          font-size: 13px;
-        }
-
-        .reset-button:hover {
-          background: #f0f0f0;
-          box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
-        }
-
-        .reset-button:active {
-          transform: scale(0.98);
-        }
-
-        #map-container {
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          left: 0;
-          right: 0;
-        }
-
-        .search-control {
-          display: flex;
-          gap: 0;
-          background: white;
-          border-radius: 4px;
-          overflow: hidden;
-          box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
-        }
-
-        .search-input {
-          border: none;
-          padding: 6px 10px;
-          outline: none;
-          font-size: 12px;
-          width: 180px;
-        }
-
-        .search-btn {
-          border: none;
-          background: white;
-          cursor: pointer;
-          padding: 6px 10px;
-          border-left: 1px solid #ddd;
-          transition: background 0.2s;
-        }
-
-        .search-btn:hover {
-          background: #f5f5f5;
-        }
-
-        .error-message {
-          position: absolute;
-          top: 60px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #ff4444;
-          color: white;
-          padding: 8px 16px;
-          border-radius: 4px;
-          z-index: 1000;
-          font-size: 14px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-      `}</style>
-
-      <div className="sidebar">
-        Longitude: {center[0].toFixed(4)} | Latitude: {center[1].toFixed(4)} | Zoom: {zoom.toFixed(2)}
-      </div>
-      
-      <button className="reset-button" onClick={handleReset}>
-        Reset
-      </button>
-
-      {searchError && (
-        <div className="error-message">{searchError}</div>
-      )} */}
-      
       <div id="map-container" ref={mapContainerRef} />
     </>
   )
