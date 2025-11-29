@@ -4,6 +4,20 @@ import { sidebarContent, modes } from "../data";
 
 export type Content = typeof sidebarContent[number]
 
+export type MapData = {
+    routes: Route[],
+}
+
+export type Map ={
+    accessToken: string;
+    mapStyle: string;
+    location?: {
+        lat: number;
+        lng: number;
+        zoom?: number;
+    }
+}
+
 export type Mode = typeof modes[number]
 
 export type Point = {

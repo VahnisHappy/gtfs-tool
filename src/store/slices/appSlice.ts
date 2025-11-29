@@ -1,13 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { AppState } from "../states";
-import type { Content, Mode } from "../../types";
+import type { Content } from "../../types";
 
 const initialState: AppState = {
     content: 'stops',
     isStopDetailOpen: false,
     selectedStop: null,
-    mode: 'drag',
+    mode: 'view'
 }
 
 const appSlice = createSlice({
@@ -20,17 +20,32 @@ const appSlice = createSlice({
         openStopDetail: (state, action: PayloadAction<any>) => {
             state.isStopDetailOpen = true;
             state.selectedStop = action.payload || null;
+            if (action.payload?.mode === 'new') {
+                state.mode = 'mark';
+            }
         },
         closeStopDetail: (state) => {
             state.isStopDetailOpen = false;
             state.selectedStop = null;
+            state.mode = 'view';
+        },
+        setMode: (state, action: PayloadAction<'view' | 'mark' | 'edit'>) => {
+            state.mode = action.payload;
+        },
+        updateStopCoordinates: (state, action: PayloadAction<{ lat: number; lng: number }>) => {
+            if (state.selectedStop) {
+                state.selectedStop.lat = action.payload.lat;
+                state.selectedStop.lng = action.payload.lng;
+            }
         }
-        , setMode: (state, {payload}: PayloadAction<Mode>) => {
-            state.mode = payload;
-        }
-        
     }
 })
 
-export const { openStopDetail, closeStopDetail } = appSlice.actions;
-export default appSlice
+export const { 
+    openStopDetail, 
+    closeStopDetail, 
+    setMode, 
+    updateStopCoordinates,
+    setContent 
+} = appSlice.actions;
+export default appSlice;

@@ -30,9 +30,9 @@ export default function App() {
       <Content />
       <div className={`flex flex-1 duration-300 ${isDetailOpen ? 'mr-[292px]' : 'mr-0'}`}>
         <Map 
-          longitude={address.longitude}
-          latitude={address.latitude}
-          resetAddress={resetAddress} 
+          // longitude={address.longitude}
+          // latitude={address.latitude}
+          // resetAddress={resetAddress} 
         />
       </div>
     </div>

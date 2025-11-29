@@ -1,5 +1,7 @@
 import { useDispatch } from 'react-redux';
-import { openStopDetail } from '../store/slices/appSlice';
+import { openStopDetail } from '../store/slices/appSlice'
+
+
 
 export function useMapInteractions() {
   const dispatch = useDispatch();
