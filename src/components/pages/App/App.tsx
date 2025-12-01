@@ -28,12 +28,8 @@ export default function App() {
     <div className="flex h-[calc(100vh-84px)]">
       <Sidebar />
       <Content />
-      <div className={`flex flex-1 duration-300 ${isDetailOpen ? 'mr-[292px]' : 'mr-0'}`}>
-        <Map 
-          // longitude={address.longitude}
-          // latitude={address.latitude}
-          // resetAddress={resetAddress} 
-        />
+      <div className={`flex flex-1 duration-300 ${isDetailOpen ? 'mr-[350px]' : 'mr-0'}`}>
+        <Map/>
       </div>
     </div>
   )

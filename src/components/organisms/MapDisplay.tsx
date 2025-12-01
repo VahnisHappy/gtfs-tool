@@ -1,163 +1,121 @@
-import { useEffect, useRef, useImperativeHandle, forwardRef } from "react"
-import { useSelector } from "react-redux"
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
-import type { RootState } from "../../store"
+import mapboxgl from "mapbox-gl"
 import type { MapData } from "../../types"
+import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback, type ReactNode } from "react"
+import { useSelector } from "react-redux"
+import type { RootState } from "../../store"
 
 export type MapDisplayProps = {
-    onClick?: (event: mapboxgl.MapMouseEvent) => void,
-    data?: MapData,
-    children?: React.ReactNode
+    onClick?: (e: mapboxgl.MapMouseEvent) => void
+    data?: MapData
+    children?: ReactNode
+    stops?: GeoJSON.FeatureCollection
 }
 
-export interface MapDisplayHandle {
-    addMarker: (lat: number, lng: number, id?: string) => void;
-    removeMarker: (id: string) => void;
-    clearAllMarkers: () => void;
+export type MapDisplayHandle = {
+    getMap: () => mapboxgl.Map | null
 }
 
 const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) => {
-    const { accessToken, mapStyle, location } = useSelector((state: RootState) => state.mapState)
-    const mapRef = useRef<mapboxgl.Map | null>(null)
-    const mapContainerRef = useRef<HTMLDivElement | null>(null)
-    const clickHandlerRef = useRef(props.onClick)
-    const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map())
+    const { accessToken, mapStyle } = useSelector((state: RootState) => state.mapState)
+    const mapContainerRef = useRef<HTMLDivElement>(null)
+    const mapInstanceRef = useRef<mapboxgl.Map | null>(null)
+    const mapInitializedRef = useRef(false)
 
-    // Update click handler ref when it changes
-    useEffect(() => {
-        clickHandlerRef.current = props.onClick
-    }, [props.onClick])
-
-    // Expose methods to parent component
     useImperativeHandle(ref, () => ({
-        addMarker: (lat: number, lng: number, id?: string) => {
-            if (!mapRef.current) return
-
-            const markerId = id || `marker-${Date.now()}`
-
-            // Create marker element
-            const el = document.createElement('div')
-            el.className = 'custom-marker'
-            el.style.width = '16px'
-            el.style.height = '16px'
-            el.style.borderRadius = '50%'
-            el.style.backgroundColor = 'rgba(255, 18, 18, 1)'
-            el.style.border = '3px solid white'
-            el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.4)'
-            el.style.cursor = 'pointer'
-            el.style.transition = 'all 0.2s'
-
-            // Add hover effect
-            el.addEventListener('mouseenter', () => {
-                el.style.transform = 'scale(1.3)'
-            })
-            el.addEventListener('mouseleave', () => {
-                el.style.transform = 'scale(1)'
-            })
-
-            // Create and add marker at the exact coordinates
-            const marker = new mapboxgl.Marker(el)
-                .setLngLat([lng, lat])
-                .addTo(mapRef.current)
-
-            // Store marker reference
-            markersRef.current.set(markerId, marker)
-
-            console.log(`Marker added at [${lng}, ${lat}]`)
-        },
-        removeMarker: (id: string) => {
-            const marker = markersRef.current.get(id)
-            if (marker) {
-                marker.remove()
-                markersRef.current.delete(id)
-            }
-        },
-        clearAllMarkers: () => {
-            markersRef.current.forEach(marker => marker.remove())
-            markersRef.current.clear()
-        }
+        getMap: () => mapInstanceRef.current
     }))
 
-    // Initialize map ONCE
+    // Initialize map only once
     useEffect(() => {
-        // Set access token
-        mapboxgl.accessToken = accessToken || ''
+        if (!mapContainerRef.current || mapInitializedRef.current) return
 
-        // Don't initialize if already initialized or no container
-        if (!mapContainerRef.current || mapRef.current) return
+        mapboxgl.accessToken = accessToken
 
-        // Initialize map
-        mapRef.current = new mapboxgl.Map({
+        const map = new mapboxgl.Map({
             container: mapContainerRef.current,
-            style: mapStyle || 'mapbox://styles/mapbox/streets-v12',
-            center: location ? [location.lng, location.lat] : [0, 0],
-            zoom: location?.zoom || 2
+            style: mapStyle,
+            center: [-74.5, 40],
+            zoom: 2
         })
 
-        // Wait for map to load before adding interactions
-        mapRef.current.on('load', () => {
-            console.log('Map loaded successfully')
-        })
-
-        // Add click handler that uses the ref
-        const handleClick = (e: mapboxgl.MapMouseEvent) => {
-            if (clickHandlerRef.current) {
-                clickHandlerRef.current(e)
-            }
-        }
-
-        mapRef.current.on('click', handleClick)
-
-        // Cleanup only when component unmounts
-        return () => {
-            if (mapRef.current) {
-                mapRef.current.off('click', handleClick)
-                mapRef.current.remove()
-                mapRef.current = null
-            }
-            // Clear all markers
-            markersRef.current.forEach(marker => marker.remove())
-            markersRef.current.clear()
-        }
-    }, [])
-
-    // Handle map style changes WITHOUT reinitializing
-    useEffect(() => {
-        if (mapRef.current && mapStyle) {
-            mapRef.current.setStyle(mapStyle)
-        }
-    }, [mapStyle])
-
-    // Handle location changes WITHOUT reinitializing
-    useEffect(() => {
-        if (mapRef.current && location) {
-            mapRef.current.flyTo({
-                center: [location.lng, location.lat],
-                zoom: location.zoom || mapRef.current.getZoom(),
-                essential: true
+        map.on('load', () => {
+            // Add source for stops
+            map.addSource('stops', {
+                type: 'geojson',
+                data: props.stops || {
+                    type: 'FeatureCollection',
+                    features: []
+                }
             })
-        }
-    }, [location?.lat, location?.lng, location?.zoom])
 
-    // Handle window resize to adjust map
+            // Add layer for stop markers
+            map.addLayer({
+                id: 'stops-layer',
+                type: 'circle',
+                source: 'stops',
+                paint: {
+                    'circle-radius': 8,
+                    'circle-color': '#3b82f6',
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#ffffff'
+                }
+            })
+
+            // Optional: Add labels for stops
+            map.addLayer({
+                id: 'stops-labels',
+                type: 'symbol',
+                source: 'stops',
+                layout: {
+                    'text-field': ['get', 'name'],
+                    'text-offset': [0, 1.5],
+                    'text-anchor': 'top',
+                    'text-size': 12
+                },
+                paint: {
+                    'text-color': '#1f2937',
+                    'text-halo-color': '#ffffff',
+                    'text-halo-width': 1
+                }
+            })
+        })
+
+        mapInstanceRef.current = map
+        mapInitializedRef.current = true
+
+        return () => {
+            map.remove()
+            mapInstanceRef.current = null
+            mapInitializedRef.current = false
+        }
+    }, []) // Empty dependency array - only run once
+
+    // Handle click events separately
     useEffect(() => {
-        const handleResize = () => {
-            if (mapRef.current) {
-                mapRef.current.resize()
-            }
-        }
+        const map = mapInstanceRef.current
+        const handler = props.onClick
+        if (!map || !handler) return
 
-        window.addEventListener('resize', handleResize)
-        return () => window.removeEventListener('resize', handleResize)
-    }, [])
+        map.on('click', handler)
+
+        return () => {
+            map.off('click', handler)
+        }
+    }, [props.onClick])
+
+    // Update GeoJSON data when stops change
+    useEffect(() => {
+        const map = mapInstanceRef.current
+        if (!map || !map.isStyleLoaded()) return
+
+        const source = map.getSource('stops') as mapboxgl.GeoJSONSource
+        if (source && props.stops) {
+            source.setData(props.stops)
+        }
+    }, [props.stops])
 
     return (
-        <div 
-            ref={mapContainerRef} 
-            className="w-full h-full"
-            style={{ position: 'relative' }}
-        >
+        <div ref={mapContainerRef} className="w-full h-full relative">
             {props.children}
         </div>
     )

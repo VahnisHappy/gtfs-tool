@@ -3,17 +3,27 @@ import type { RootState } from "../store"
 import { StopActions } from "../store/actions";
 import { createStop } from "../factory";
 import type { Point } from "../types";
-import { useCallback, useRef } from "react";
+import { useRef, useMemo, useCallback } from "react";
 import MapDisplay from "./organisms/MapDisplay";
 import type { MapDisplayHandle } from "./organisms/MapDisplay";
-import { updateStopCoordinates } from "../store/slices/appSlice";
+import { stopsToGeoJSONCollection } from "../factory";
 
 export default function Map() {
   const dispatch = useDispatch()
   const { mode } = useSelector((state: RootState) => state.appState)
   const stops = useSelector((state: RootState) => state.stopState.data)
   const mapDisplayRef = useRef<MapDisplayHandle>(null)
+  
+  // Convert stops to GeoJSON format
+  const stopsGeoJSON = useMemo(() => {
+    return stopsToGeoJSONCollection(stops)
+  }, [stops])
+  
+  const handleMark = useCallback((point: Point) => {
+    dispatch(StopActions.addStop(createStop(point)))
+  }, [dispatch])
 
+  // Use useCallback to memoize the click handler
   const mapDisplayMapClick = useCallback((e: mapboxgl.MapMouseEvent) => {
     // Check if clicked directly on canvas (not on a marker or control)
     const target = e.originalEvent.target as HTMLElement;
@@ -28,35 +38,22 @@ export default function Map() {
       mode: mode
     });
     
-    // When in mark mode, update the coordinates and add visual marker
+    // When in mark mode, add the stop
     if (mode === 'mark') {
-      // Update coordinates in Redux
-      dispatch(updateStopCoordinates({
-        lat: point.lat,
-        lng: point.lng
-      }));
-      
-      // Add visual marker on map at exact click location
-      if (mapDisplayRef.current) {
-        // Use timestamp as unique ID for each marker
-        const markerId = `stop-${Date.now()}`
-        mapDisplayRef.current.addMarker(point.lat, point.lng, markerId);
-      }
-      
-      console.log('Marker added at:', { 
-        lat: point.lat.toFixed(6), 
-        lng: point.lng.toFixed(6) 
-      });
+      handleMark(point);
+      console.log('Added stop in GeoJSON format');
     }
-  }, [mode, dispatch])
+    
+    console.log('Current stops (GeoJSON):', stopsGeoJSON);
+  }, [mode, handleMark, stopsGeoJSON])
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full" style={{position: `relative`}}>
       <MapDisplay 
         ref={mapDisplayRef}
         onClick={mapDisplayMapClick}
+        stops={stopsGeoJSON}
       >
-        {/* You can add markers or other map elements here as children */}
       </MapDisplay>
     </div>
   )

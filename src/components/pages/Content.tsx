@@ -13,7 +13,7 @@ export default function Content () {
     }
     const {content} = useSelector((state: RootState) => state.appState)
     return (
-        <div className="relative flex h-screen w-full max-w-[15rem] flex-col bg-[#F5F7F9] bg-clip-border p-4 text-gray-700 shadow-xl shadow-blue-gray-900/5">
+        <div className="relative flex h-screen w-full max-w-[240px] flex-col bg-[#F5F7F9] bg-clip-border p-4 text-gray-700 shadow-xl shadow-blue-gray-900/5">
             {renderSidebarContent(content)}
         </div>
     )

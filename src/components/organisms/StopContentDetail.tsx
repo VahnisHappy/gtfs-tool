@@ -67,7 +67,7 @@ export default function StopContentDetail() {
 
   return (
     <aside 
-      className={`fixed right-0 top-0 h-screen w-[450px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${
+      className={`fixed right-0 top-0 h-screen w-[350px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}
     >

@@ -38,7 +38,7 @@ export default function StopContent() {
                     <h3 className="font-semibold mb-2">Stop List</h3>
                     <ul>
                         {stops.map((stop) => (
-                            <li key={String(stop.id)}>{stop.name.value}</li>
+                            <li key={stop.id.value}>{stop.name.value}</li>
                         ))}
                     </ul>
                 </div>

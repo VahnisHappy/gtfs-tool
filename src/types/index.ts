@@ -39,4 +39,12 @@ export type Route = {
     name: Field<string>
 }
 
+export type StopGeoJSON = GeoJSON.Feature<GeoJSON.Point, {
+    id: string
+    name?: string
+}>
+
+export type StopsGeoJSONCollection = GeoJSON.FeatureCollection<GeoJSON.Point>
+
+
 export type {Field} from "./Field"
