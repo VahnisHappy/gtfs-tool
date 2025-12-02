@@ -1,8 +1,11 @@
 import mapboxgl from "mapbox-gl"
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import type { MapData } from "../../types"
-import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback, type ReactNode } from "react"
+import { useEffect, useRef, forwardRef, useImperativeHandle, type ReactNode } from "react"
 import { useSelector } from "react-redux"
 import type { RootState } from "../../store"
+import 'mapbox-gl/dist/mapbox-gl.css'
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
 
 export type MapDisplayProps = {
     onClick?: (e: mapboxgl.MapMouseEvent) => void
@@ -17,7 +20,7 @@ export type MapDisplayHandle = {
 
 const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) => {
     const { accessToken, mapStyle } = useSelector((state: RootState) => state.mapState)
-    const mapContainerRef = useRef<HTMLDivElement>(null)
+    const mapContainerRef = useRef<HTMLDivElement | null>(null)
     const mapInstanceRef = useRef<mapboxgl.Map | null>(null)
     const mapInitializedRef = useRef(false)
 
@@ -27,7 +30,7 @@ const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) =>
 
     // Initialize map only once
     useEffect(() => {
-        if (!mapContainerRef.current || mapInitializedRef.current) return
+        if (!mapContainerRef.current) return
 
         mapboxgl.accessToken = accessToken
 
@@ -38,6 +41,15 @@ const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) =>
             zoom: 2
         })
 
+        // Add geocoder search control
+        const geocoder = new MapboxGeocoder({
+            accessToken: accessToken,
+            marker: true,
+            placeholder: 'Search for a location'
+        })
+        map.addControl(geocoder, 'top-right');
+        map.addControl(new mapboxgl.NavigationControl());
+        
         map.on('load', () => {
             // Add source for stops
             map.addSource('stops', {
@@ -55,9 +67,7 @@ const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) =>
                 source: 'stops',
                 paint: {
                     'circle-radius': 8,
-                    'circle-color': '#3b82f6',
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': '#ffffff'
+                    'circle-color': '#3b82f6'
                 }
             })
 
@@ -115,10 +125,11 @@ const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) =>
     }, [props.stops])
 
     return (
-        <div ref={mapContainerRef} className="w-full h-full relative">
-            {props.children}
-        </div>
-    )
+    <div className="w-full h-full relative overflow-hidden">
+        <div ref={mapContainerRef} className="w-full h-full absolute inset-0" />
+        {props.children}
+    </div>
+)
 })
 
 MapDisplay.displayName = 'MapDisplay'
