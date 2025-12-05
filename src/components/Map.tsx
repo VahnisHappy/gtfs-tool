@@ -16,16 +16,35 @@ export default function Map() {
   const { mode } = useSelector((state: RootState) => state.appState)
   const { accessToken } = useSelector((state: RootState) => state.mapState)
   const stops = useSelector((state: RootState) => state.stopState.data)
+  const routes = useSelector((state: RootState) => state.routeState.data)
+  const currentRoute = useSelector((state: RootState) => state.routeState.currentRoute)
   const mapDisplayRef = useRef<MapDisplayHandle>(null)
   const [mapInstance, setMapInstance] = useState<mapboxgl.Map | null>(null)
-
+  
   const handleMark = useCallback((point: Point) => {
-    dispatch(StopActions.addStop(createStop(point))) // Exit mark mode after placing one stop
-    dispatch(AppActions.setMode('view')) // or whatever your default mode is
+    dispatch(StopActions.addStop(createStop(point)))
+    dispatch(AppActions.setMode('view'))
   }, [dispatch])
 
-  const handleDraw = (stop: StopIndex) => dispatch(RouteActions.addStopToRoute(stop))
+  const handleDraw = useCallback((stop: StopIndex) => {
+    dispatch(RouteActions.addStopToRoute(stop))
+  }, [dispatch])
 
+  // Start a new route when entering draw mode
+  useEffect(() => {
+    if (mode === 'draw' && !currentRoute) {
+      dispatch(RouteActions.startNewRoute())
+    }
+  }, [mode, currentRoute, dispatch])
+
+  // Log route state for debugging
+  useEffect(() => {
+    console.log('Current route state:', {
+      currentRoute,
+      allRoutes: routes,
+      routeStops: currentRoute?.stopIndexes?.map(idx => stops[idx])
+    })
+  }, [currentRoute, routes, stops])
   
   // Update mapInstance when ref is available
   useEffect(() => {
@@ -36,25 +55,20 @@ export default function Map() {
       }
     }
     
-    // Check immediately and after a short delay to ensure map is ready
     checkMap()
     const timer = setTimeout(checkMap, 100)
     
     return () => clearTimeout(timer)
   }, [mapInstance])
   
-  // Convert stops to GeoJSON format
   const stopsGeoJSON = useMemo(() => {
     return stopsToGeoJSONCollection(stops)
   }, [stops])
 
-  // Use useCallback to memoize the click handler
   const mapDisplayMapClick = useCallback((e: mapboxgl.MapMouseEvent) => {
-    // Check if clicked directly on canvas (not on a marker or control)
     const target = e.originalEvent.target as HTMLElement;
     if (target !== e.target.getCanvas()) return;
     
-    // Get the exact coordinates where clicked
     const point: Point = e.lngLat as Point
     
     console.log('Map clicked at:', {
@@ -63,7 +77,6 @@ export default function Map() {
       mode: mode
     });
     
-    // When in mark mode, add the stop
     if (mode === 'mark') {
       handleMark(point);
       console.log('Added stop in GeoJSON format');
@@ -73,8 +86,17 @@ export default function Map() {
   }, [mode, handleMark, stopsGeoJSON])
 
   const mapDisplayStopClick = useCallback((index: number) => {
-    if (mode === 'draw') handleDraw(index)
-  }, [mode, handleDraw])
+    if (mode === 'draw') {
+      console.log('Stop clicked:', {
+        clickedStopIndex: index,
+        clickedStop: stops[index],
+        currentRoute: currentRoute,
+        currentStops: currentRoute?.stopIndexes
+      });
+      
+      handleDraw(index);
+    }
+  }, [mode, handleDraw, stops, currentRoute])
 
   return (
     <div className="w-full h-full" style={{position: `relative`}}>

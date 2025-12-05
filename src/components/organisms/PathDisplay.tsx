@@ -9,6 +9,7 @@ export type PathDisplayProps = {
 }
 
 export default function PathDisplay({ map, linewidth = 3 }: PathDisplayProps) {
+    const stops = useSelector((state: RootState) => state.stopState.data)
     const routes = useSelector((state: RootState) => state.routeState.data)
     const layersAddedRef = useRef<Set<string>>(new Set())
 
@@ -26,26 +27,37 @@ export default function PathDisplay({ map, linewidth = 3 }: PathDisplayProps) {
         })
         layersAddedRef.current.clear()
 
-        // Add new routes
-        routes.forEach((route, index) => {
-            const path = route?.path || []
-            const routeId = String(route?.id || `route-${index}`)
+        // Draw each route
+        routes.forEach((route, routeIndex) => {
+            const routeId = `route-${routeIndex}`
             
-            if (path.length < 2) return // Need at least 2 points for a line
-
-            const geojson: GeoJSON.Feature<GeoJSON.LineString> = {
-                type: "Feature",
-                geometry: {
-                    type: "LineString",
-                    coordinates: path.map(point => [point.lng, point.lat])
-                },
-                properties: {}
+            // Option 1: Use stopIndexes if available
+            let coordinates: number[][] = []
+            
+            if (route.stopIndexes && route.stopIndexes.length >= 2) {
+                coordinates = route.stopIndexes
+                    .map(index => stops[index])
+                    .filter(stop => stop !== undefined)
+                    .map(stop => [stop.lng, stop.lat])
+            } 
+            // Option 2: Use path if available (direct coordinates)
+            else if (route.path && route.path.length >= 2) {
+                coordinates = route.path.map(point => [point.lng, point.lat])
             }
+
+            if (coordinates.length < 2) return
 
             // Add source
             map.addSource(`route-source-${routeId}`, {
                 type: 'geojson',
-                data: geojson
+                data: {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: coordinates
+                    },
+                    properties: {}
+                }
             })
 
             // Add layer
@@ -54,8 +66,8 @@ export default function PathDisplay({ map, linewidth = 3 }: PathDisplayProps) {
                 type: 'line',
                 source: `route-source-${routeId}`,
                 paint: {
-                    'line-width': linewidth,
-                    'line-color': route?.color || '#000000'
+                    'line-color': route.color || '#3b82f6',
+                    'line-width': linewidth
                 }
             })
 
@@ -74,7 +86,7 @@ export default function PathDisplay({ map, linewidth = 3 }: PathDisplayProps) {
             })
             layersAddedRef.current.clear()
         }
-    }, [map, routes, linewidth])
+    }, [map, routes, stops, linewidth])
 
-    return null // This component doesn't render anything
+    return null
 }

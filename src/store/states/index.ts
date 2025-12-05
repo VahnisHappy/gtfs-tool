@@ -13,10 +13,9 @@ export type StopState = {
     data: Stop[],
 }
 
-export type StopIndex = number;
-
 export type RouteState = {
-    data: Route[]
+    data: Route[],
+    currentRoute: Route | null;
 }
 
 export type MapState = {

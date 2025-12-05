@@ -4,7 +4,7 @@ import StopMarker from "../atoms/StopMarker";
 import type mapboxgl from 'mapbox-gl';
 
 export type StopDisplayProps = {
-    map: mapboxgl.Map | null;  // Add this
+    map: mapboxgl.Map | null;
     onClick?: (index: number) => void;
 }
 
