@@ -1,4 +1,4 @@
-import type { Field, Point, Stop, StopGeoJSON } from "../types"
+import type { Field, Point, Route, Stop, StopGeoJSON } from "../types"
 
 export function createField<T>(value: T, optional?: boolean): Field<T> {
     return {value, error: !optional}
@@ -30,5 +30,16 @@ export const stopsToGeoJSONCollection = (stops: Stop[]): GeoJSON.FeatureCollecti
     return {
         type: 'FeatureCollection',
         features: stops.map(stopToGeoJSON)
+    }
+}
+
+export function createRoute(color: string): Route {
+    return {
+        id: createField(""),
+        name: createField(""),
+        path: [],
+        stopIndexes:[],
+        color,
+        edit: false
     }
 }

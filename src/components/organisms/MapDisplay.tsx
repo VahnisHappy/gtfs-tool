@@ -1,11 +1,9 @@
 import mapboxgl from "mapbox-gl"
-import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import type { MapData } from "../../types"
 import { useEffect, useRef, forwardRef, useImperativeHandle, type ReactNode } from "react"
 import { useSelector } from "react-redux"
 import type { RootState } from "../../store"
 import 'mapbox-gl/dist/mapbox-gl.css'
-import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
 
 export type MapDisplayProps = {
     onClick?: (e: mapboxgl.MapMouseEvent) => void
@@ -41,53 +39,47 @@ const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) =>
             zoom: 2
         })
 
-        // Add geocoder search control
-        const geocoder = new MapboxGeocoder({
-            accessToken: accessToken,
-            marker: true,
-            placeholder: 'Search for a location'
-        })
-        map.addControl(geocoder, 'top-right');
-        map.addControl(new mapboxgl.NavigationControl());
+        // Add navigation control below search (top-right)
+        map.addControl(new mapboxgl.NavigationControl(), 'top-right')
         
         map.on('load', () => {
             // Add source for stops
-            map.addSource('stops', {
-                type: 'geojson',
-                data: props.stops || {
-                    type: 'FeatureCollection',
-                    features: []
-                }
-            })
+            // map.addSource('stops', {
+            //     type: 'geojson',
+            //     data: props.stops || {
+            //         type: 'FeatureCollection',
+            //         features: []
+            //     }
+            // })
 
             // Add layer for stop markers
-            map.addLayer({
-                id: 'stops-layer',
-                type: 'circle',
-                source: 'stops',
-                paint: {
-                    'circle-radius': 8,
-                    'circle-color': '#3b82f6'
-                }
-            })
+            // map.addLayer({
+            //     id: 'stops-layer',
+            //     type: 'circle',
+            //     source: 'stops',
+            //     paint: {
+            //         'circle-radius': 8,
+            //         'circle-color': '#3b82f6'
+            //     }
+            // })
 
             // Optional: Add labels for stops
-            map.addLayer({
-                id: 'stops-labels',
-                type: 'symbol',
-                source: 'stops',
-                layout: {
-                    'text-field': ['get', 'name'],
-                    'text-offset': [0, 1.5],
-                    'text-anchor': 'top',
-                    'text-size': 12
-                },
-                paint: {
-                    'text-color': '#1f2937',
-                    'text-halo-color': '#ffffff',
-                    'text-halo-width': 1
-                }
-            })
+            // map.addLayer({
+            //     id: 'stops-labels',
+            //     type: 'symbol',
+            //     source: 'stops',
+            //     layout: {
+            //         'text-field': ['get', 'name'],
+            //         'text-offset': [0, 1.5],
+            //         'text-anchor': 'top',
+            //         'text-size': 12
+            //     },
+            //     paint: {
+            //         'text-color': '#1f2937',
+            //         'text-halo-color': '#ffffff',
+            //         'text-halo-width': 1
+            //     }
+            // })
         })
 
         mapInstanceRef.current = map
@@ -125,11 +117,16 @@ const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) =>
     }, [props.stops])
 
     return (
-    <div className="w-full h-full relative overflow-hidden">
-        <div ref={mapContainerRef} className="w-full h-full absolute inset-0" />
-        {props.children}
-    </div>
-)
+        <div className="w-full h-screen relative overflow-hidden">
+            <div ref={mapContainerRef} className="w-full h-full absolute inset-0" />
+            {props.children}
+            <style>{`
+                .mapboxgl-ctrl-top-right {
+                    top: 32px;
+                }
+            `}</style>
+        </div>
+    )
 })
 
 MapDisplay.displayName = 'MapDisplay'

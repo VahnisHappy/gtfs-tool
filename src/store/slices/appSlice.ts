@@ -7,6 +7,8 @@ const initialState: AppState = {
     content: 'stops',
     isStopDetailOpen: false,
     selectedStop: null,
+    isRouteDetailOpen: false,
+    selectedRoute: null,
     mode: 'view'
 }
 
@@ -29,7 +31,7 @@ const appSlice = createSlice({
             state.selectedStop = null;
             state.mode = 'view';
         },
-        setMode: (state, action: PayloadAction<'view' | 'mark' | 'edit'>) => {
+        setMode: (state, action: PayloadAction<'view' | 'mark' | 'edit' | 'draw'>) => {
             state.mode = action.payload;
         },
         updateStopCoordinates: (state, action: PayloadAction<{ lat: number; lng: number }>) => {
@@ -37,6 +39,16 @@ const appSlice = createSlice({
                 state.selectedStop.lat = action.payload.lat;
                 state.selectedStop.lng = action.payload.lng;
             }
+        },
+        openRouteDetail: (state, action: PayloadAction<any>) => {
+            state.isRouteDetailOpen = true;
+            if (action.payload?.mode === 'new') {
+                state.mode = 'draw';
+            }
+        },
+        closeRouteDetail: (state) => {
+            state.isRouteDetailOpen = false;
+            state.mode = 'view';
         }
     }
 })
@@ -46,6 +58,8 @@ export const {
     closeStopDetail, 
     setMode, 
     updateStopCoordinates,
-    setContent 
+    setContent,
+    openRouteDetail,
+    closeRouteDetail
 } = appSlice.actions;
 export default appSlice;

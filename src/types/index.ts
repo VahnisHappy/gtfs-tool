@@ -1,14 +1,13 @@
 import type { Field } from "./Field";
 import { sidebarContent, modes } from "../data";
 
-
 export type Content = typeof sidebarContent[number]
 
 export type MapData = {
     routes: Route[],
 }
 
-export type Map ={
+export type Map = {
     accessToken: string;
     mapStyle: string;
     location?: {
@@ -29,15 +28,33 @@ export type Stop = {
     id: Field<string>,
     name: Field<string>,
     lat: number,
-    lng: number
+    lng: number,
+    code?: Field<string>,
+    tlsName?: Field<string>,
+    zoneId?: Field<string>,
+    locationType?: Field<string>,
+    url?: Field<string>,
+    parentStation?: Field<string>,
+    timezone?: Field<string>,
+    wheelchairBoarding?: Field<string>,
+    levelId?: Field<string>,
+    platformCode?: Field<string>,
+    access?: Field<string>,
+    description?: Field<string>,
 }
 
 export type StopIndex = number
 
 export type Route = {
     id: Field<string>,
-    name: Field<string>
+    name: Field<string>,
+    stopIndexes: StopIndex[],
+    path: Point[],
+    color: string,
+    edit?: boolean,
 }
+
+export type RouteIndex = number
 
 export type StopGeoJSON = GeoJSON.Feature<GeoJSON.Point, {
     id: string
@@ -46,5 +63,4 @@ export type StopGeoJSON = GeoJSON.Feature<GeoJSON.Point, {
 
 export type StopsGeoJSONCollection = GeoJSON.FeatureCollection<GeoJSON.Point>
 
-
-export type {Field} from "./Field"
+export type { Field } from "./Field"
