@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { AppState } from "../states";
 import type { Content } from "../../types";
+import type { modes } from "../../data";
 
 const initialState: AppState = {
     content: 'stops',
@@ -31,7 +32,7 @@ const appSlice = createSlice({
             state.selectedStop = null;
             state.mode = 'view';
         },
-        setMode: (state, action: PayloadAction<'view' | 'mark' | 'edit' | 'draw'>) => {
+        setMode: (state, action: PayloadAction<typeof modes[number]>) => {
             state.mode = action.payload;
         },
         updateStopCoordinates: (state, action: PayloadAction<{ lat: number; lng: number }>) => {

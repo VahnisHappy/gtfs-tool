@@ -15,25 +15,52 @@ const routeSlice = createSlice({
         addRoute: (state, {payload}: PayloadAction<Route>) => {
             state.data = [...state.data, payload];
         },
-        addStop: (state, {payload}: PayloadAction<StopIndex>) => {
+        createRoute: (state, {payload}: PayloadAction<string>) => {
+            // Close any existing route being edited
+            state.data = state.data.map(r => ({...r, edit: false}));
+            // Create new route with edit mode
+            const newRoute: Route = {
+                id: { value: `route-${Date.now()}`, error: false },
+                name: { value: '', error: true },
+                stopIndexes: [],
+                path: [],
+                color: payload,
+                edit: true
+            };
+            state.data = [...state.data, newRoute];
+            state.currentRoute = newRoute;
+        },
+        addStopToRoute: (state, {payload}: PayloadAction<StopIndex>) => {
             const route = state.data.find(r => r.edit);
             if (!route) return;
             route.stopIndexes = [...route.stopIndexes, payload];
         },
-        addStopToRoute: (state, {payload}: PayloadAction<StopIndex>) => {
+        updateRouteName: (state, {payload}: PayloadAction<string>) => {
             const route = state.data.find(r => r.edit);
-            if (!route) {
-                console.warn('No route in edit mode found');
-                return;
+            if (route) {
+                route.name = { value: payload, error: payload.trim() === '' };
             }
-            route.stopIndexes = [...(route.stopIndexes || []), payload];
-            state.currentRoute = route;
+        },
+        updateRouteColor: (state, {payload}: PayloadAction<string>) => {
+            const route = state.data.find(r => r.edit);
+            if (route) {
+                route.color = payload;
+            }
         },
         finishEditingRoute: (state) => {
             const route = state.data.find(r => r.edit);
             if (route) {
+                // Validate before finishing
+                if (route.name.value.trim() === '' || route.stopIndexes.length < 2) {
+                    return; // Don't finish if invalid
+                }
                 route.edit = false;
             }
+            state.currentRoute = null;
+        },
+        cancelEditingRoute: (state) => {
+            // Remove the route being edited if it was never finished
+            state.data = state.data.filter(r => !r.edit);
             state.currentRoute = null;
         },
         removeRoute: (state, {payload}: PayloadAction<RouteIndex>) => {

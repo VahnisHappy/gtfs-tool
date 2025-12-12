@@ -16,25 +16,45 @@ export default function Map() {
   const { mode } = useSelector((state: RootState) => state.appState)
   const stops = useSelector((state: RootState) => state.stopState.data)
   const routes = useSelector((state: RootState) => state.routeState.data)
+  const currentRoute = useSelector((state: RootState) => state.routeState.currentRoute)
   
   const handleMark = (point: Point) => {
     dispatch(StopActions.addStop(createStop(point)))
-    // Exit mark mode after placing one stop
     dispatch(AppActions.setMode('view'))
   }
   
-  const handleDrawPath = (stop: StopIndex) => dispatch(RouteActions.addStop(stop))
-  const currentRoute = useSelector((state: RootState) => state.routeState.currentRoute)
+  // Fixed: Use addStopToRoute instead of addStop
+  const handleDrawPath = (stop: StopIndex) => {
+    dispatch(RouteActions.addStopToRoute(stop))
+  }
 
   const currentEditedRoute = routes.find(route => route.edit)
+  
   useEffect(() => {
-    if (!currentEditedRoute) return
+    if (!currentEditedRoute) {
+      console.log('No route being edited')
+      return
+    }
+    
+    console.log('Current edited route:', currentEditedRoute)
+    console.log('Stop indexes:', currentEditedRoute.stopIndexes)
+    
     const points: Point[] = currentEditedRoute.stopIndexes.map(idx => stops[idx])
-    if (points.length < 2) dispatch(RouteActions.setPath([]))
-      else direction(points).then(path => {
+    console.log('Points for direction:', points)
+    
+    if (points.length < 2) {
+      console.log('Not enough points, clearing path')
+      dispatch(RouteActions.setPath([]))
+    } else {
+      console.log('Fetching directions...')
+      direction(points).then(path => {
+        console.log('Direction API returned path with', path.length, 'points')
         dispatch(RouteActions.setPath(path))
+      }).catch(err => {
+        console.error('Direction API error:', err)
       })
-  }, [currentEditedRoute?.stopIndexes, stops])
+    }
+  }, [currentEditedRoute?.stopIndexes?.length, stops])
 
   const stopsGeoJSON = useMemo(() => {
     return stopsToGeoJSONCollection(stops)
@@ -46,38 +66,41 @@ export default function Map() {
     const point = e.lngLat as Point
 
     console.log('Map clicked at:', {
-      lat: point.lat,
-      lng: point.lng,
+      latitude: point.lat,
+      longitude: point.lng,
       mode: mode
     })
     
     if (mode === 'mark') {
       handleMark(point)
-      console.log('Added stop in GeoJSON format')
+      console.log('Added stop')
     }
-    console.log('Current stops (GeoJSON):', stopsGeoJSON);
-    
-  }, [mode, stopsGeoJSON])
+  }, [mode])
 
-  const mapDisplayStopClick = (index: number) => {
+  const handleDisplayStopClick = (index: number) => {
+    console.log('Stop clicked:', {
+      index,
+      mode,
+      stop: stops[index],
+      currentRoute: currentRoute,
+      currentEditedRoute: currentEditedRoute
+    })
+    
     if (mode === 'draw') {
-      console.log('Stop clicked:', {
-        clickedStopIndex: index,
-        clickedStop: stops[index],
-        currentRoute: currentRoute,
-        currentStops: currentRoute?.stopIndexes
-      });
-      
-      handleDrawPath(index);
+      if (!currentEditedRoute) {
+        console.error('No route being edited! Click "New Route" first.')
+        return
+      }
+      handleDrawPath(index)
     }
   }
 
   return (
-     <div className="w-full h-full" style={{position: `relative`}}>
+    <div className="w-full h-full" style={{position: `relative`}}>
       <MapDisplay onClick={handleMapDisplayClick} stops={stopsGeoJSON}>
-        <StopDisplay onClick={mapDisplayStopClick} />
+        <StopDisplay onClick={handleDisplayStopClick} />
         <PathDisplay lineWidth={3} />
       </MapDisplay>
-     </div>
+    </div>
   )
 }
