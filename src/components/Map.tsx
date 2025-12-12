@@ -3,89 +3,63 @@ import type { RootState } from "../store"
 import { StopActions, AppActions, RouteActions } from "../store/actions";
 import { createStop } from "../factory";
 import type { Point, StopIndex } from "../types";
-import { useRef, useMemo, useCallback, useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import MapDisplay from "./organisms/MapDisplay";
-import type { MapDisplayHandle } from "./organisms/MapDisplay";
-import SearchLocation from "./molecules/SearchLocation";
 import { stopsToGeoJSONCollection } from "../factory";
 import StopDisplay from "./molecules/StopDisplay";
 import PathDisplay from "./organisms/PathDisplay";
+import { direction } from "../services/useMapInteractions";
+import type { MapMouseEvent } from "react-map-gl/mapbox";
 
 export default function Map() {
   const dispatch = useDispatch()
   const { mode } = useSelector((state: RootState) => state.appState)
-  const { accessToken } = useSelector((state: RootState) => state.mapState)
   const stops = useSelector((state: RootState) => state.stopState.data)
   const routes = useSelector((state: RootState) => state.routeState.data)
-  const currentRoute = useSelector((state: RootState) => state.routeState.currentRoute)
-  const mapDisplayRef = useRef<MapDisplayHandle>(null)
-  const [mapInstance, setMapInstance] = useState<mapboxgl.Map | null>(null)
   
-  const handleMark = useCallback((point: Point) => {
+  const handleMark = (point: Point) => {
     dispatch(StopActions.addStop(createStop(point)))
+    // Exit mark mode after placing one stop
     dispatch(AppActions.setMode('view'))
-  }, [dispatch])
-
-  const handleDraw = useCallback((stop: StopIndex) => {
-    dispatch(RouteActions.addStopToRoute(stop))
-  }, [dispatch])
-
-  // Start a new route when entering draw mode
-  useEffect(() => {
-    if (mode === 'draw' && !currentRoute) {
-      dispatch(RouteActions.startNewRoute())
-    }
-  }, [mode, currentRoute, dispatch])
-
-  // Log route state for debugging
-  useEffect(() => {
-    console.log('Current route state:', {
-      currentRoute,
-      allRoutes: routes,
-      routeStops: currentRoute?.stopIndexes?.map(idx => stops[idx])
-    })
-  }, [currentRoute, routes, stops])
+  }
   
-  // Update mapInstance when ref is available
+  const handleDrawPath = (stop: StopIndex) => dispatch(RouteActions.addStop(stop))
+  const currentRoute = useSelector((state: RootState) => state.routeState.currentRoute)
+
+  const currentEditedRoute = routes.find(route => route.edit)
   useEffect(() => {
-    const checkMap = () => {
-      const map = mapDisplayRef.current?.getMap()
-      if (map && !mapInstance) {
-        setMapInstance(map)
-      }
-    }
-    
-    checkMap()
-    const timer = setTimeout(checkMap, 100)
-    
-    return () => clearTimeout(timer)
-  }, [mapInstance])
-  
+    if (!currentEditedRoute) return
+    const points: Point[] = currentEditedRoute.stopIndexes.map(idx => stops[idx])
+    if (points.length < 2) dispatch(RouteActions.setPath([]))
+      else direction(points).then(path => {
+        dispatch(RouteActions.setPath(path))
+      })
+  }, [currentEditedRoute?.stopIndexes, stops])
+
   const stopsGeoJSON = useMemo(() => {
     return stopsToGeoJSONCollection(stops)
   }, [stops])
 
-  const mapDisplayMapClick = useCallback((e: mapboxgl.MapMouseEvent) => {
-    const target = e.originalEvent.target as HTMLElement;
-    if (target !== e.target.getCanvas()) return;
-    
-    const point: Point = e.lngLat as Point
-    
+  const handleMapDisplayClick = useCallback((e: MapMouseEvent) => {
+    const target = e.originalEvent.target as HTMLElement
+    if (target !== e.target.getCanvas()) return
+    const point = e.lngLat as Point
+
     console.log('Map clicked at:', {
       lat: point.lat,
       lng: point.lng,
       mode: mode
-    });
+    })
     
     if (mode === 'mark') {
-      handleMark(point);
-      console.log('Added stop in GeoJSON format');
+      handleMark(point)
+      console.log('Added stop in GeoJSON format')
     }
-    
     console.log('Current stops (GeoJSON):', stopsGeoJSON);
-  }, [mode, handleMark, stopsGeoJSON])
+    
+  }, [mode, stopsGeoJSON])
 
-  const mapDisplayStopClick = useCallback((index: number) => {
+  const mapDisplayStopClick = (index: number) => {
     if (mode === 'draw') {
       console.log('Stop clicked:', {
         clickedStopIndex: index,
@@ -94,26 +68,16 @@ export default function Map() {
         currentStops: currentRoute?.stopIndexes
       });
       
-      handleDraw(index);
+      handleDrawPath(index);
     }
-  }, [mode, handleDraw, stops, currentRoute])
+  }
 
   return (
-    <div className="w-full h-full" style={{position: `relative`}}>
-      <MapDisplay 
-        ref={mapDisplayRef}
-        onClick={mapDisplayMapClick}
-        stops={stopsGeoJSON}
-      >
-        <SearchLocation 
-          map={mapInstance}
-          accessToken={accessToken}
-          position="top-right"
-          placeholder="Search for a location"
-        />
-        <StopDisplay map={mapInstance} onClick={mapDisplayStopClick}/>
-        <PathDisplay map={mapInstance} linewidth={3} />
+     <div className="w-full h-full" style={{position: `relative`}}>
+      <MapDisplay onClick={handleMapDisplayClick} stops={stopsGeoJSON}>
+        <StopDisplay onClick={mapDisplayStopClick} />
+        <PathDisplay lineWidth={3} />
       </MapDisplay>
-    </div>
+     </div>
   )
 }

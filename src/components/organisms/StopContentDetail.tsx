@@ -48,10 +48,14 @@ export default function StopContentDetail() {
   const dispatch = useDispatch();
   const isOpen = useSelector((state: RootState) => state.appState.isStopDetailOpen);
   const selectedStop = useSelector((state: RootState) => state.appState.selectedStop);
+  const stops = useSelector((state: RootState) => state.stopState.data);
   
   const [stopData, setStopData] = useState<StopFormData>(initialFormData);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
+  const [latInput, setLatInput] = useState('');
+  const [lngInput, setLngInput] = useState('');
 
+  // Update form when selectedStop changes or when a new stop is added
   useEffect(() => {
     if (selectedStop) {
       if (selectedStop.mode === 'edit') {
@@ -74,26 +78,63 @@ export default function StopContentDetail() {
           access: selectedStop.access?.value || '',
           description: selectedStop.description?.value || ''
         });
-      } else {
-        // New stop - just set coordinates
-        setStopData(prev => ({
-          ...prev,
-          lat: selectedStop.lat,
-          lng: selectedStop.lng
-        }));
+        setLatInput(selectedStop.lat?.toFixed(6) || '');
+        setLngInput(selectedStop.lng?.toFixed(6) || '');
+      } else if (selectedStop.mode === 'new') {
+        // For new stops, get the last stop from the stops array (the one just added)
+        const lastStop = stops[stops.length - 1];
+        if (lastStop) {
+          setStopData(prev => ({
+            ...prev,
+            lat: lastStop.lat,
+            lng: lastStop.lng
+          }));
+          setLatInput(lastStop.lat.toFixed(6));
+          setLngInput(lastStop.lng.toFixed(6));
+        }
       }
     }
-  }, [selectedStop]);
+  }, [selectedStop, stops]);
+
+  const handleLatChange = (value: string) => {
+    setLatInput(value);
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= -90 && numValue <= 90) {
+      setStopData(prev => ({ ...prev, lat: numValue }));
+      // Update the marker position in real-time
+      const lastStopIndex = stops.length - 1;
+      if (selectedStop?.mode === 'new' && lastStopIndex >= 0) {
+        const updatedStop = { ...stops[lastStopIndex], lat: numValue };
+        dispatch(StopActions.updateStop({ index: lastStopIndex, stop: updatedStop }));
+      }
+    }
+  };
+
+  const handleLngChange = (value: string) => {
+    setLngInput(value);
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= -180 && numValue <= 180) {
+      setStopData(prev => ({ ...prev, lng: numValue }));
+      // Update the marker position in real-time
+      const lastStopIndex = stops.length - 1;
+      if (selectedStop?.mode === 'new' && lastStopIndex >= 0) {
+        const updatedStop = { ...stops[lastStopIndex], lng: numValue };
+        dispatch(StopActions.updateStop({ index: lastStopIndex, stop: updatedStop }));
+      }
+    }
+  };
 
   const handleClose = () => {
-  // If it's a new stop that hasn't been saved, remove it from the map
-  if (selectedStop?.mode === 'new' && selectedStop?.stopIndex !== undefined) {
-    dispatch(StopActions.removeStop(selectedStop.stopIndex));
-  }
-  
-  dispatch(closeStopDetail());
-  setStopData(initialFormData);
-};
+    // If it's a new stop that hasn't been saved, remove the marker
+    if (selectedStop?.mode === 'new') {
+      dispatch(StopActions.removeLastStop());
+    }
+    
+    dispatch(closeStopDetail());
+    setStopData(initialFormData);
+    setLatInput('');
+    setLngInput('');
+  };
 
   const handleSave = () => {
     // Convert form data back to Stop type
@@ -116,9 +157,33 @@ export default function StopContentDetail() {
       ...(stopData.description && { description: { value: stopData.description, error: undefined } })
     };
 
+    if (selectedStop?.mode === 'new') {
+      // Remove the temporary marker (which only has coordinates)
+      dispatch(StopActions.removeLastStop());
+      // Add the complete stop with all data
+      dispatch(StopActions.addStop(stop));
+    } else if (selectedStop?.mode === 'edit') {
+      // Update existing stop
+      const stopIndex = stops.findIndex(s => s.id.value === selectedStop.id?.value);
+      if (stopIndex !== -1) {
+        dispatch(StopActions.updateStop({ index: stopIndex, stop }));
+      }
+    }
+
     console.log('Saving stop:', stop);
-    // TODO: Dispatch save action
-    handleClose();
+    
+    // TODO: Send to backend in the future
+    // const stopGeoJSON = stopToGeoJSON(stop);
+    // await fetch('/api/stops', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(stopGeoJSON)
+    // });
+    
+    dispatch(closeStopDetail());
+    setStopData(initialFormData);
+    setLatInput('');
+    setLngInput('');
   };
 
   return (
@@ -132,7 +197,6 @@ export default function StopContentDetail() {
           <h3 className="text-xl font-semibold">
             {selectedStop?.mode === 'new' ? 'New Stop' : 'Edit Stop'}
           </h3>
-          <button onClick={handleClose} className="text-red-500">Close</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -165,21 +229,27 @@ export default function StopContentDetail() {
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">stop lat</label>
               <input 
-                type="text"
-                value={stopData.lat?.toFixed(6) || ''}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                placeholder="Click map to set"
-                readOnly
+                type="number"
+                step="0.000001"
+                value={latInput}
+                onChange={(e) => handleLatChange(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Click map or enter value"
+                min="-90"
+                max="90"
               />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">stop lng</label>
               <input 
-                type="text"
-                value={stopData.lng?.toFixed(6) || ''}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                placeholder="Click map to set"
-                readOnly
+                type="number"
+                step="0.000001"
+                value={lngInput}
+                onChange={(e) => handleLngChange(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Click map or enter value"
+                min="-180"
+                max="180"
               />
             </div>
           </div>
@@ -188,7 +258,7 @@ export default function StopContentDetail() {
           {selectedStop?.mode === 'new' && (!stopData.lat || !stopData.lng) && (
             <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-700 flex items-center gap-2">
               <span className="text-xl">📍</span>
-              <span>Click on the map to mark the stop location</span>
+              <span>Click on the map to mark the stop location or enter coordinates manually</span>
             </div>
           )}
 
@@ -196,7 +266,7 @@ export default function StopContentDetail() {
           {stopData.lat && stopData.lng && (
             <div className="bg-green-50 border border-green-200 rounded p-3 text-sm text-green-700 flex items-center gap-2">
               <span className="text-xl">✓</span>
-              <span>Location marked! Fill in the details below.</span>
+              <span>Location set! Fill in the details below.</span>
             </div>
           )}
 
@@ -365,7 +435,7 @@ export default function StopContentDetail() {
           <button 
             onClick={handleSave}
             className="px-6 py-2 text-sm bg-cyan-500 text-white rounded hover:bg-cyan-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!stopData.lat || !stopData.lng}
+            disabled={!stopData.lat || !stopData.lng || !stopData.id || !stopData.name}
           >
             save
           </button>

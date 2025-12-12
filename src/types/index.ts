@@ -7,16 +7,6 @@ export type MapData = {
     routes: Route[],
 }
 
-export type Map = {
-    accessToken: string;
-    mapStyle: string;
-    location?: {
-        lat: number;
-        lng: number;
-        zoom?: number;
-    }
-}
-
 export type Mode = typeof modes[number]
 
 export type Point = {
@@ -55,6 +45,8 @@ export type Route = {
 }
 
 export type RouteIndex = number
+
+export type Bounds = [number, number, number, number]
 
 export type StopGeoJSON = GeoJSON.Feature<GeoJSON.Point, {
     id: string

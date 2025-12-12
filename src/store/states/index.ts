@@ -1,4 +1,5 @@
-import type { Stop, Content, Route, Mode, Field } from "../../types";
+import type { Stop, Content, Route, Mode, Field, Bounds } from "../../types";
+import type { ViewState } from "react-map-gl/mapbox";
 
 export type AppState ={
     content: Content
@@ -21,11 +22,9 @@ export type RouteState = {
 export type MapState = {
     accessToken: string,
     mapStyle: string,
-    location: {
-        lat: number;
-        lng: number;
-        zoom: number;
-    }
+    location: Field<string>,
+    bounds?: Bounds,
+    viewState?: Partial<ViewState>
 }
 
 export type LocationState = {

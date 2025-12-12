@@ -22,6 +22,15 @@ const stopSlice = createSlice({
         },
         removeLastStop: (state) => {
             state.data = state.data.slice(0, -1);
+        },
+        updateStop: (state, {payload}: PayloadAction<{index: StopIndex, stop: Stop}>) => {
+            state.data[payload.index] = payload.stop;
+        },
+        setCoordinates: (state, {payload}: PayloadAction<{index: StopIndex, lat: number, lng: number}>) => {
+            const stop = state.data[payload.index];
+            stop.lat = payload.lat;
+            stop.lng = payload.lng;
+            state.data[payload.index] = stop;
         }
     }
 })

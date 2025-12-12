@@ -5,7 +5,7 @@ import type { RouteState } from "../states";
 
 const initialState: RouteState = {
     data: [],
-    currentRoute: null // Add this
+    currentRoute: null
 }
 
 const routeSlice = createSlice({
@@ -15,21 +15,10 @@ const routeSlice = createSlice({
         addRoute: (state, {payload}: PayloadAction<Route>) => {
             state.data = [...state.data, payload];
         },
-        setRoutes: (state, {payload}: PayloadAction<Route[]>) => {
-            state.data = payload;
-        },
-        startNewRoute: (state) => {
-            // Create a new route and set it as current
-            const newRoute: Route = {
-                id: { value: `route-${Date.now()}` },
-                name: { value: '' },
-                stopIndexes: [],
-                path: [],
-                color: '#3b82f6',
-                edit: true
-            };
-            state.data = [...state.data, newRoute];
-            state.currentRoute = newRoute;
+        addStop: (state, {payload}: PayloadAction<StopIndex>) => {
+            const route = state.data.find(r => r.edit);
+            if (!route) return;
+            route.stopIndexes = [...route.stopIndexes, payload];
         },
         addStopToRoute: (state, {payload}: PayloadAction<StopIndex>) => {
             const route = state.data.find(r => r.edit);
@@ -38,7 +27,6 @@ const routeSlice = createSlice({
                 return;
             }
             route.stopIndexes = [...(route.stopIndexes || []), payload];
-            // Update currentRoute reference
             state.currentRoute = route;
         },
         finishEditingRoute: (state) => {

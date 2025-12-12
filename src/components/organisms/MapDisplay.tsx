@@ -1,113 +1,45 @@
-import mapboxgl from "mapbox-gl"
+import type { MapRef, ViewState, ViewStateChangeEvent } from "react-map-gl/mapbox"
+import { Map as Mapbox, NavigationControl } from "react-map-gl/mapbox"
 import type { MapData } from "../../types"
-import { useEffect, useRef, forwardRef, useImperativeHandle, type ReactNode } from "react"
+import { useDispatch } from "react-redux"
 import { useSelector } from "react-redux"
 import type { RootState } from "../../store"
+import MapActions from "../../store/slices/mapSlice"
+import { useEffect, useRef, useState } from "react"
 import 'mapbox-gl/dist/mapbox-gl.css'
+import SearchLocation from "../molecules/SearchLocation"
 
 export type MapDisplayProps = {
-    onClick?: (e: mapboxgl.MapMouseEvent) => void
-    data?: MapData
-    children?: ReactNode
+    data?: MapData,
+    viewStrate?: ViewState,
+    children?: React.ReactNode,
+    onClick?: (event: mapboxgl.MapMouseEvent) => void,
     stops?: GeoJSON.FeatureCollection
 }
 
-export type MapDisplayHandle = {
-    getMap: () => mapboxgl.Map | null
-}
+export default function MapDisplay(props: MapDisplayProps) {
+    const dispatch = useDispatch()
+    const {accessToken, mapStyle, viewState, bounds} = useSelector((state: RootState) => state.mapState)
+    const handleMapClick = (e: mapboxgl.MapMouseEvent) => props.onClick?.(e)
+    const handleMove = (e: ViewStateChangeEvent) => dispatch(MapActions.actions.setViewState(e.viewState))
+    const mapRef = useRef<MapRef | null>(null)
+    const [mapLoaded, setMapLoaded] = useState(false)
 
-const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) => {
-    const { accessToken, mapStyle } = useSelector((state: RootState) => state.mapState)
-    const mapContainerRef = useRef<HTMLDivElement | null>(null)
-    const mapInstanceRef = useRef<mapboxgl.Map | null>(null)
-    const mapInitializedRef = useRef(false)
 
-    useImperativeHandle(ref, () => ({
-        getMap: () => mapInstanceRef.current
-    }))
-
-    // Initialize map only once
     useEffect(() => {
-        if (!mapContainerRef.current) return
+        const map = mapRef.current
+        if (!map || !bounds) return
+        map.fitBounds(bounds)
+    }, [bounds])
 
-        mapboxgl.accessToken = accessToken
-
-        const map = new mapboxgl.Map({
-            container: mapContainerRef.current,
-            style: mapStyle,
-            center: [-74.5, 40],
-            zoom: 2
-        })
-
-        // Add navigation control below search (top-right)
-        map.addControl(new mapboxgl.NavigationControl(), 'top-right')
-        
-        map.on('load', () => {
-            // Add source for stops
-            // map.addSource('stops', {
-            //     type: 'geojson',
-            //     data: props.stops || {
-            //         type: 'FeatureCollection',
-            //         features: []
-            //     }
-            // })
-
-            // Add layer for stop markers
-            // map.addLayer({
-            //     id: 'stops-layer',
-            //     type: 'circle',
-            //     source: 'stops',
-            //     paint: {
-            //         'circle-radius': 8,
-            //         'circle-color': '#3b82f6'
-            //     }
-            // })
-
-            // Optional: Add labels for stops
-            // map.addLayer({
-            //     id: 'stops-labels',
-            //     type: 'symbol',
-            //     source: 'stops',
-            //     layout: {
-            //         'text-field': ['get', 'name'],
-            //         'text-offset': [0, 1.5],
-            //         'text-anchor': 'top',
-            //         'text-size': 12
-            //     },
-            //     paint: {
-            //         'text-color': '#1f2937',
-            //         'text-halo-color': '#ffffff',
-            //         'text-halo-width': 1
-            //     }
-            // })
-        })
-
-        mapInstanceRef.current = map
-        mapInitializedRef.current = true
-
-        return () => {
-            map.remove()
-            mapInstanceRef.current = null
-            mapInitializedRef.current = false
-        }
-    }, []) // Empty dependency array - only run once
-
-    // Handle click events separately
+    // Track when map is loaded
+    const handleMapLoad = () => {
+        console.log('Map loaded')
+        setMapLoaded(true)
+    }
+    
     useEffect(() => {
-        const map = mapInstanceRef.current
-        const handler = props.onClick
-        if (!map || !handler) return
-
-        map.on('click', handler)
-
-        return () => {
-            map.off('click', handler)
-        }
-    }, [props.onClick])
-
-    // Update GeoJSON data when stops change
-    useEffect(() => {
-        const map = mapInstanceRef.current
+        const map = mapRef.current
         if (!map || !map.isStyleLoaded()) return
 
         const source = map.getSource('stops') as mapboxgl.GeoJSONSource
@@ -118,17 +50,26 @@ const MapDisplay = forwardRef<MapDisplayHandle, MapDisplayProps>((props, ref) =>
 
     return (
         <div className="w-full h-screen relative overflow-hidden">
-            <div ref={mapContainerRef} className="w-full h-full absolute inset-0" />
-            {props.children}
-            <style>{`
-                .mapboxgl-ctrl-top-right {
-                    top: 32px;
-                }
-            `}</style>
+            <Mapbox 
+                id="default"
+                mapboxAccessToken={accessToken}
+                ref={mapRef}
+                mapStyle={mapStyle}
+                onClick={handleMapClick}
+                onMove={handleMove}
+                onLoad={handleMapLoad}
+                {...viewState}
+            >
+                {mapLoaded && (
+                    <SearchLocation 
+                        accessToken={accessToken} 
+                        placeholder="Search for a location"
+                        map={mapRef.current?.getMap() || null}
+                    />
+                )}
+                <NavigationControl position="top-right" style={{ marginTop: '45px' }} />
+                {props.children}
+            </Mapbox>
         </div>
     )
-})
-
-MapDisplay.displayName = 'MapDisplay'
-
-export default MapDisplay
+}
