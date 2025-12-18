@@ -4,6 +4,7 @@ import type { RootState } from '../../store';
 import { closeStopDetail } from '../../store/slices/appSlice';
 import type { Stop } from '../../types';
 import { StopActions } from '../../store/actions';
+import TextInput from '../atoms/TextInput';
 
 // Form state uses plain strings for easier input handling
 type StopFormData = {
@@ -199,33 +200,15 @@ export default function StopContentDetail() {
           </h3>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Stop ID and Stop Name */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">stop id</label>
-              <input 
-                type="text"
-                value={stopData.id}
-                onChange={(e) => setStopData({...stopData, id: e.target.value})}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">stop name</label>
-              <input 
-                type="text"
-                value={stopData.name}
-                onChange={(e) => setStopData({...stopData, name: e.target.value})}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="input"
-              />
-            </div>
+          <div className="grid grid-cols-2 gap-3">
+            <TextInput label='stop id' value={stopData.id} onChange={(value) => setStopData({...stopData, id: value})} placeholder="input"/>
+            <TextInput label='stop name' value={stopData.name} onChange={(value) => setStopData({...stopData, name: value})} placeholder="input"/>
           </div>
 
           {/* Stop Lat and Stop Lng */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">stop lat</label>
               <input 
