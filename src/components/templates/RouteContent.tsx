@@ -31,7 +31,11 @@ export default function RouteContent() {
                         <div className="flex items-center p-4 border-b">
                             <ButtonAction label="New Route" onClick={handleNewRoute} />
                         </div>
-                        
+                        <ul>
+                        {routes.map((route) => (
+                            <li key={route.id.value}>{route.name.value}</li>
+                        ))}
+                        </ul>  
                     </div>
             <RouteContentDetail />
         </div>

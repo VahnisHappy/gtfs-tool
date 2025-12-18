@@ -94,7 +94,7 @@ export default function RouteContentDetail() {
                                         <p>Click on stops on the map to add them to this route.</p>
                                     )}
                                     {editingRoute.stopIndexes.length === 1 && (
-                                        <p>Add at least one more stop to create a route.</p>
+                                        <p>Add at least one more stop to create a route.</p> 
                                     )}
                                     {editingRoute.stopIndexes.length >= 2 && (
                                         <p>✓ Route has {editingRoute.stopIndexes.length} stops</p>
@@ -104,9 +104,12 @@ export default function RouteContentDetail() {
                                 {editingRoute.stopIndexes.length > 0 && (
                                     <div className="mt-3 space-y-2">
                                         {editingRoute.stopIndexes.map((stopIdx, idx) => (
-                                            <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                                                <span className="text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <span className="text-sm flex-1">{stops[stopIdx]?.name.value || `Stop ${stopIdx}`}</span>
+                                            <div
+                                                key={idx}
+                                                className="flex items-center gap-2 p-2 bg-gray-50 rounded transition-colors hover:bg-blue-100 hover:text-blue-900 cursor-pointer group"
+                                            >
+                                                <span className="text-xs font-medium text-gray-500 group-hover:text-blue-700">{idx + 1}</span>
+                                                <span className="text-sm flex-1 group-hover:text-blue-900">{stops[stopIdx]?.name.value || `Stop ${stopIdx}`}</span>
                                             </div>
                                         ))}
                                     </div>
