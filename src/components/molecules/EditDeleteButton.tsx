@@ -3,7 +3,7 @@ import ButtonAction from "../atoms/ButtonAction";
 export type EditDeleteButtonProps = {
     onEdit: () => void;
     onDelete: () => void;
-    disabled: boolean;
+    disabled?: boolean;
 }
 
 export default function EditDeleteButton({ onEdit, onDelete, disabled }: EditDeleteButtonProps) {

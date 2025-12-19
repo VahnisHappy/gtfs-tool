@@ -20,20 +20,38 @@ const routeSlice = createSlice({
             state.data = state.data.map(r => ({...r, edit: false}));
             // Create new route with edit mode
             const newRoute: Route = {
-                id: { value: `route-${Date.now()}`, error: false },
+                id: { value: '', error: true },
                 name: { value: '', error: true },
                 stopIndexes: [],
                 path: [],
                 color: payload,
-                edit: true
+                edit: true,
+                isNew: true
             };
             state.data = [...state.data, newRoute];
             state.currentRoute = newRoute;
+        },
+        startEditingRoute: (state, {payload}: PayloadAction<RouteIndex>) => {
+            // Close any existing route being edited
+            state.data = state.data.map(r => ({...r, edit: false}));
+            // Set the selected route to edit mode
+            const route = state.data[payload];
+            if (route) {
+                route.edit = true;
+                route.isNew = false;
+                state.currentRoute = route;
+            }
         },
         addStopToRoute: (state, {payload}: PayloadAction<StopIndex>) => {
             const route = state.data.find(r => r.edit);
             if (!route) return;
             route.stopIndexes = [...route.stopIndexes, payload];
+        },
+        updateRouteId: (state, {payload}: PayloadAction<string>) => {
+            const route = state.data.find(r => r.edit);
+            if (route) {
+                route.id = { value: payload, error: payload.trim() === '' };
+            }
         },
         updateRouteName: (state, {payload}: PayloadAction<string>) => {
             const route = state.data.find(r => r.edit);
@@ -41,7 +59,7 @@ const routeSlice = createSlice({
                 route.name = { value: payload, error: payload.trim() === '' };
             }
         },
-        updateRouteColor: (state, {payload}: PayloadAction<string>) => {
+        setRouteColor: (state, {payload}: PayloadAction<string>) => {
             const route = state.data.find(r => r.edit);
             if (route) {
                 route.color = payload;
@@ -51,16 +69,24 @@ const routeSlice = createSlice({
             const route = state.data.find(r => r.edit);
             if (route) {
                 // Validate before finishing
-                if (route.name.value.trim() === '' || route.stopIndexes.length < 2) {
+                if (route.name.value.trim() === '' || route.id.value.trim() === '') {
                     return; // Don't finish if invalid
                 }
                 route.edit = false;
+                route.name.error = false;
+                route.id.error = false;
             }
             state.currentRoute = null;
         },
         cancelEditingRoute: (state) => {
-            // Remove the route being edited if it was never finished
-            state.data = state.data.filter(r => !r.edit);
+            const editingRoute = state.data.find(r => r.edit);
+            if (editingRoute?.isNew) {
+                // Remove the route if it was newly created and never finished
+                state.data = state.data.filter(r => !r.edit);
+            } else {
+                // Just close edit mode for existing routes
+                state.data = state.data.map(r => ({...r, edit: false}));
+            }
             state.currentRoute = null;
         },
         removeRoute: (state, {payload}: PayloadAction<RouteIndex>) => {
@@ -71,12 +97,14 @@ const routeSlice = createSlice({
             if (!route) return;
             route.path = payload;
         },
-        setRouteColor: (state, {payload}: PayloadAction<{ index: number, color: string }>) => {
-            state.data = state.data.map((r, idx) => {
-                if (idx === payload.index)
-                    r.color = payload.color;
-                return r;
-            })
+        updateRouteType: (state, {payload}: PayloadAction<string>) => {
+            const route = state.data.find(r => r.edit);
+            if (route) {
+                route.routeType = payload;
+            }
+        },
+        setRoutes: (state, {payload}: PayloadAction<Route[]>) => {
+            state.data = payload;
         }
     }
 })

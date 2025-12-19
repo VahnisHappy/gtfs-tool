@@ -38,10 +38,12 @@ export type StopIndex = number
 export type Route = {
     id: Field<string>,
     name: Field<string>,
+    routeType?: string,
     stopIndexes: StopIndex[],
     path: Point[],
     color: string,
     edit?: boolean,
+    isNew?: boolean,
 }
 
 export type RouteIndex = number

@@ -40,7 +40,7 @@ export default function StopContent() {
         
         // Confirm deletion
         const stop = stops[selectedStopIndex];
-        if (window.confirm(`Are you sure you want to delete "${stop.name.value}"?`)) {
+        if (window.confirm(`Are you sure you want to delete "stop: ${stop.name.value}"?`)) {
             dispatch(StopActions.removeStop(selectedStopIndex));
             setSelectedStopIndex(null);
         }
