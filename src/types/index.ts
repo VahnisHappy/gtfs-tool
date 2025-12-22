@@ -46,6 +46,23 @@ export type Route = {
     isNew?: boolean,
 }
 
+export type BooleanDays = [boolean, boolean, boolean, boolean, boolean, boolean, boolean];
+
+export type ADate = {
+    date: number,
+    month: number,
+    year: number,
+}
+
+export type Calendar = {
+    id: Field<string>,
+    startDate: Field<ADate | null>,
+    endDate: Field<ADate | null>,
+    days: BooleanDays,
+}
+
+export type CalendarIndex = number;
+
 export type RouteIndex = number
 
 export type Bounds = [number, number, number, number]

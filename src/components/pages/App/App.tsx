@@ -13,7 +13,8 @@ export default function App() {
     longitude: ''
   })
   
-  const isDetailOpen = useSelector((state: RootState) => state.appState.isStopDetailOpen || state.appState.isRouteDetailOpen);
+  const isDetailOpen = useSelector((state: RootState) => state.appState.isStopDetailOpen || 
+      state.appState.isRouteDetailOpen || state.appState.isCalendarDetailOpen);
 
   const resetAddress = () => {
     setAddress({

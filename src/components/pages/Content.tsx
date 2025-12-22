@@ -3,12 +3,14 @@ import type { RootState } from "../../store";
 import type { Content as ContentType} from "../../types";
 import StopContent from "../templates/StopContent";
 import RouteContent from "../templates/RouteContent";
+import CalendarContent from "../templates/CalendarContent";
 
 export default function Content () {
     const renderSidebarContent = (panel: ContentType) => {
         switch(panel) {
             case 'stops': return <StopContent />
             case 'routes': return <RouteContent />
+            case 'calendar': return <CalendarContent />
         }
     }
     const {content} = useSelector((state: RootState) => state.appState)

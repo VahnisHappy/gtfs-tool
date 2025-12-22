@@ -10,6 +10,8 @@ const initialState: AppState = {
     selectedStop: null,
     isRouteDetailOpen: false,
     selectedRoute: null,
+    isCalendarDetailOpen: false,
+    selectedCalendar: null,
     mode: 'view'
 }
 
@@ -50,6 +52,14 @@ const appSlice = createSlice({
         closeRouteDetail: (state) => {
             state.isRouteDetailOpen = false;
             state.mode = 'view';
+        },
+        openCalcendarDetail: (state, action: PayloadAction<any>) => {
+            state.isCalendarDetailOpen = true;
+            state.mode = 'edit';
+        },
+        closeCalendarDetail: (state) => {
+            state.isCalendarDetailOpen = false;
+            state.mode = 'view';
         }
     }
 })
@@ -61,6 +71,8 @@ export const {
     updateStopCoordinates,
     setContent,
     openRouteDetail,
-    closeRouteDetail
+    closeRouteDetail,
+    openCalcendarDetail,
+    closeCalendarDetail
 } = appSlice.actions;
 export default appSlice;

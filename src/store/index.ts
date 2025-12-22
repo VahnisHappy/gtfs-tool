@@ -4,12 +4,14 @@ import appSlice from './slices/appSlice';
 import routeSlice from './slices/routeSlice';
 import mapSlice from './slices/mapSlice';
 import { stopsToGeoJSONCollection } from '../factory';
+import calendarSlice from './slices/calendarSlice';
 
 const store = configureStore({
   reducer: {
     appState: appSlice.reducer,
     stopState: stopSlice.reducer,
     routeState: routeSlice.reducer,
+    calendarState: calendarSlice.reducer,
     mapState: mapSlice.reducer,
   },
 })

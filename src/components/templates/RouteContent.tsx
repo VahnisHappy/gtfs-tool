@@ -18,10 +18,10 @@ export default function RouteContent() {
     const handleNewRoute = () => {
         setSelectedRouteIndex(null)
         // Generate random color for new route
-        const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        const colors = ['#3b82f6'];
+        const initialColor = colors[Math.floor(Math.random() * colors.length)];
         
-        dispatch(RouteActions.createRoute(randomColor));
+        dispatch(RouteActions.createRoute(initialColor));
         dispatch(
             openRouteDetail({
                 mode: 'new'

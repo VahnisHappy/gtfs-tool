@@ -6,7 +6,7 @@ import TextInput from "../atoms/TextInput";
 import SelectInput from "../atoms/SelectInput";
 import ButtonAction from "../atoms/ButtonAction";
 import type { Route } from "../../types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { routeTypeOptions } from "../../data";
 import ColorPicker from "../atoms/ColorPicker";
 
@@ -195,12 +195,12 @@ export default function RouteContentDetail() {
                             {/* Stops Section */}
                             <div className="border-t pt-4">
                                 <label className="block text-sm font-medium mb-2">
-                                    Stops ({editingRoute.stopIndexes.length})
+                                    Stops ({Array.from(new Set(editingRoute.stopIndexes)).length})
                                 </label>
                                 
                                 {editingRoute.stopIndexes.length > 0 && (
                                     <div className="space-y-1 border border-gray-200 rounded-md overflow-hidden">
-                                        {editingRoute.stopIndexes.map((stopIdx, idx) => (
+                                        {Array.from(new Set(editingRoute.stopIndexes)).map((stopIdx, idx) => (
                                             <div
                                                 key={idx}
                                                 className="flex items-center gap-3 p-3 bg-white hover:bg-gray-50 border-b last:border-b-0"
