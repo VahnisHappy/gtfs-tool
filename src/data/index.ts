@@ -12,4 +12,19 @@ export const routeTypeOptions = [
         { value: '7', label: 'Funicular' },
     ];
 
+export const days = [
+    { index: 0, key: 'sun', label: 'sun' },
+    { index: 1, key: 'mon', label: 'mon' },
+    { index: 2, key: 'tues', label: 'tues' },
+    { index: 3, key: 'wed', label: 'wed' },
+    { index: 4, key: 'thurs', label: 'thurs' },
+    { index: 5, key: 'fri', label: 'fri' },
+    { index: 6, key: 'sat', label: 'sat' }
+] as const
+
+export const exceptionDate = [
+    {index: 1, label: 'Added Service'},
+    {index: 2, label: 'Removed Service'}
+]
+
 // mode mark will map to new stop in stop state

@@ -5,19 +5,16 @@ import { RouteActions } from "../../store/actions";
 import TextInput from "../atoms/TextInput";
 import SelectInput from "../atoms/SelectInput";
 import ButtonAction from "../atoms/ButtonAction";
-import type { Route } from "../../types";
-import { useState } from "react";
 import { routeTypeOptions } from "../../data";
 import ColorPicker from "../atoms/ColorPicker";
+import RouteOptional from "../molecules/RotueOptional";
+import CancelSaveButton from "../molecules/CancelSaveButton";
 
 export default function RouteContentDetail() {
     const dispatch = useDispatch();
     const isOpen = useSelector((state: RootState) => state.appState.isRouteDetailOpen)
-    const selectedRoute = useSelector((state: RootState) => state.appState.selectedRoute)
     const routes = useSelector((state: RootState) => state.routeState.data)
     const stops = useSelector((state: RootState) => state.stopState.data)
-
-    const [showOptionalFields, setShowOptionalFields] = useState(false);
 
     // Find the route being edited
     const editingRoute = routes.find(r => r.edit)
@@ -34,13 +31,6 @@ export default function RouteContentDetail() {
             dispatch(RouteActions.finishEditingRoute())
             dispatch(closeRouteDetail())
         }
-    }
-
-    const handleCancel = () => {
-        if (editingRoute) {
-            dispatch(RouteActions.cancelEditingRoute())
-        }
-        dispatch(closeRouteDetail())
     }
     
     const handleIdChange = (value: string) => {
@@ -111,86 +101,21 @@ export default function RouteContentDetail() {
                                 </div>
                             </div>
 
-                            {/* Optional Fields Toggle */}
-                            <div className="border-t pt-4">
-                                <button
-                                    onClick={() => setShowOptionalFields(!showOptionalFields)}
-                                    className="flex items-center justify-between w-full text-left font-medium text-gray-700 hover:text-gray-900"
-                                >
-                                    <span>optional fields</span>
-                                    <svg
-                                        className={`w-5 h-5 transition-transform ${showOptionalFields ? 'rotate-180' : ''}`}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-
-                                {showOptionalFields && (
-                                    <div className="mt-4 space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <TextInput 
-                                                label="route long name"
-                                                value=""
-                                                onChange={() => {}}
-                                                placeholder="input"
-                                            />
-                                            <TextInput 
-                                                label="route url"
-                                                value=""
-                                                onChange={() => {}}
-                                                placeholder="input"
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <SelectInput 
-                                                label="continuous pickup"
-                                                value=""
-                                                onChange={() => {}}
-                                                placeholder="select"
-                                            />
-                                            <SelectInput 
-                                                label="continuous drop off"
-                                                value=""
-                                                onChange={() => {}}
-                                                placeholder="select"
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <TextInput 
-                                                label="network id"
-                                                value=""
-                                                onChange={() => {}}
-                                                placeholder="input"
-                                            />
-                                            <SelectInput 
-                                                label="cemv support"
-                                                value=""
-                                                onChange={() => {}}
-                                                placeholder="select"
-                                            />
-                                        </div>
-
-                                        <TextInput 
-                                            label="route sort order"
-                                            value=""
-                                            onChange={() => {}}
-                                            placeholder="input"
-                                        />
-
-                                        <TextInput 
-                                            label="route desc"
-                                            value=""
-                                            onChange={() => {}}
-                                            placeholder="input"
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                            {/* Optional Fields */}
+                            <RouteOptional
+                                routeLongName=""
+                                routeUrl=""
+                                continuousPickup=""
+                                continuousDropOff=""
+                                networkId=""
+                                cemvSupport=""
+                                routeSortOrder=""
+                                routeDesc=""
+                                onFieldChange={(field, value) => {
+                                    // TODO: Implement optional field updates in Redux
+                                    console.log(`Update ${field}:`, value);
+                                }}
+                            />
 
                             {/* Stops Section */}
                             <div className="border-t pt-4">
@@ -216,9 +141,9 @@ export default function RouteContentDetail() {
                     )}
                 </div>
                 
-                <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                {/* <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
                     <button
-                        onClick={handleCancel}
+                        onClick={handleClose}
                         className="px-6 py-2 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors"
                     >
                         cancel
@@ -228,7 +153,9 @@ export default function RouteContentDetail() {
                         onClick={handleSave}
                         disabled={!canSave}
                     />
-                </div>
+                </div> */}
+            <CancelSaveButton onCancel={handleClose}
+                onSave={handleSave}/>
             </div>
         </aside>
     )

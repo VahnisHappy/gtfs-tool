@@ -1,10 +1,12 @@
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
 import ButtonAction from "../atoms/ButtonAction"
-import { openCalcendarDetail } from "../../store/slices/appSlice"
+import { openCalendarDetail } from "../../store/slices/appSlice"
 import { useEffect, useState } from "react"
 import CalendarContentDetail from "../organisms/CalendarContentDetail"
 import EditDeleteButton from "../molecules/EditDeleteButton"
+import CalendarCard from "../molecules/CalendarCard"
+import { CalendarActions } from "../../store/actions"
 
 export default function CalendarContent() {
     const calendars = useSelector((state: RootState) => state.calendarState.data)
@@ -14,13 +16,13 @@ export default function CalendarContent() {
 
     const handleNewCalendar = () => {
         setSelectedCalendarIndex(null)
-        dispatch(openCalcendarDetail({ mode: 'new' }))
+        dispatch(openCalendarDetail({ mode: 'new' }))
     }
 
     const handEditCalendar = () => {
         if (selectedCalendarIndex === null) return
         const calendar = calendars[selectedCalendarIndex]
-        dispatch(openCalcendarDetail({
+        dispatch(openCalendarDetail({
             mode: 'edit',
             ...calendar,
             calendarIndex: selectedCalendarIndex
@@ -31,9 +33,8 @@ export default function CalendarContent() {
         if (selectedCalendarIndex === null) return
         
         const calendar = calendars[selectedCalendarIndex]
-        if (window.confirm(`Are you sure you want to delete this calendar?`)) {
-            // TODO: dispatch delete action when calendar slice is ready
-            // dispatch(CalendarActions.removeCalendar(selectedCalendarIndex))
+        if (window.confirm(`Are you sure you want to delete calendar "${calendar.id.value}"?`)) {
+            dispatch(CalendarActions.removeCalendar(selectedCalendarIndex))
             setSelectedCalendarIndex(null)
         }
     }
@@ -55,6 +56,25 @@ export default function CalendarContent() {
                         disabled={selectedCalendarIndex === null}
                     />
                     <ButtonAction label="new schedule" onClick={handleNewCalendar} />
+                </div>
+            <div className="flex-1 overflow-y-auto">
+                <div className="py-2">
+                    <h3 className="font-semibold mb-2">calendar list ({calendars.length})</h3>
+                    {calendars.length === 0 ? (
+                        <p className="text-gray-500 text-sm mt-4">No calendars yet. Click "new schedule" to create one.</p>
+                    ) : (
+                        <ul className="border border-gray-200 rounded-md overflow-hidden">
+                            {calendars.map((calendar, index) => (
+                                <CalendarCard
+                                    key={index}
+                                    calendar={calendar}
+                                    isSelected={selectedCalendarIndex === index}
+                                    onSelect={() => setSelectedCalendarIndex(index)}
+                                />
+                            ))}
+                        </ul>
+                    )}
+                </div>
             </div>
            </div>
            <CalendarContentDetail />

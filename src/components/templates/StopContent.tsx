@@ -90,7 +90,7 @@ export default function StopContent() {
                 </div>
                 <div className="flex-1 overflow-y-auto">
                     <div className="py-2">
-                        <h3 className="font-semibold mb-2">Stop List ({stops.length})</h3>
+                        <h3 className="font-semibold mb-2">stop list ({stops.length})</h3>
                     </div>
                     {stops.length === 0 ? (
                         <p className="text-gray-500 text-sm px-4">No stops created yet. Click "New Stop" to add one.</p>

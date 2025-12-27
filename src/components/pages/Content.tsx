@@ -4,6 +4,7 @@ import type { Content as ContentType} from "../../types";
 import StopContent from "../templates/StopContent";
 import RouteContent from "../templates/RouteContent";
 import CalendarContent from "../templates/CalendarContent";
+import TripContent from "../templates/TripContent";
 
 export default function Content () {
     const renderSidebarContent = (panel: ContentType) => {
@@ -11,6 +12,7 @@ export default function Content () {
             case 'stops': return <StopContent />
             case 'routes': return <RouteContent />
             case 'calendar': return <CalendarContent />
+            case 'trips': return <TripContent />
         }
     }
     const {content} = useSelector((state: RootState) => state.appState)

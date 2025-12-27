@@ -31,6 +31,18 @@ const stopSlice = createSlice({
             stop.lat = payload.lat;
             stop.lng = payload.lng;
             state.data[payload.index] = stop;
+        },
+        updateStopField: (state, {payload}: PayloadAction<{index: StopIndex, field: keyof Stop, value: any}>) => {
+            const stop = state.data[payload.index];
+            if (stop) {
+                if (payload.field === 'lat' || payload.field === 'lng') {
+                    // Handle coordinate fields directly
+                    (stop as any)[payload.field] = payload.value;
+                } else {
+                    // Handle Field<T> type fields
+                    (stop as any)[payload.field] = { value: payload.value, error: undefined };
+                }
+            }
         }
     }
 })

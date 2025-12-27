@@ -3,13 +3,11 @@ import type { RootState } from "../../store";
 import { closeCalendarDetail } from "../../store/slices/appSlice";
 import { useState } from "react";
 import TextInput from "../atoms/TextInput";
-import ButtonAction from "../atoms/ButtonAction";
-
-type Exception = {
-    id: string;
-    date: string;
-    type: string;
-}
+import type { ExceptionDate, Calendar, BooleanDays, ADate } from "../../types";
+import { days } from "../../data";
+import CancelSaveButton from "../molecules/CancelSaveButton";
+import { CalendarActions } from "../../store/actions";
+import SelectDate from "../atoms/SelectDate";
 
 export default function CalendarContentDetail() {
     const dispatch = useDispatch()
@@ -25,9 +23,9 @@ export default function CalendarContentDetail() {
         fri: false,
         sat: false
     })
-    const [startDate, setStartDate] = useState('')
-    const [endDate, setEndDate] = useState('')
-    const [exceptions, setExceptions] = useState<Exception[]>([])
+    const [startDate, setStartDate] = useState<ADate | null>(null)
+    const [endDate, setEndDate] = useState<ADate | null>(null)
+    const [exceptions, setExceptions] = useState<ExceptionDate[]>([])
 
     const handleClose = () => {
         dispatch(closeCalendarDetail())
@@ -42,46 +40,66 @@ export default function CalendarContentDetail() {
 
     const handleAddException = () => {
         setExceptions([...exceptions, {
-            id: Date.now().toString(),
-            date: '',
-            type: ''
+            id: { value: Date.now().toString(), error: undefined },
+            date: { value: null, error: undefined },
+            type: { value: '', error: undefined }
         }])
     }
 
     const handleRemoveException = (id: string) => {
-        setExceptions(exceptions.filter(ex => ex.id !== id))
+        setExceptions(exceptions.filter(ex => ex.id.value !== id))
     }
 
-    const handleExceptionDateChange = (id: string, date: string) => {
+    const handleExceptionDateChange = (id: string, date: ADate | null) => {
         setExceptions(exceptions.map(ex => 
-            ex.id === id ? { ...ex, date } : ex
+            ex.id.value === id ? { ...ex, date: { value: date, error: undefined } } : ex
         ))
     }
 
     const handleExceptionTypeChange = (id: string, type: string) => {
         setExceptions(exceptions.map(ex => 
-            ex.id === id ? { ...ex, type } : ex
+            ex.id.value === id ? { ...ex, type: { value: type, error: undefined } } : ex
         ))
     }
 
     const handleSave = () => {
-        // TODO: Implement save logic
-        console.log({ serviceId, operatingDays, startDate, endDate, exceptions })
-    }
+        // Convert operatingDays to BooleanDays array [sun, mon, tue, wed, thu, fri, sat]
+        const daysArray: BooleanDays = [
+            operatingDays.sun,
+            operatingDays.mon,
+            operatingDays.tues,
+            operatingDays.wed,
+            operatingDays.thurs,
+            operatingDays.fri,
+            operatingDays.sat
+        ];
 
-    const handleCancel = () => {
-        dispatch(closeCalendarDetail())
-    }
+        const calendar: Calendar = {
+            id: { value: serviceId, error: undefined },
+            startDate: { value: startDate, error: undefined },
+            endDate: { value: endDate, error: undefined },
+            days: daysArray,
+            exception: exceptions.length
+        };
 
-    const days = [
-        { key: 'sun', label: 'sun' },
-        { key: 'mon', label: 'mon' },
-        { key: 'tues', label: 'tues' },
-        { key: 'wed', label: 'wed' },
-        { key: 'thurs', label: 'thurs' },
-        { key: 'fri', label: 'fri' },
-        { key: 'sat', label: 'sat' }
-    ]
+        dispatch(CalendarActions.addCalendar(calendar));
+        dispatch(closeCalendarDetail());
+        
+        // Reset form
+        setServiceId('');
+        setOperatingDays({
+            sun: false,
+            mon: false,
+            tues: false,
+            wed: false,
+            thurs: false,
+            fri: false,
+            sat: false
+        });
+        setStartDate(null);
+        setEndDate(null);
+        setExceptions([]);
+    }
 
     return (
         <aside
@@ -110,8 +128,8 @@ export default function CalendarContentDetail() {
                     <div>
                         <label className="block text-sm font-medium mb-2">service operates</label>
                         <div className="grid grid-cols-7 gap-1">
-                            {days.map(({ key, label }) => (
-                                <div key={key} className="flex flex-col items-center">
+                            {days.map(({ index, key, label }) => (
+                                <div key={index} className="flex flex-col items-center">
                                     <span className="text-xs mb-1">{label}</span>
                                     <button
                                         onClick={() => handleDayToggle(key as keyof typeof operatingDays)}
@@ -128,28 +146,18 @@ export default function CalendarContentDetail() {
 
                     {/* Start and End Date */}
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">start date</label>
-                            <select
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">select</option>
-                                {/* Add date options here */}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2">end date</label>
-                            <select
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">select</option>
-                                {/* Add date options here */}
-                            </select>
-                        </div>
+                        <SelectDate
+                            label="start date"
+                            value={startDate}
+                            onChange={setStartDate}
+                            placeholder="Select start date"
+                        />
+                        <SelectDate
+                            label="end date"
+                            value={endDate}
+                            onChange={setEndDate}
+                            placeholder="Select end date"
+                        />
                     </div>
 
                     {/* Exception Section */}
@@ -165,18 +173,18 @@ export default function CalendarContentDetail() {
 
                         <div className="space-y-3">
                             {exceptions.map((exception) => (
-                                <div key={exception.id} className="flex items-center gap-2">
+                                <div key={exception.id.value} className="flex items-center gap-2">
+                                    <div className="flex-1">
+                                        <SelectDate
+                                            label=""
+                                            value={exception.date.value}
+                                            onChange={(date) => handleExceptionDateChange(exception.id.value, date)}
+                                            placeholder="Select date"
+                                        />
+                                    </div>
                                     <select
-                                        value={exception.date}
-                                        onChange={(e) => handleExceptionDateChange(exception.id, e.target.value)}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">select date</option>
-                                        {/* Add date options here */}
-                                    </select>
-                                    <select
-                                        value={exception.type}
-                                        onChange={(e) => handleExceptionTypeChange(exception.id, e.target.value)}
+                                        value={exception.type.value}
+                                        onChange={(e) => handleExceptionTypeChange(exception.id.value, e.target.value)}
                                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="">exception type</option>
@@ -184,7 +192,7 @@ export default function CalendarContentDetail() {
                                         <option value="removed">Service Removed</option>
                                     </select>
                                     <button
-                                        onClick={() => handleRemoveException(exception.id)}
+                                        onClick={() => handleRemoveException(exception.id.value)}
                                         className="p-2 text-gray-500 hover:text-red-500 transition-colors"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256">
@@ -197,19 +205,8 @@ export default function CalendarContentDetail() {
                     </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                    <button
-                        onClick={handleCancel}
-                        className="px-6 py-2 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors"
-                    >
-                        cancel
-                    </button>
-                    <ButtonAction 
-                        label="save"
-                        onClick={handleSave}
-                    />
-                </div>
+                <CancelSaveButton onCancel={handleClose}
+                    onSave={handleSave}/>
             </div>
         </aside>
     )

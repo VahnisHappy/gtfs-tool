@@ -59,6 +59,13 @@ export type Calendar = {
     startDate: Field<ADate | null>,
     endDate: Field<ADate | null>,
     days: BooleanDays,
+    exception: number
+}
+
+export type ExceptionDate ={
+    id: Field<string>,
+    date: Field<ADate | null>,
+    type: Field<string>,
 }
 
 export type CalendarIndex = number;
@@ -66,6 +73,27 @@ export type CalendarIndex = number;
 export type RouteIndex = number
 
 export type Bounds = [number, number, number, number]
+
+export type Time = {
+    hour: number,
+    minute: number,
+    second: number
+}
+
+export type StopTime = {
+    arrivalTime: Field<Time | null>,
+    departureTime: Field<Time | null>,
+    stopIndex: number
+}
+
+export type Trip = {
+    id: Field<string>,
+    route: Field<RouteIndex | null>,
+    calendar: Field<CalendarIndex | null>,
+    stopTimes: StopTime[],
+}
+
+export type TripIndex = number
 
 export type StopGeoJSON = GeoJSON.Feature<GeoJSON.Point, {
     id: string

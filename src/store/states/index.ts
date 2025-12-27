@@ -1,4 +1,4 @@
-import type { Stop, Content, Route, Mode, Field, Bounds, Calendar } from "../../types";
+import type { Stop, Content, Route, Mode, Field, Bounds, Calendar, Trip } from "../../types";
 import type { ViewState } from "react-map-gl/mapbox";
 
 export type AppState ={
@@ -6,6 +6,7 @@ export type AppState ={
     isStopDetailOpen: boolean;
     isRouteDetailOpen?: boolean;
     isCalendarDetailOpen?: boolean;
+    isTripDetailOpen?: boolean;
     selectedStop: (Stop & { mode: 'new' | 'edit'; stopIndex?: number }) | null;
     selectedRoute: (Route & { mode: 'new' | 'edit'; routeIndex?: number }) | null;
     selectedCalendar: (Calendar & { mode: 'new' | 'edit'; calendarIndex?: number }) | null;
@@ -23,6 +24,10 @@ export type RouteState = {
 
 export type CalendarState = {
     data: Calendar[]
+}
+
+export type TripState = {
+    data: Trip[],
 }
 
 export type MapState = {

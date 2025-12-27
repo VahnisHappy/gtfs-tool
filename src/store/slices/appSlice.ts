@@ -53,11 +53,19 @@ const appSlice = createSlice({
             state.isRouteDetailOpen = false;
             state.mode = 'view';
         },
-        openCalcendarDetail: (state, action: PayloadAction<any>) => {
+        openCalendarDetail: (state, action: PayloadAction<any>) => {
             state.isCalendarDetailOpen = true;
             state.mode = 'edit';
         },
         closeCalendarDetail: (state) => {
+            state.isCalendarDetailOpen = false;
+            state.mode = 'view';
+        },
+        openTripDetail: (state, action: PayloadAction<any>) => {
+            state.isCalendarDetailOpen = true;
+            state.mode = 'edit';
+        },
+        closeTripDetail: (state) => {
             state.isCalendarDetailOpen = false;
             state.mode = 'view';
         }
@@ -72,7 +80,9 @@ export const {
     setContent,
     openRouteDetail,
     closeRouteDetail,
-    openCalcendarDetail,
-    closeCalendarDetail
+    openCalendarDetail,
+    closeCalendarDetail,
+    openTripDetail,
+    closeTripDetail
 } = appSlice.actions;
 export default appSlice;
