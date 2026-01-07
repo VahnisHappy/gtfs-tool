@@ -12,6 +12,8 @@ const initialState: AppState = {
     selectedRoute: null,
     isCalendarDetailOpen: false,
     selectedCalendar: null,
+    isTripDetailOpen: false,
+    selectedTrip: null,
     mode: 'view'
 }
 
@@ -55,18 +57,22 @@ const appSlice = createSlice({
         },
         openCalendarDetail: (state, action: PayloadAction<any>) => {
             state.isCalendarDetailOpen = true;
+            state.selectedCalendar = action.payload || null;
             state.mode = 'edit';
         },
         closeCalendarDetail: (state) => {
             state.isCalendarDetailOpen = false;
+            state.selectedCalendar = null;
             state.mode = 'view';
         },
         openTripDetail: (state, action: PayloadAction<any>) => {
-            state.isCalendarDetailOpen = true;
+            state.isTripDetailOpen = true;
+            state.selectedTrip = action.payload || null;
             state.mode = 'edit';
         },
         closeTripDetail: (state) => {
-            state.isCalendarDetailOpen = false;
+            state.isTripDetailOpen = false;
+            state.selectedTrip = null;
             state.mode = 'view';
         }
     }

@@ -16,6 +16,11 @@ const calendarSlice = createSlice({
         removeCalendar: (state, {payload}: PayloadAction<CalendarIndex>) => {
             state.data = state.data.filter((_, index) => index !== payload)
         },
+        updateCalendar: (state, {payload}: PayloadAction<{ index: number, calendar: Calendar }>) => {
+            if (payload.index >= 0 && payload.index < state.data.length) {
+                state.data[payload.index] = payload.calendar;
+            }
+        },
         setCalendar: (state, {payload}: PayloadAction<Calendar[]>) =>{
             state.data = payload
         }

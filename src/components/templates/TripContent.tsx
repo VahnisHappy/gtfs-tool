@@ -15,7 +15,7 @@ export default function TripContent() {
     
     const handleNewTrip = () => {
         setSelectedTrip(null);
-        dispatch(openTripDetail({ mode: 'new' }));  
+        dispatch(openTripDetail({ mode: 'new' }));
     }
 
     const handleEditTrip = () => {

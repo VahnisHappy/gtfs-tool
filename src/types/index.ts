@@ -59,7 +59,8 @@ export type Calendar = {
     startDate: Field<ADate | null>,
     endDate: Field<ADate | null>,
     days: BooleanDays,
-    exception: number
+    exception: number,
+    exceptions?: ExceptionDate[]
 }
 
 export type ExceptionDate ={
@@ -94,6 +95,8 @@ export type Trip = {
 }
 
 export type TripIndex = number
+
+export type StopTimeIndex = number
 
 export type StopGeoJSON = GeoJSON.Feature<GeoJSON.Point, {
     id: string

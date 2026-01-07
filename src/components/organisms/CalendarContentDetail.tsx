@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import { closeCalendarDetail } from "../../store/slices/appSlice";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TextInput from "../atoms/TextInput";
 import type { ExceptionDate, Calendar, BooleanDays, ADate } from "../../types";
 import { days } from "../../data";
@@ -12,6 +12,7 @@ import SelectDate from "../atoms/SelectDate";
 export default function CalendarContentDetail() {
     const dispatch = useDispatch()
     const isOpen = useSelector((state: RootState) => state.appState.isCalendarDetailOpen)
+    const selectedCalendar = useSelector((state: RootState) => state.appState.selectedCalendar)
     
     const [serviceId, setServiceId] = useState('')
     const [operatingDays, setOperatingDays] = useState({
@@ -26,6 +27,43 @@ export default function CalendarContentDetail() {
     const [startDate, setStartDate] = useState<ADate | null>(null)
     const [endDate, setEndDate] = useState<ADate | null>(null)
     const [exceptions, setExceptions] = useState<ExceptionDate[]>([])
+
+    // Load calendar data when editing
+    useEffect(() => {
+        if (selectedCalendar && selectedCalendar.mode === 'edit') {
+            setServiceId(selectedCalendar.id.value);
+            
+            // Convert BooleanDays array back to operatingDays object
+            setOperatingDays({
+                sun: selectedCalendar.days[0],
+                mon: selectedCalendar.days[1],
+                tues: selectedCalendar.days[2],
+                wed: selectedCalendar.days[3],
+                thurs: selectedCalendar.days[4],
+                fri: selectedCalendar.days[5],
+                sat: selectedCalendar.days[6]
+            });
+            
+            setStartDate(selectedCalendar.startDate.value);
+            setEndDate(selectedCalendar.endDate.value);
+            setExceptions(selectedCalendar.exceptions || []);
+        } else if (selectedCalendar && selectedCalendar.mode === 'new') {
+            // Reset form for new calendar
+            setServiceId('');
+            setOperatingDays({
+                sun: false,
+                mon: false,
+                tues: false,
+                wed: false,
+                thurs: false,
+                fri: false,
+                sat: false
+            });
+            setStartDate(null);
+            setEndDate(null);
+            setExceptions([]);
+        }
+    }, [selectedCalendar]);
 
     const handleClose = () => {
         dispatch(closeCalendarDetail())
@@ -79,10 +117,18 @@ export default function CalendarContentDetail() {
             startDate: { value: startDate, error: undefined },
             endDate: { value: endDate, error: undefined },
             days: daysArray,
-            exception: exceptions.length
+            exception: exceptions.length,
+            exceptions: exceptions
         };
 
-        dispatch(CalendarActions.addCalendar(calendar));
+        if (selectedCalendar?.mode === 'edit' && selectedCalendar.calendarIndex !== undefined) {
+            // Update existing calendar
+            dispatch(CalendarActions.updateCalendar({ index: selectedCalendar.calendarIndex, calendar }));
+        } else {
+            // Add new calendar
+            dispatch(CalendarActions.addCalendar(calendar));
+        }
+        
         dispatch(closeCalendarDetail());
         
         // Reset form
@@ -205,8 +251,7 @@ export default function CalendarContentDetail() {
                     </div>
                 </div>
 
-                <CancelSaveButton onCancel={handleClose}
-                    onSave={handleSave}/>
+                <CancelSaveButton onCancel={handleClose} onSave={handleSave}/>
             </div>
         </aside>
     )

@@ -4,7 +4,6 @@ import { closeRouteDetail } from "../../store/slices/appSlice";
 import { RouteActions } from "../../store/actions";
 import TextInput from "../atoms/TextInput";
 import SelectInput from "../atoms/SelectInput";
-import ButtonAction from "../atoms/ButtonAction";
 import { routeTypeOptions } from "../../data";
 import ColorPicker from "../atoms/ColorPicker";
 import RouteOptional from "../molecules/RotueOptional";
@@ -71,16 +70,9 @@ export default function RouteContentDetail() {
                             {/* Required Fields */}
                             <div className="grid grid-cols-2 gap-3">
                                 <TextInput 
-                                    label="route id" 
-                                    value={editingRoute.id.value} 
-                                    onChange={handleIdChange} 
-                                    placeholder="input" 
+                                    label="route id" value={editingRoute.id.value} onChange={handleIdChange} placeholder="input" 
                                 />
-                                <TextInput 
-                                    label="route name" 
-                                    value={editingRoute.name.value} 
-                                    onChange={handleNameChange} 
-                                    placeholder="input" 
+                                <TextInput label="route name" value={editingRoute.name.value} onChange={handleNameChange} placeholder="input" 
                                 />
                             </div>
 
@@ -94,10 +86,7 @@ export default function RouteContentDetail() {
                                 />
                                 
                                 <div>
-                                    <ColorPicker 
-                                        color={editingRoute.color}
-                                        onChange={handleColorChange}
-                                    />
+                                    <ColorPicker color={editingRoute.color} onChange={handleColorChange} />
                                 </div>
                             </div>
 
@@ -141,21 +130,8 @@ export default function RouteContentDetail() {
                     )}
                 </div>
                 
-                {/* <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
-                    <button
-                        onClick={handleClose}
-                        className="px-6 py-2 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors"
-                    >
-                        cancel
-                    </button>
-                    <ButtonAction 
-                        label="save"
-                        onClick={handleSave}
-                        disabled={!canSave}
-                    />
-                </div> */}
             <CancelSaveButton onCancel={handleClose}
-                onSave={handleSave}/>
+                onSave={handleSave} disabled={!canSave}/>
             </div>
         </aside>
     )

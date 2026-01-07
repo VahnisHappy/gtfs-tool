@@ -61,7 +61,7 @@ export default function CalendarContent() {
                 <div className="py-2">
                     <h3 className="font-semibold mb-2">calendar list ({calendars.length})</h3>
                     {calendars.length === 0 ? (
-                        <p className="text-gray-500 text-sm mt-4">No calendars yet. Click "new schedule" to create one.</p>
+                        <p className="text-gray-500 text-sm px-4">No calendars yet. Click "new schedule" to create one.</p>
                     ) : (
                         <ul className="border border-gray-200 rounded-md overflow-hidden">
                             {calendars.map((calendar, index) => (

@@ -10,6 +10,7 @@ export type AppState ={
     selectedStop: (Stop & { mode: 'new' | 'edit'; stopIndex?: number }) | null;
     selectedRoute: (Route & { mode: 'new' | 'edit'; routeIndex?: number }) | null;
     selectedCalendar: (Calendar & { mode: 'new' | 'edit'; calendarIndex?: number }) | null;
+    selectedTrip: (Trip & {mode: 'new' | 'edit'; tripIndex?: number}) | null;
     mode: Mode;
 }
 

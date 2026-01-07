@@ -14,7 +14,7 @@ export default function App() {
   })
   
   const isDetailOpen = useSelector((state: RootState) => state.appState.isStopDetailOpen || 
-      state.appState.isRouteDetailOpen || state.appState.isCalendarDetailOpen);
+      state.appState.isRouteDetailOpen || state.appState.isCalendarDetailOpen || state.appState.isTripDetailOpen);
 
   const resetAddress = () => {
     setAddress({
