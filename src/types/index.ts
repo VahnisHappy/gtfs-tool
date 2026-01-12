@@ -33,6 +33,8 @@ export type Stop = {
     description?: Field<string>,
 }
 
+export type StopFormData = Stop[]
+
 export type StopIndex = number
 
 export type Route = {

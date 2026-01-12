@@ -7,6 +7,7 @@ import ButtonAction from "../atoms/ButtonAction";
 import StopContentDetail from "../organisms/StopContentDetail";
 import EditDeleteButton from "../molecules/EditDeleteButton";
 import StopCard from "../molecules/StopCard";
+import { stopsApi, ApiError } from "../../services/api";
 
 export default function StopContent() {
     const stops = useSelector((state: RootState) => state.stopState.data);
@@ -14,6 +15,7 @@ export default function StopContent() {
     const dispatch = useDispatch();
     const [selectedStopIndex, setSelectedStopIndex] = useState<number | null>(null);
     const stopListRef = useRef<HTMLDivElement>(null);
+
 
     const handleNewStop = () => {
         setSelectedStopIndex(null);
@@ -35,14 +37,29 @@ export default function StopContent() {
         }));
     }
     
-    const handleDeleteStop = () => {
+    const handleDeleteStop = async () => {
         if (selectedStopIndex === null) return;
         
         // Confirm deletion
         const stop = stops[selectedStopIndex];
         if (window.confirm(`Are you sure you want to delete "stop: ${stop.name.value}"?`)) {
-            dispatch(StopActions.removeStop(selectedStopIndex));
-            setSelectedStopIndex(null);
+            try {
+                // Delete from backend
+                await stopsApi.delete(stop.id.value);
+                console.log('Stop deleted from backend successfully');
+                
+                // Remove from local state
+                dispatch(StopActions.removeStop(stop.id.value))
+                setSelectedStopIndex(null);
+            } catch (err) {
+                console.error('Failed to delete stop:', err);
+                
+                if (err instanceof ApiError) {
+                    alert(`Failed to delete stop: ${err.message}`);
+                } else {
+                    alert('An unexpected error occurred. Please try again.');
+                }
+            }
         }
     }
     
@@ -51,8 +68,6 @@ export default function StopContent() {
         setSelectedStopIndex(prevIndex => prevIndex === index ? null : index);
     }
 
-    
-    
     useEffect(() => {
         const timer = setTimeout(() => {
             window.dispatchEvent(new Event('resize'));

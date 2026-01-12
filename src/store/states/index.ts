@@ -1,4 +1,4 @@
-import type { Stop, Content, Route, Mode, Field, Bounds, Calendar, Trip } from "../../types";
+import type { Stop, Content, Route, Mode, Field, Bounds, Calendar, Trip, StopFormData } from "../../types";
 import type { ViewState } from "react-map-gl/mapbox";
 
 export type AppState ={
@@ -15,7 +15,7 @@ export type AppState ={
 }
 
 export type StopState = {
-    data: Stop[],
+    data: Stop[]
 }
 
 export type RouteState = {

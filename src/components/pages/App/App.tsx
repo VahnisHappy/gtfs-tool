@@ -5,7 +5,12 @@ import { useSelector } from 'react-redux'
 import type { RootState } from '../../../store'
 import Sidebar from '../../organisms/Sidebar'
 import Content from '../Content'
+import { useLoadStops } from '../../../services/useLoadStops'
+
 export default function App() {
+  // Load stops from backend on app initialization
+  useLoadStops();
+
   const [address, setAddress] = useState<{ [key: string]: string }>({
     country: '',
     state: '',
@@ -25,6 +30,14 @@ export default function App() {
     })
   }
 
+  // const test = async () => {
+
+  //     const response = await fetch('http://localhost:3000/');
+  //     const data = await response.json();
+  //     console.log(data);
+  // }
+
+  // test();
   return (
     <div className="flex h-[calc(100vh-84px)]">
       <Sidebar />

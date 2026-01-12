@@ -7,6 +7,8 @@ import { StopActions } from '../../store/actions';
 import TextInput from '../atoms/TextInput';
 import StopOptional from '../molecules/StopOptional';
 import CancelSaveButton from '../molecules/CancelSaveButton';
+import { stopsApi, ApiError } from '../../services/api';
+import { stopToCreatePayload, stopToUpdatePayload } from '../../services/stopMapper';
 
 // Form state uses plain strings for easier input handling
 type StopFormData = {
@@ -56,6 +58,8 @@ export default function StopContentDetail() {
   const [stopData, setStopData] = useState<StopFormData>(initialFormData);
   const [latInput, setLatInput] = useState('');
   const [lngInput, setLngInput] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Update form when selectedStop changes or when a new stop is added
   useEffect(() => {
@@ -136,56 +140,83 @@ export default function StopContentDetail() {
     setStopData(initialFormData);
     setLatInput('');
     setLngInput('');
+    setError(null);
   };
 
-  const handleSave = () => {
-    // Convert form data back to Stop type
-    const stop: Stop = {
-      id: { value: stopData.id, error: undefined },
-      name: { value: stopData.name, error: undefined },
-      lat: stopData.lat!,
-      lng: stopData.lng!,
-      ...(stopData.code && { code: { value: stopData.code, error: undefined } }),
-      ...(stopData.tlsName && { tlsName: { value: stopData.tlsName, error: undefined } }),
-      ...(stopData.zoneId && { zoneId: { value: stopData.zoneId, error: undefined } }),
-      ...(stopData.locationType && { locationType: { value: stopData.locationType, error: undefined } }),
-      ...(stopData.url && { url: { value: stopData.url, error: undefined } }),
-      ...(stopData.parentStation && { parentStation: { value: stopData.parentStation, error: undefined } }),
-      ...(stopData.timezone && { timezone: { value: stopData.timezone, error: undefined } }),
-      ...(stopData.wheelchairBoarding && { wheelchairBoarding: { value: stopData.wheelchairBoarding, error: undefined } }),
-      ...(stopData.levelId && { levelId: { value: stopData.levelId, error: undefined } }),
-      ...(stopData.platformCode && { platformCode: { value: stopData.platformCode, error: undefined } }),
-      ...(stopData.access && { access: { value: stopData.access, error: undefined } }),
-      ...(stopData.description && { description: { value: stopData.description, error: undefined } })
-    };
+  const handleSave = async () => {
+    setIsSaving(true);
+    setError(null);
 
-    if (selectedStop?.mode === 'new') {
-      // Remove the temporary marker (which only has coordinates)
-      dispatch(StopActions.removeLastStop());
-      // Add the complete stop with all data
-      dispatch(StopActions.addStop(stop));
-    } else if (selectedStop?.mode === 'edit') {
-      // Update existing stop
-      const stopIndex = stops.findIndex(s => s.id.value === selectedStop.id?.value);
-      if (stopIndex !== -1) {
-        dispatch(StopActions.updateStop({ index: stopIndex, stop }));
+    try {
+      const stop: Stop = {
+        id: { value: stopData.id, error: undefined },
+        name: { value: stopData.name, error: undefined },
+        lat: stopData.lat!,
+        lng: stopData.lng!,
+        ...(stopData.code && { code: { value: stopData.code, error: undefined } }),
+        ...(stopData.tlsName && { tlsName: { value: stopData.tlsName, error: undefined } }),
+        ...(stopData.zoneId && { zoneId: { value: stopData.zoneId, error: undefined } }),
+
+        ...(stopData.locationType && { locationType: { value: stopData.locationType, error: undefined } }),
+        
+        ...(stopData.url && { url: { value: stopData.url, error: undefined } }),
+        ...(stopData.parentStation && { parentStation: { value: stopData.parentStation, error: undefined } }),
+        ...(stopData.timezone && { timezone: { value: stopData.timezone, error: undefined } }),
+        
+        ...(stopData.wheelchairBoarding && { wheelchairBoarding: { value: stopData.wheelchairBoarding, error: undefined } }),
+        
+        ...(stopData.levelId && { levelId: { value: stopData.levelId, error: undefined } }),
+        ...(stopData.platformCode && { platformCode: { value: stopData.platformCode, error: undefined } }),
+        ...(stopData.access && { access: { value: stopData.access, error: undefined } }),
+        ...(stopData.description && { description: { value: stopData.description, error: undefined } })
       }
-    }
 
-    console.log('Saving stop:', stop);
-    
-    // TODO: Send to backend in the future
-    // const stopGeoJSON = stopToGeoJSON(stop);
-    // await fetch('/api/stops', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(stopGeoJSON)
-    // });
-    
-    dispatch(closeStopDetail());
-    setStopData(initialFormData);
-    setLatInput('');
-    setLngInput('');
+      if (selectedStop?.mode === 'new') {
+        // Create new stop via API
+        const payload = stopToCreatePayload(stop);
+
+        console.log('Payload being sent:', payload);
+
+        const createdStop = await stopsApi.create(payload);
+        
+        console.log('Stop created successfully:', createdStop);
+        
+        // Remove the temporary marker
+        dispatch(StopActions.removeLastStop());
+        // Add the complete stop to local state
+        dispatch(StopActions.addStop(stop));
+        
+      } else if (selectedStop?.mode === 'edit') {
+        // Update existing stop via API
+        const payload = stopToUpdatePayload(stop);
+        const updatedStop = await stopsApi.update(stopData.id, payload);
+        
+        console.log('Stop updated successfully:', updatedStop);
+        
+        // Update in local state
+        const stopIndex = stops.findIndex(s => s.id.value === selectedStop.id?.value);
+        if (stopIndex !== -1) {
+          dispatch(StopActions.updateStop({ index: stopIndex, stop }));
+        }
+      }
+
+      // Close the panel after successful save
+      dispatch(closeStopDetail());
+      setStopData(initialFormData);
+      setLatInput('');
+      setLngInput('');
+      
+    } catch (err) {
+      console.error('Failed to save stop:', err);
+      
+      if (err instanceof ApiError) {
+        setError(`Failed to save: ${err.message}`);
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -210,18 +241,8 @@ export default function StopContentDetail() {
 
           {/* Stop Lat and Stop Lng */}
           <div className="grid grid-cols-2 gap-3">
-            <TextInput
-              label="stop lat"
-              value={latInput}
-              onChange={handleLatChange}
-              placeholder="Click map or enter value"
-            />
-            <TextInput
-              label="stop lng"
-              value={lngInput}
-              onChange={handleLngChange}
-              placeholder="Click map or enter value"
-            />
+            <TextInput label="stop lat" value={latInput} onChange={handleLatChange} placeholder="Click map or enter value"/>
+            <TextInput label="stop lng" value={lngInput} onChange={handleLngChange} placeholder="Click map or enter value"/>
           </div>
 
           {/* Show instruction when in mark mode */}
@@ -237,6 +258,14 @@ export default function StopContentDetail() {
             <div className="bg-green-50 border border-green-200 rounded p-3 text-sm text-green-700 flex items-center gap-2">
               <span className="text-xl">✓</span>
               <span>Location set! Fill in the details below.</span>
+            </div>
+          )}
+
+          {/* Show error message if save fails */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700 flex items-center gap-2">
+              <span className="text-xl">⚠️</span>
+              <span>{error}</span>
             </div>
           )}
 
@@ -257,7 +286,7 @@ export default function StopContentDetail() {
         <CancelSaveButton
           onCancel={handleClose}
           onSave={handleSave}
-          disabled={!stopData.lat || !stopData.lng || !stopData.id || !stopData.name}
+          disabled={!stopData.lat || !stopData.lng || !stopData.id || !stopData.name || isSaving}
         />
       </div>
     </aside>
