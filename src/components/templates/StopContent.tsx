@@ -76,18 +76,18 @@ export default function StopContent() {
     }, [isStopDetailOpen]);
 
     // Handle clicks outside the stop list to deselect
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (stopListRef.current && !stopListRef.current.contains(event.target as Node)) {
-                setSelectedStopIndex(null);
-            }
-        };
+    // useEffect(() => {
+    //     const handleClickOutside = (event: MouseEvent) => {
+    //         if (stopListRef.current && !stopListRef.current.contains(event.target as Node)) {
+    //             setSelectedStopIndex(null);
+    //         }
+    //     };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+    //     document.addEventListener('mousedown', handleClickOutside);
+    //     return () => {
+    //         document.removeEventListener('mousedown', handleClickOutside);
+    //     };
+    // }, []);
 
     return ( // TODO Can search stops by name or id (searchbox)
         <div className="flex h-full w-full">
@@ -101,7 +101,7 @@ export default function StopContent() {
                         onDelete={handleDeleteStop}
                         disabled={selectedStopIndex === null}
                     />
-                    <ButtonAction label="New Stop" onClick={handleNewStop} />
+                    <ButtonAction label="new top" onClick={handleNewStop} />
                 </div>
                 <div className="flex-1 overflow-y-auto">
                     <div className="py-2">

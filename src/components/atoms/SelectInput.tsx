@@ -31,24 +31,26 @@ export default function SelectInput({ label, value, onChange, options = [], plac
     }, []);
 
     const handleSelect = (optionValue: string) => {
-        onChange?.(optionValue);
-        setIsOpen(false);
+        if (value === optionValue) { onChange?.("")}
+        else {onChange?.(optionValue)}
+        setIsOpen(false)
     };
 
     return (
-        <div>
-            <label className="block text-sm font-medium mb-2">{label}</label>
+        <div className="flex flex-col">
+            <label className="mb-2 font-medium text-gray-700">{label}</label>
             <div className="relative" ref={dropdownRef}>
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
                 >
-                    <span className={value ? 'text-gray-900' : 'text-gray-500'}>
+                    <span className={`block truncate mr-2 ${value ? 'text-gray-900' : 'text-gray-500'}`}
+                        title={displayText}>
                         {displayText}
                     </span>
                     <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -58,7 +60,7 @@ export default function SelectInput({ label, value, onChange, options = [], plac
                 </button>
 
                 {isOpen && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute z-10 w-full mt-3 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                         {options.length === 0 ? (
                             <div className="px-3 py-2 text-gray-500 text-sm">No options available</div>
                         ) : (

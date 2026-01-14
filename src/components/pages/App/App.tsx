@@ -1,6 +1,5 @@
 import './App.css'
 import Map from '../../Map'
-import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import type { RootState } from '../../../store'
 import Sidebar from '../../organisms/Sidebar'
@@ -11,24 +10,8 @@ export default function App() {
   // Load stops from backend on app initialization
   useLoadStops();
 
-  const [address, setAddress] = useState<{ [key: string]: string }>({
-    country: '',
-    state: '',
-    latitude: '',
-    longitude: ''
-  })
-  
   const isDetailOpen = useSelector((state: RootState) => state.appState.isStopDetailOpen || 
       state.appState.isRouteDetailOpen || state.appState.isCalendarDetailOpen || state.appState.isTripDetailOpen);
-
-  const resetAddress = () => {
-    setAddress({
-      country: '',
-      state: '',
-      latitude: '',
-      longitude: ''
-    })
-  }
 
   // const test = async () => {
 

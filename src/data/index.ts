@@ -23,8 +23,16 @@ export const days = [
 ] as const
 
 export const exceptionDate = [
-    {index: 1, label: 'Added Service'},
-    {index: 2, label: 'Removed Service'}
+    {index: 1, label: 'added service'},
+    {index: 2, label: 'removed service'}
+]
+
+export const locationTypeOption = [
+    {value: `0`, label: 'stop'},
+    {value: `1`, label: 'station'},
+    {value: `2`, label: 'entrance/exit'},
+    {value: `3`, label: 'generic node'},
+    {value: `4`, label: 'boarding area'}
 ]
 
 // mode mark will map to new stop in stop state

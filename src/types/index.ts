@@ -1,4 +1,4 @@
-import type { Field } from "./Field";
+import type { Field, UnwrapType } from "./Field";
 import { sidebarContent, modes } from "../data";
 
 export type Content = typeof sidebarContent[number]
@@ -33,7 +33,11 @@ export type Stop = {
     description?: Field<string>,
 }
 
-export type StopFormData = Stop[]
+export type StopFormState = {
+    [K in keyof Stop]-?: UnwrapType<Stop[K]> extends number 
+        ? number | undefined 
+        : string
+}
 
 export type StopIndex = number
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../store';
 import { closeStopDetail } from '../../store/slices/appSlice';
-import type { Stop } from '../../types';
+import type { Stop, StopFormState } from '../../types';
 import { StopActions } from '../../store/actions';
 import TextInput from '../atoms/TextInput';
 import StopOptional from '../molecules/StopOptional';
@@ -10,27 +10,7 @@ import CancelSaveButton from '../molecules/CancelSaveButton';
 import { stopsApi, ApiError } from '../../services/api';
 import { stopToCreatePayload, stopToUpdatePayload } from '../../services/stopMapper';
 
-// Form state uses plain strings for easier input handling
-type StopFormData = {
-  id: string;
-  name: string;
-  lat?: number;
-  lng?: number;
-  code?: string;
-  tlsName?: string;
-  zoneId?: string;
-  locationType?: string;
-  url?: string;
-  parentStation?: string;
-  timezone?: string;
-  wheelchairBoarding?: string;
-  levelId?: string;
-  platformCode?: string;
-  access?: string;
-  description?: string;
-};
-
-const initialFormData: StopFormData = {
+const initialFormData: StopFormState = {
   id: '',
   name: '',
   lat: undefined,
@@ -55,7 +35,7 @@ export default function StopContentDetail() {
   const selectedStop = useSelector((state: RootState) => state.appState.selectedStop);
   const stops = useSelector((state: RootState) => state.stopState.data);
   
-  const [stopData, setStopData] = useState<StopFormData>(initialFormData);
+  const [stopData, setStopData] = useState<StopFormState>(initialFormData);
   const [latInput, setLatInput] = useState('');
   const [lngInput, setLngInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -67,8 +47,8 @@ export default function StopContentDetail() {
       if (selectedStop.mode === 'edit') {
         // Convert Stop type to form data
         setStopData({
-          id: selectedStop.id?.value || '',
-          name: selectedStop.name?.value || '',
+          id: selectedStop.id.value || '',
+          name: selectedStop.name.value || '',
           lat: selectedStop.lat,
           lng: selectedStop.lng,
           code: selectedStop.code?.value || '',
@@ -87,20 +67,28 @@ export default function StopContentDetail() {
         setLatInput(selectedStop.lat?.toFixed(6) || '');
         setLngInput(selectedStop.lng?.toFixed(6) || '');
       } else if (selectedStop.mode === 'new') {
-        // For new stops, get the last stop from the stops array (the one just added)
-        const lastStop = stops[stops.length - 1];
-        if (lastStop) {
-          setStopData(prev => ({
-            ...prev,
-            lat: lastStop.lat,
-            lng: lastStop.lng
-          }));
-          setLatInput(lastStop.lat.toFixed(6));
-          setLngInput(lastStop.lng.toFixed(6));
-        }
+        setStopData(initialFormData);
+        setLatInput('');
+        setLngInput('');
       }
     }
-  }, [selectedStop, stops]);
+  }, [selectedStop])
+
+  useEffect(() => {
+    if (isOpen && selectedStop?.mode === 'new') {
+      const lastStop = stops[stops.length - 1];
+      
+      if (lastStop) {
+        setStopData(prev => ({
+          ...prev,
+          lat: lastStop.lat,
+          lng: lastStop.lng
+        }));
+        setLatInput(lastStop.lat.toFixed(6));
+        setLngInput(lastStop.lng.toFixed(6));
+      }
+    }
+  }, [stops])
 
   const handleLatChange = (value: string) => {
     setLatInput(value);
@@ -172,7 +160,6 @@ export default function StopContentDetail() {
       }
 
       if (selectedStop?.mode === 'new') {
-        // Create new stop via API
         const payload = stopToCreatePayload(stop);
 
         console.log('Payload being sent:', payload);
@@ -221,28 +208,48 @@ export default function StopContentDetail() {
 
   return (
     <aside 
-      className={`fixed right-0 top-0 h-screen w-[350px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${
+      className={`fixed right-0 top-0 h-screen w-[350px] shadow-xl z-50 overflow-hidden transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
-      <div className="flex flex-col h-full">
-        <div className="flex justify-between items-center p-4 border-b">
+      <div className="flex flex-col h-full bg-[#F5F7F9]">
+        <div className="flex justify-between items-center p-4">
           <h3 className="text-xl font-semibold">
-            {selectedStop?.mode === 'new' ? 'New Stop' : 'Edit Stop'}
+            {selectedStop?.mode === 'new' 
+              ? (stopData.name || 'new stop') 
+              : `${stopData.name} (edit)`
+            }
           </h3>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-5">
           {/* Stop ID and Stop Name */}
           <div className="grid grid-cols-2 gap-3">
-            <TextInput label='stop id' value={stopData.id} onChange={(value) => setStopData({...stopData, id: value})} placeholder="input"/>
-            <TextInput label='stop name' value={stopData.name} onChange={(value) => setStopData({...stopData, name: value})} placeholder="input"/>
+            <TextInput label='stop id' value={stopData.id} onChange={(value) => setStopData({...stopData, id: value})} placeholder="stop id"/>
+            <TextInput label='stop name' value={stopData.name} onChange={(value) => setStopData({...stopData, name: value})} placeholder="stop name"/>
           </div>
 
           {/* Stop Lat and Stop Lng */}
           <div className="grid grid-cols-2 gap-3">
-            <TextInput label="stop lat" value={latInput} onChange={handleLatChange} placeholder="Click map or enter value"/>
-            <TextInput label="stop lng" value={lngInput} onChange={handleLngChange} placeholder="Click map or enter value"/>
+             <div className="flex flex-col">
+              <label className="mb-2 font-medium text-gray-700">stop lat</label> 
+              <input 
+                  type="number" step="0.000001" value={latInput} onChange={(e) => handleLatChange(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Click map or enter value"
+                  min="-90"
+                  max="90"
+                />
+            </div>
+            <div className="flex flex-col">
+                <label className="mb-2 font-medium text-gray-700">stop lat</label>
+                <input type="number" step="0.000001" value={lngInput} onChange={(e) => handleLngChange(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Click map or enter value"
+                    min="-180"
+                    max="180"
+                />
+            </div>
           </div>
 
           {/* Show instruction when in mark mode */}
@@ -283,9 +290,7 @@ export default function StopContentDetail() {
           />
         </div>
 
-        <CancelSaveButton
-          onCancel={handleClose}
-          onSave={handleSave}
+        <CancelSaveButton onCancel={handleClose} onSave={handleSave}
           disabled={!stopData.lat || !stopData.lng || !stopData.id || !stopData.name || isSaving}
         />
       </div>
