@@ -7,6 +7,7 @@ import RouteContentDetail from "../organisms/RouteContentDetail"
 import { useEffect, useRef, useState } from "react"
 import EditDeleteButton from "../molecules/EditDeleteButton"
 import RouteCard from "../molecules/RouteCard"
+import { ApiError, routesApi } from "../../services/api"
 
 export default function RouteContent() {
     const routes = useSelector((state: RootState) => state.routeState.data)
@@ -22,9 +23,11 @@ export default function RouteContent() {
         const initialColor = colors[Math.floor(Math.random() * colors.length)];
         
         dispatch(RouteActions.createRoute(initialColor));
+        // New route is added at the end, so its index is current routes.length
         dispatch(
             openRouteDetail({
-                mode: 'new'
+                mode: 'new',
+                routeIndex: routes.length
             })
         );
     }
@@ -41,13 +44,26 @@ export default function RouteContent() {
         }))
     }
 
-    const handleDelteRoute = () => {
+    const handleDelteRoute = async () => {
         if (selectedRouteIndex === null) return;
-
+        
         const route = routes[selectedRouteIndex];
+
         if (window.confirm(`Are you sure you want to delete "route: ${route.name.value}"?`)) {
-            dispatch(RouteActions.removeRoute(selectedRouteIndex));
-            setSelectedRouteIndex(null);
+            try{
+                await routesApi.delete(route.id.value)
+                console.log('Route deleted from backend succesfully')
+
+                dispatch(RouteActions.removeRoute(selectedRouteIndex));
+                setSelectedRouteIndex(null);
+            } catch (err) {
+                console.error('Failed to delete route:', err);
+                
+                if (err instanceof ApiError) {
+                    alert(`Failed to delete route: ${err.message}`)
+                } else alert
+                    ('An unexpected error occurred. Please try again.')
+            }
         }
     }
 
@@ -71,7 +87,7 @@ export default function RouteContent() {
                             onDelete={handleDelteRoute}
                             disabled={selectedRouteIndex === null}
                         />
-                        <ButtonAction label="New Route" onClick={handleNewRoute} />
+                        <ButtonAction label="new route" onClick={handleNewRoute} />
                 </div>
                 <div className="flex-1 overflow-y-auto">
                     <div className="py-2">

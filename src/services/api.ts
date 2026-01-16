@@ -24,6 +24,13 @@ async function handleResponse<T>(response: Response): Promise<T> {
     }
     throw new ApiError(response.status, errorMessage);
   }
+  
+  // Handle empty responses (e.g., 204 No Content)
+  const contentLength = response.headers.get('content-length');
+  if (response.status === 204 || contentLength === '0') {
+    return undefined as T;
+  }
+  
   return response.json();
 }
 
@@ -102,6 +109,47 @@ export const stopsApi = {
   },
 };
 
+export const routesApi = {
+  async getAll() {
+    const response = await fetch(`${API_BASE_URL}/routes`);
+    return handleResponse(response);
+  },
+
+  async getById(id: string) {
+    const response = await fetch(`${API_BASE_URL}/routes/${id}`);
+    return handleResponse(response);
+  },
+
+  async create(routeData: CreateRoutePayload) {
+    const response = await fetch(`${API_BASE_URL}/routes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(routeData),
+    });
+    return handleResponse(response);
+  },
+
+  async update(id: string, routeData: UpdateRoutePayload) {
+    const response = await fetch(`${API_BASE_URL}/routes/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(routeData),
+    });
+    return handleResponse(response);
+  },
+
+  async delete(id: string) {
+    const response = await fetch(`${API_BASE_URL}/routes/${id}`, {
+      method: 'DELETE',
+    });
+    return handleResponse(response);
+  }
+}
+
 // Type definitions for API payloads
 export interface CreateStopPayload {
   stop_id: string;
@@ -120,4 +168,22 @@ export interface CreateStopPayload {
   platform_code?: string;
 }
 
+export interface CreateRoutePayload {
+  route_id: string;
+  route_short_name: string;
+  route_type: number;
+  route_long_name?: string;
+  route_desc?: string;
+  route_url?: string;
+  route_color?: string;
+  route_text_color?: string;
+  route_sort_order?: number;
+  continuous_pickup?: string;
+  continuous_drop_off?: string;
+  network_id?: string;
+  cemv_support?: string;
+  route_path?: { lat: number; lng: number }[];
+}
+
 export interface UpdateStopPayload extends Partial<CreateStopPayload> {}
+export interface UpdateRoutePayload extends Partial<CreateRoutePayload> {}

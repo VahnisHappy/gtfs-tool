@@ -22,6 +22,7 @@ const routeSlice = createSlice({
             const newRoute: Route = {
                 id: { value: '', error: true },
                 name: { value: '', error: true },
+                routeType: '' as unknown as number,
                 stopIndexes: [],
                 path: [],
                 color: payload,
@@ -97,7 +98,7 @@ const routeSlice = createSlice({
             if (!route) return;
             route.path = payload;
         },
-        updateRouteType: (state, {payload}: PayloadAction<string>) => {
+        updateRouteType: (state, {payload}: PayloadAction<number>) => {
             const route = state.data.find(r => r.edit);
             if (route) {
                 route.routeType = payload;
@@ -105,6 +106,11 @@ const routeSlice = createSlice({
         },
         setRoutes: (state, {payload}: PayloadAction<Route[]>) => {
             state.data = payload;
+        },
+        updateRoute: (state, {payload}: PayloadAction<{index: RouteIndex, route: Route}>) => {
+            if (payload.index >= 0 && payload.index < state.data.length) {
+                state.data[payload.index] = payload.route;
+            }
         }
     }
 })

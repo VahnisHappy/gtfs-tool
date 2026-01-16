@@ -28,14 +28,14 @@ export default function RouteOptional({
   const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   return (
-    <div className="border-t pt-4">
+    <div className="relative w-full">
       <button
         onClick={() => setShowOptionalFields(!showOptionalFields)}
-        className="flex items-center justify-between w-full text-left font-medium text-gray-700 hover:text-gray-900"
+        className="w-full flex justify-between items-center py-2 px-3 border border-gray-300 rounded bg-white hover:bg-gray-50 transition-colors"
       >
         <span>optional fields</span>
         <svg
-          className={`w-5 h-5 transition-transform ${showOptionalFields ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 transition-transform ${showOptionalFields ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -45,8 +45,8 @@ export default function RouteOptional({
       </button>
 
       {showOptionalFields && (
-        <div className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="absolute top-full left-0 w-full mt-2 p-4 space-y-4 border border-gray-200 rounded shadow-xl bg-white z-50">
+          <div className="grid grid-cols-2 gap-3">
             <TextInput 
               label="route long name"
               value={routeLongName}

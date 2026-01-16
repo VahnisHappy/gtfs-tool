@@ -47,12 +47,14 @@ const appSlice = createSlice({
         },
         openRouteDetail: (state, action: PayloadAction<any>) => {
             state.isRouteDetailOpen = true;
+            state.selectedRoute = action.payload || null;
             if (action.payload?.mode === 'new') {
                 state.mode = 'draw';
             }
         },
         closeRouteDetail: (state) => {
             state.isRouteDetailOpen = false;
+            state.selectedRoute = null;
             state.mode = 'view';
         },
         openCalendarDetail: (state, action: PayloadAction<any>) => {
