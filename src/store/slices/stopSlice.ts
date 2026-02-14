@@ -4,7 +4,8 @@ import type { StopState } from "../states";
 import type { Stop, StopIndex } from "../../types";
 
 const initialState: StopState = {
-    data: []
+    data: [],
+    selectedIndex: null
 }
 
 const stopSlice = createSlice({
@@ -19,9 +20,11 @@ const stopSlice = createSlice({
         },
         removeStop: (state, {payload}: PayloadAction<string>) => {
             state.data = state.data.filter((stop) => stop.id.value !== payload);
+            state.selectedIndex = null;
         },
         removeLastStop: (state) => {
             state.data = state.data.slice(0, -1);
+            state.selectedIndex = null;
         },
         updateStop: (state, {payload}: PayloadAction<{index: StopIndex, stop: Stop}>) => {
             state.data[payload.index] = payload.stop;
@@ -32,18 +35,9 @@ const stopSlice = createSlice({
             stop.lng = payload.lng;
             state.data[payload.index] = stop;
         },
-        // updateStopField: (state, {payload}: PayloadAction<{index: StopIndex, field: keyof Stop, value: any}>) => {
-        //     const stop = state.data[payload.index];
-        //     if (stop) {
-        //         if (payload.field === 'lat' || payload.field === 'lng') {
-        //             // Handle coordinate fields directly
-        //             (stop as any)[payload.field] = payload.value;
-        //         } else {
-        //             // Handle Field<T> type fields
-        //             (stop as any)[payload.field] = { value: payload.value, error: undefined };
-        //         }
-        //     }
-        // }
+        selectStop: (state, {payload}: PayloadAction<number | null>) => {
+            state.selectedIndex = payload;
+        }
     }
 })
 

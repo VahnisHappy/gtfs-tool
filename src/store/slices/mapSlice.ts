@@ -7,6 +7,7 @@ const initialState: MapState = {
   accessToken: import.meta.env.VITE_APP_MAPBOX_ACCESS_TOKEN || '',
   mapStyle: 'mapbox://styles/mapbox/streets-v12',
   location: {value: "", error: false},
+  flyTo: null
 };
 
 const mapSlice = createSlice({
@@ -27,6 +28,9 @@ const mapSlice = createSlice({
     },
     setViewState: (state, {payload}: PayloadAction<ViewState>) => {
             state.viewState = payload;
+    },
+    flyToLocation: (state, {payload}: PayloadAction<{lat: number, lng: number, zoom?: number} | null>) => {
+      state.flyTo = payload;
     }
   }
 });

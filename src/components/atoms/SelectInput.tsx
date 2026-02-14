@@ -6,9 +6,10 @@ export type SelectInputProps = {
     onChange?: (value: string) => void;
     options?: { value: string; label: string }[];
     placeholder?: string;
+    labelClassName?: string;
 }
 
-export default function SelectInput({ label, value, onChange, options = [], placeholder = "select" }: SelectInputProps) {
+export default function SelectInput({ label, value, onChange, options = [], placeholder = "select", labelClassName = "" }: SelectInputProps) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +39,7 @@ export default function SelectInput({ label, value, onChange, options = [], plac
 
     return (
         <div className="flex flex-col">
-            <label className="mb-2 font-medium text-gray-700">{label}</label>
+            <label className={`mb-2 font-medium text-gray-700 ${labelClassName}`}>{label}</label>
             <div className="relative" ref={dropdownRef}>
                 <button
                     type="button"

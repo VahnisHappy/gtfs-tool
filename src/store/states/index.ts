@@ -15,7 +15,8 @@ export type AppState ={
 }
 
 export type StopState = {
-    data: Stop[]
+    data: Stop[],
+    selectedIndex: number | null
 }
 
 export type RouteState = {
@@ -36,7 +37,8 @@ export type MapState = {
     mapStyle: string,
     location: Field<string>,
     bounds?: Bounds,
-    viewState?: Partial<ViewState>
+    viewState?: Partial<ViewState>,
+    flyTo?: {lat: number, lng: number, zoom?: number} | null
 }
 
 export type LocationState = {

@@ -1,8 +1,8 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState, useRef } from "react";
+import { useRef } from "react";
 import type { RootState } from "../../store";
 import { openStopDetail } from "../../store/slices/appSlice";
-import { StopActions } from "../../store/actions";
+import { StopActions, MapActions } from "../../store/actions";
 import ButtonAction from "../atoms/ButtonAction";
 import StopContentDetail from "../organisms/StopContentDetail";
 import EditDeleteButton from "../molecules/EditDeleteButton";
@@ -11,14 +11,13 @@ import { stopsApi, ApiError } from "../../services/api";
 
 export default function StopContent() {
     const stops = useSelector((state: RootState) => state.stopState.data);
-    const isStopDetailOpen = useSelector((state: RootState) => state.appState.isStopDetailOpen);
+    const selectedStopIndex = useSelector((state: RootState) => state.stopState.selectedIndex);
     const dispatch = useDispatch();
-    const [selectedStopIndex, setSelectedStopIndex] = useState<number | null>(null);
     const stopListRef = useRef<HTMLDivElement>(null);
 
 
     const handleNewStop = () => {
-        setSelectedStopIndex(null);
+        dispatch(StopActions.selectStop(null));
         // Open detail panel in 'new' mode, which also sets mode to 'mark'
         dispatch(openStopDetail({
             mode: 'new',
@@ -50,7 +49,7 @@ export default function StopContent() {
                 
                 // Remove from local state
                 dispatch(StopActions.removeStop(stop.id.value))
-                setSelectedStopIndex(null);
+                dispatch(StopActions.selectStop(null));
             } catch (err) {
                 console.error('Failed to delete stop:', err);
                 
@@ -65,29 +64,15 @@ export default function StopContent() {
     
     const handleSelectStop = (index: number) => {
         // Toggle selection: if clicking the same stop, deselect it
-        setSelectedStopIndex(prevIndex => prevIndex === index ? null : index);
+        const newSelection = selectedStopIndex === index ? null : index;
+        dispatch(StopActions.selectStop(newSelection));
+        
+        // Fly to the selected stop
+        if (newSelection !== null) {
+            const stop = stops[newSelection];
+            dispatch(MapActions.flyToLocation({ lat: stop.lat, lng: stop.lng, zoom: 16 }));
+        }
     }
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [isStopDetailOpen]);
-
-    // Handle clicks outside the stop list to deselect
-    // useEffect(() => {
-    //     const handleClickOutside = (event: MouseEvent) => {
-    //         if (stopListRef.current && !stopListRef.current.contains(event.target as Node)) {
-    //             setSelectedStopIndex(null);
-    //         }
-    //     };
-
-    //     document.addEventListener('mousedown', handleClickOutside);
-    //     return () => {
-    //         document.removeEventListener('mousedown', handleClickOutside);
-    //     };
-    // }, []);
 
     return ( // TODO Can search stops by name or id (searchbox)
         <div className="flex h-full w-full">
@@ -101,7 +86,7 @@ export default function StopContent() {
                         onDelete={handleDeleteStop}
                         disabled={selectedStopIndex === null}
                     />
-                    <ButtonAction label="new top" onClick={handleNewStop} />
+                    <ButtonAction label="new stop" onClick={handleNewStop} />
                 </div>
                 <div className="flex-1 overflow-y-auto">
                     <div className="py-2">

@@ -19,7 +19,15 @@ export default function Map() {
   const currentRoute = useSelector((state: RootState) => state.routeState.currentRoute)
   
   const handleMark = (point: Point) => {
-    dispatch(StopActions.addStop(createStop(point)))
+    // Create empty placeholder stop with only coordinates (no auto-generated id/name)
+    const placeholderStop = {
+      id: { value: '', error: undefined },
+      name: { value: '', error: undefined },
+      lat: point.lat,
+      lng: point.lng
+    };
+    dispatch(StopActions.addStop(placeholderStop))
+    dispatch(AppActions.updateStopCoordinates({ lat: point.lat, lng: point.lng }))
     dispatch(AppActions.setMode('view'))
   }
   
@@ -85,6 +93,10 @@ export default function Map() {
       currentRoute: currentRoute,
       currentEditedRoute: currentEditedRoute
     })
+    
+    // Toggle selection when clicking marker
+    const currentSelected = stops[index] ? index : null;
+    dispatch(StopActions.selectStop(currentSelected));
     
     if (mode === 'draw') {
       if (!currentEditedRoute) {

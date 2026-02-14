@@ -19,7 +19,7 @@ export type MapDisplayProps = {
 
 export default function MapDisplay(props: MapDisplayProps) {
     const dispatch = useDispatch()
-    const {accessToken, mapStyle, viewState, bounds} = useSelector((state: RootState) => state.mapState)
+    const {accessToken, mapStyle, viewState, bounds, flyTo} = useSelector((state: RootState) => state.mapState)
     const handleMapClick = (e: mapboxgl.MapMouseEvent) => props.onClick?.(e)
     const handleMove = (e: ViewStateChangeEvent) => dispatch(MapActions.actions.setViewState(e.viewState))
     const mapRef = useRef<MapRef | null>(null)
@@ -31,6 +31,21 @@ export default function MapDisplay(props: MapDisplayProps) {
         if (!map || !bounds) return
         map.fitBounds(bounds)
     }, [bounds])
+
+    // Fly to location when flyTo changes
+    useEffect(() => {
+        const map = mapRef.current
+        if (!map || !flyTo) return
+        
+        map.flyTo({
+            center: [flyTo.lng, flyTo.lat],
+            zoom: flyTo.zoom || 16,
+            duration: 1000
+        })
+        
+        // Clear flyTo after animation
+        dispatch(MapActions.actions.flyToLocation(null))
+    }, [flyTo])
 
     // Track when map is loaded
     const handleMapLoad = () => {

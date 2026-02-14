@@ -9,6 +9,8 @@ export type StopCardProps = {
 }
 
 export default function StopCard({ stop, index, isSelected, onSelect }: StopCardProps) {
+    const isEmpty = !stop.id.value && !stop.name.value;
+    
     return (
         <li
             onClick={onSelect}
@@ -21,12 +23,20 @@ export default function StopCard({ stop, index, isSelected, onSelect }: StopCard
             <div className="flex items-center gap-4">
                 <div className="flex-1">
                     <div className="flex items-baseline gap-4">
-                        <span className="font-semibold text-gray-900">
-                            {stop.id.value}
-                        </span>
-                        <span className="text-gray-900">
-                            {stop.name.value}
-                        </span>
+                        {isEmpty ? (
+                            <span className="text-gray-400 italic">
+                                New Stop (unsaved)
+                            </span>
+                        ) : (
+                            <>
+                                <span className="font-semibold text-gray-900">
+                                    {stop.id.value}
+                                </span>
+                                <span className="text-gray-900">
+                                    {stop.name.value}
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

@@ -1,299 +1,182 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../store';
 import { closeStopDetail } from '../../store/slices/appSlice';
-import type { Stop, StopFormState } from '../../types';
+import type { Stop } from '../../types';
 import { StopActions } from '../../store/actions';
-import TextInput from '../atoms/TextInput';
 import StopOptional from '../molecules/StopOptional';
 import CancelSaveButton from '../molecules/CancelSaveButton';
-import { stopsApi, ApiError } from '../../services/api';
-import { stopToCreatePayload, stopToUpdatePayload } from '../../services/stopMapper';
+import { stopsApi } from '../../services/api';
+import { FormProvider, useForm } from 'react-hook-form';
+import FormInput from '../molecules/FormInput';
+import FormNumberInput from '../molecules/FormNumberInput';
 
-const initialFormData: StopFormState = {
-  id: '',
-  name: '',
-  lat: undefined,
-  lng: undefined,
-  code: '',
-  tlsName: '',
-  zoneId: '',
-  locationType: '',
-  url: '',
-  parentStation: '',
-  timezone: '',
-  wheelchairBoarding: '',
-  levelId: '',
-  platformCode: '',
-  access: '',
-  description: ''
-};
+interface StopFormData {
+  stop_id: string,
+  stop_name: string,
+  stop_lat: number,
+  stop_lon: number,
+  tts_stop_name?: string,
+  stop_code?: string,
+  stop_desc?: string,
+  zone_id?: string,
+  stop_url?: string,
+  location_type?: number,
+  parent_station?: string,
+  stop_timezone?: string
+  wheelchair_boarding?: number,
+  level_id?: string,
+  platform_code?: string,
+  stop_access?: number
+}
 
 export default function StopContentDetail() {
   const dispatch = useDispatch();
   const isOpen = useSelector((state: RootState) => state.appState.isStopDetailOpen);
   const selectedStop = useSelector((state: RootState) => state.appState.selectedStop);
   const stops = useSelector((state: RootState) => state.stopState.data);
-  
-  const [stopData, setStopData] = useState<StopFormState>(initialFormData);
-  const [latInput, setLatInput] = useState('');
-  const [lngInput, setLngInput] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Update form when selectedStop changes or when a new stop is added
+  const methods = useForm<StopFormData>({
+    defaultValues: {
+      stop_id: '',
+      stop_name: '',
+      stop_lat: 0,
+      stop_lon: 0,
+    }
+  });
+
+  const { handleSubmit, reset, setValue } = methods;
+
   useEffect(() => {
     if (selectedStop) {
       if (selectedStop.mode === 'edit') {
-        // Convert Stop type to form data
-        setStopData({
-          id: selectedStop.id.value || '',
-          name: selectedStop.name.value || '',
-          lat: selectedStop.lat,
-          lng: selectedStop.lng,
-          code: selectedStop.code?.value || '',
-          tlsName: selectedStop.tlsName?.value || '',
-          zoneId: selectedStop.zoneId?.value || '',
-          locationType: selectedStop.locationType?.value || '',
-          url: selectedStop.url?.value || '',
-          parentStation: selectedStop.parentStation?.value || '',
-          timezone: selectedStop.timezone?.value || '',
-          wheelchairBoarding: selectedStop.wheelchairBoarding?.value || '',
-          levelId: selectedStop.levelId?.value || '',
-          platformCode: selectedStop.platformCode?.value || '',
-          access: selectedStop.access?.value || '',
-          description: selectedStop.description?.value || ''
+        reset({
+          stop_id: selectedStop.id.value,
+          stop_name: selectedStop.name.value,
+          stop_lat: selectedStop.lat,
+          stop_lon: selectedStop.lng,
+          stop_code: selectedStop.code?.value,
+          stop_desc: selectedStop.description?.value,
+          // ... map the rest
         });
-        setLatInput(selectedStop.lat?.toFixed(6) || '');
-        setLngInput(selectedStop.lng?.toFixed(6) || '');
       } else if (selectedStop.mode === 'new') {
-        setStopData(initialFormData);
-        setLatInput('');
-        setLngInput('');
+        reset({
+          stop_id: '',
+          stop_name: '',
+          stop_lat: typeof selectedStop.lat === 'number' ? selectedStop.lat : 0,
+          stop_lon: typeof selectedStop.lng === 'number' ? selectedStop.lng : 0
+        });
       }
     }
-  }, [selectedStop])
+  }, [selectedStop, reset]);
 
   useEffect(() => {
-    if (isOpen && selectedStop?.mode === 'new') {
-      const lastStop = stops[stops.length - 1];
-      
-      if (lastStop) {
-        setStopData(prev => ({
-          ...prev,
-          lat: lastStop.lat,
-          lng: lastStop.lng
-        }));
-        setLatInput(lastStop.lat.toFixed(6));
-        setLngInput(lastStop.lng.toFixed(6));
-      }
-    }
-  }, [stops])
+     if (
+       selectedStop?.mode === 'new' &&
+       typeof selectedStop.lat === 'number' &&
+       typeof selectedStop.lng === 'number'
+     ) {
+       setValue('stop_lat', selectedStop.lat);
+       setValue('stop_lon', selectedStop.lng);
+     }
+  }, [selectedStop, setValue]);
 
-  const handleLatChange = (value: string) => {
-    setLatInput(value);
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue) && numValue >= -90 && numValue <= 90) {
-      setStopData(prev => ({ ...prev, lat: numValue }));
-      // Update the marker position in real-time
-      const lastStopIndex = stops.length - 1;
-      if (selectedStop?.mode === 'new' && lastStopIndex >= 0) {
-        const updatedStop = { ...stops[lastStopIndex], lat: numValue };
-        dispatch(StopActions.updateStop({ index: lastStopIndex, stop: updatedStop }));
+  const onSubmit = async (data: StopFormData) => {
+    try {
+      if (selectedStop?.mode === 'new') {
+        // Data is ALREADY in the correct format! No need for 'stopToCreatePayload'
+        await stopsApi.create(data); 
+        
+        // Update the temporary marker with proper data instead of removing it
+        const lastStopIndex = stops.length - 1;
+        if (lastStopIndex >= 0) {
+          const savedStop: Stop = {
+            id: { value: data.stop_id, error: undefined },
+            name: { value: data.stop_name, error: undefined },
+            lat: data.stop_lat,
+            lng: data.stop_lon,
+            ...(data.stop_code && { code: { value: data.stop_code, error: undefined } }),
+            ...(data.stop_desc && { description: { value: data.stop_desc, error: undefined } }),
+          };
+          dispatch(StopActions.updateStop({ index: lastStopIndex, stop: savedStop }));
+        }
+      } else {
+        await stopsApi.update(data.stop_id, data);
+        
+        // Update the stop in local state
+        const stopIndex = stops.findIndex(s => s.id.value === data.stop_id);
+        if (stopIndex !== -1) {
+          const updatedStop: Stop = {
+            id: { value: data.stop_id, error: undefined },
+            name: { value: data.stop_name, error: undefined },
+            lat: data.stop_lat,
+            lng: data.stop_lon,
+            ...(data.stop_code && { code: { value: data.stop_code, error: undefined } }),
+            ...(data.stop_desc && { description: { value: data.stop_desc, error: undefined } }),
+          };
+          dispatch(StopActions.updateStop({ index: stopIndex, stop: updatedStop }));
+        }
       }
+      dispatch(closeStopDetail());
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const handleLngChange = (value: string) => {
-    setLngInput(value);
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue) && numValue >= -180 && numValue <= 180) {
-      setStopData(prev => ({ ...prev, lng: numValue }));
-      // Update the marker position in real-time
-      const lastStopIndex = stops.length - 1;
-      if (selectedStop?.mode === 'new' && lastStopIndex >= 0) {
-        const updatedStop = { ...stops[lastStopIndex], lng: numValue };
-        dispatch(StopActions.updateStop({ index: lastStopIndex, stop: updatedStop }));
-      }
-    }
-  };
-
-  const handleClose = () => {
-    // If it's a new stop that hasn't been saved, remove the marker
+  const handleCancel = () => {
+    // If it's a new stop that hasn't been saved, remove the placeholder
     if (selectedStop?.mode === 'new') {
       dispatch(StopActions.removeLastStop());
     }
-    
     dispatch(closeStopDetail());
-    setStopData(initialFormData);
-    setLatInput('');
-    setLngInput('');
-    setError(null);
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    setError(null);
-
-    try {
-      const stop: Stop = {
-        id: { value: stopData.id, error: undefined },
-        name: { value: stopData.name, error: undefined },
-        lat: stopData.lat!,
-        lng: stopData.lng!,
-        ...(stopData.code && { code: { value: stopData.code, error: undefined } }),
-        ...(stopData.tlsName && { tlsName: { value: stopData.tlsName, error: undefined } }),
-        ...(stopData.zoneId && { zoneId: { value: stopData.zoneId, error: undefined } }),
-
-        ...(stopData.locationType && { locationType: { value: stopData.locationType, error: undefined } }),
-        
-        ...(stopData.url && { url: { value: stopData.url, error: undefined } }),
-        ...(stopData.parentStation && { parentStation: { value: stopData.parentStation, error: undefined } }),
-        ...(stopData.timezone && { timezone: { value: stopData.timezone, error: undefined } }),
-        
-        ...(stopData.wheelchairBoarding && { wheelchairBoarding: { value: stopData.wheelchairBoarding, error: undefined } }),
-        
-        ...(stopData.levelId && { levelId: { value: stopData.levelId, error: undefined } }),
-        ...(stopData.platformCode && { platformCode: { value: stopData.platformCode, error: undefined } }),
-        ...(stopData.access && { access: { value: stopData.access, error: undefined } }),
-        ...(stopData.description && { description: { value: stopData.description, error: undefined } })
-      }
-
-      if (selectedStop?.mode === 'new') {
-        const payload = stopToCreatePayload(stop);
-
-        console.log('Payload being sent:', payload);
-
-        const createdStop = await stopsApi.create(payload);
-        
-        console.log('Stop created successfully:', createdStop);
-        
-        // Remove the temporary marker
-        dispatch(StopActions.removeLastStop());
-        // Add the complete stop to local state
-        dispatch(StopActions.addStop(stop));
-        
-      } else if (selectedStop?.mode === 'edit') {
-        // Update existing stop via API
-        const payload = stopToUpdatePayload(stop);
-        const updatedStop = await stopsApi.update(stopData.id, payload);
-        
-        console.log('Stop updated successfully:', updatedStop);
-        
-        // Update in local state
-        const stopIndex = stops.findIndex(s => s.id.value === selectedStop.id?.value);
-        if (stopIndex !== -1) {
-          dispatch(StopActions.updateStop({ index: stopIndex, stop }));
-        }
-      }
-
-      // Close the panel after successful save
-      dispatch(closeStopDetail());
-      setStopData(initialFormData);
-      setLatInput('');
-      setLngInput('');
-      
-    } catch (err) {
-      console.error('Failed to save stop:', err);
-      
-      if (err instanceof ApiError) {
-        setError(`Failed to save: ${err.message}`);
-      } else {
-        setError('An unexpected error occurred. Please try again.');
-      }
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   return (
-    <aside 
-      className={`fixed right-0 top-0 h-screen w-[350px] shadow-xl z-50 overflow-hidden transition-transform duration-300 ease-in-out ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}
-    >
-      <div className="flex flex-col h-full bg-[#F5F7F9]">
-        <div className="flex justify-between items-center p-4">
-          <h3 className="text-xl font-semibold">
-            {selectedStop?.mode === 'new' 
-              ? (stopData.name || 'new stop') 
-              : `${stopData.name} (edit)`
-            }
-          </h3>
-        </div>
+    <aside className={`fixed right-0 top-0 h-screen w-[350px] shadow-xl z-50 bg-[#F5F7F9] ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-5">
+            <h3 className="text-xl font-semibold mb-4">
+              {selectedStop?.mode === 'new' ? 'New Stop' : 'Edit Stop'}
+            </h3>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-5">
-          {/* Stop ID and Stop Name */}
-          <div className="grid grid-cols-2 gap-3">
-            <TextInput label='stop id' value={stopData.id} onChange={(value) => setStopData({...stopData, id: value})} placeholder="stop id"/>
-            <TextInput label='stop name' value={stopData.name} onChange={(value) => setStopData({...stopData, name: value})} placeholder="stop name"/>
+            <div className="grid grid-cols-2 gap-3">
+              <FormInput name="stop_id" label="stop id" placeholder="stop id" />
+              <FormInput name="stop_name" label="stop name" placeholder="stop name" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormNumberInput 
+                name="stop_lat" 
+                label="stop lat" 
+                placeholder="latitude" 
+                step={0.000001}
+                min={-90}
+                max={90}
+              />
+              <FormNumberInput 
+                name="stop_lon" 
+                label="stop lon" 
+                placeholder="longitude"
+                step={0.000001}
+                min={-180}
+                max={180}
+              />
+            </div>
+
+            <StopOptional /> 
           </div>
 
-          {/* Stop Lat and Stop Lng */}
-          <div className="grid grid-cols-2 gap-3">
-             <div className="flex flex-col">
-              <label className="mb-2 font-medium text-gray-700">stop lat</label> 
-              <input 
-                  type="number" step="0.000001" value={latInput} onChange={(e) => handleLatChange(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Click map or enter value"
-                  min="-90"
-                  max="90"
-                />
-            </div>
-            <div className="flex flex-col">
-                <label className="mb-2 font-medium text-gray-700">stop lat</label>
-                <input type="number" step="0.000001" value={lngInput} onChange={(e) => handleLngChange(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Click map or enter value"
-                    min="-180"
-                    max="180"
-                />
-            </div>
-          </div>
-
-          {/* Show instruction when in mark mode */}
-          {selectedStop?.mode === 'new' && (!stopData.lat || !stopData.lng) && (
-            <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-700 flex items-center gap-2">
-              <span className="text-xl">📍</span>
-              <span>Click on the map to mark the stop location or enter coordinates manually</span>
-            </div>
-          )}
-
-          {/* Show success when location is marked */}
-          {stopData.lat && stopData.lng && (
-            <div className="bg-green-50 border border-green-200 rounded p-3 text-sm text-green-700 flex items-center gap-2">
-              <span className="text-xl">✓</span>
-              <span>Location set! Fill in the details below.</span>
-            </div>
-          )}
-
-          {/* Show error message if save fails */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700 flex items-center gap-2">
-              <span className="text-xl">⚠️</span>
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Optional Fields */}
-          <StopOptional code={stopData.code} tlsName={stopData.tlsName}
-            zoneId={stopData.zoneId} locationType={stopData.locationType}
-            url={stopData.url} parentStation={stopData.parentStation}
-            timezone={stopData.timezone}
-            wheelchairBoarding={stopData.wheelchairBoarding}
-            levelId={stopData.levelId}
-            platformCode={stopData.platformCode}
-            access={stopData.access}
-            description={stopData.description}
-            onFieldChange={(field, value) => setStopData({...stopData, [field]: value})}
+          <CancelSaveButton 
+             onCancel={handleCancel} 
+             // FormProvider handles the submit logic via the <form> tag
+             onSave={handleSubmit(onSubmit)}
+             disabled={false} 
           />
-        </div>
-
-        <CancelSaveButton onCancel={handleClose} onSave={handleSave}
-          disabled={!stopData.lat || !stopData.lng || !stopData.id || !stopData.name || isSaving}
-        />
-      </div>
+        </form>
+      </FormProvider>
     </aside>
   );
 }

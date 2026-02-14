@@ -111,6 +111,11 @@ const routeSlice = createSlice({
             if (payload.index >= 0 && payload.index < state.data.length) {
                 state.data[payload.index] = payload.route;
             }
+        },
+        removeStopFromRoute: (state, {payload}: PayloadAction<StopIndex>) => {
+            const route = state.data.find(r => r.edit);
+            if (!route) return;
+            route.stopIndexes = route.stopIndexes.filter(idx => idx !== payload);
         }
     }
 })

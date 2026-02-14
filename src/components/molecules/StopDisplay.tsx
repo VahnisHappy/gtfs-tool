@@ -8,11 +8,14 @@ export type StopDisplayProps = {
 
 export default function StopDisplay({ onClick }: StopDisplayProps) {
     const stops = useSelector((state: RootState) => state.stopState.data);
+    const selectedIndex = useSelector((state: RootState) => state.stopState.selectedIndex);
+    
     return <>
      {stops.map((stop, index) => (
         <StopMarker 
             key={index} 
             stop={stop} 
+            isSelected={selectedIndex === index}
             onClick={() => onClick?.(index)}
         />
      ))}
