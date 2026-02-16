@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { routesApi } from './api';
 import { RouteActions } from '../store/actions';
 import type { Route } from '../types';
+import type { RootState } from '../store';
 
 interface BackendRoute {
   route_id: string;
@@ -19,6 +20,7 @@ interface BackendRoute {
   network_id?: string;
   cemv_support?: string;
   route_path?: { lat: number; lng: number }[];
+  route_stop_ids?: string[];
 }
 
 /**
@@ -26,8 +28,13 @@ interface BackendRoute {
  */
 export function useLoadRoutes() {
   const dispatch = useDispatch();
+  const stops = useSelector((state: RootState) => state.stopState.data);
+  const hasLoadedRoutes = useRef(false);
 
   useEffect(() => {
+    // Only load routes once
+    if (hasLoadedRoutes.current) return;
+
     const loadRoutes = async () => {
       try {
         console.log('Loading routes from backend...');
@@ -43,19 +50,27 @@ export function useLoadRoutes() {
               : `#${backendRoute.route_color}`;
           }
           
+          // Convert stop IDs back to indices (using current stops state)
+          const stopIds = backendRoute.route_stop_ids || [];
+          const stopIndexes = stopIds
+            .map(stopId => stops.findIndex(s => s.id.value === stopId))
+            .filter(idx => idx !== -1);
+          
           return {
             id: { value: backendRoute.route_id, error: false },
             name: { value: backendRoute.route_short_name, error: false },
             routeType: backendRoute.route_type,
             color,
-            stopIndexes: [], // Routes from DB don't have stop associations yet
-            path: backendRoute.route_path || [], // Load path from database
+            stopIndexes,
+            stopIds,
+            path: backendRoute.route_path || [],
             edit: false,
             isNew: false,
           };
         });
 
         console.log(`Loaded ${routes.length} routes from backend`);
+        hasLoadedRoutes.current = true;
         
         // Load all routes into Redux store
         dispatch(RouteActions.setRoutes(routes));
@@ -66,6 +81,11 @@ export function useLoadRoutes() {
       }
     };
 
-    loadRoutes();
-  }, [dispatch]);
+    // Load routes after a small delay to ensure stops are loaded first
+    const timer = setTimeout(() => {
+      loadRoutes();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [dispatch, stops]);
 }

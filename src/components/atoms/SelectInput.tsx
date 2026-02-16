@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from "react";
 
 export type SelectInputProps = {
     label: string;
-    value?: string;
-    onChange?: (value: string) => void;
-    options?: { value: string; label: string }[];
+    value?: string | number;
+    onChange?: (value: string | number) => void;
+    options?: { value: string | number; label: string }[];
     placeholder?: string;
     labelClassName?: string;
 }
@@ -13,8 +13,8 @@ export default function SelectInput({ label, value, onChange, options = [], plac
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Get the label for the selected value
-    const selectedOption = options.find(opt => opt.value === value);
+    // Get the label for the selected value (use == for loose comparison)
+    const selectedOption = options.find(opt => String(opt.value) === String(value));
     const displayText = selectedOption ? selectedOption.label : placeholder;
 
     // Close dropdown when clicking outside
@@ -31,8 +31,8 @@ export default function SelectInput({ label, value, onChange, options = [], plac
         };
     }, []);
 
-    const handleSelect = (optionValue: string) => {
-        if (value === optionValue) { onChange?.("")}
+    const handleSelect = (optionValue: string | number) => {
+        if (String(value) === String(optionValue)) { onChange?.(optionValue === '' ? '' : optionValue)}
         else {onChange?.(optionValue)}
         setIsOpen(false)
     };
@@ -68,10 +68,10 @@ export default function SelectInput({ label, value, onChange, options = [], plac
                             <ul className="py-1">
                                 {options.map((option) => (
                                     <li
-                                        key={option.value}
+                                        key={String(option.value)}
                                         onClick={() => handleSelect(option.value)}
                                         className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${
-                                            value === option.value ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                                            String(value) === String(option.value) ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
                                         }`}
                                     >
                                         {option.label}

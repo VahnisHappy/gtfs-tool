@@ -9,10 +9,7 @@ export type PathDisplayProps = {
 export default function PathDisplay({lineWidth}: PathDisplayProps) {
     const routes = useSelector((state: RootState) => state.routeState.data);
     
-    console.log('PathDisplay rendering with routes:', routes)
-    
     if (!routes || routes.length === 0) {
-        console.log('No routes to display')
         return null
     }
     
@@ -21,15 +18,7 @@ export default function PathDisplay({lineWidth}: PathDisplayProps) {
             {routes.map((route, index) => {
                 const path = route?.path || [];
                 
-                console.log(`Route ${index}:`, {
-                    id: route.id,
-                    stopIndexes: route.stopIndexes,
-                    pathLength: path.length,
-                    color: route.color
-                })
-                
                 if (path.length < 2) {
-                    console.log(`Route ${index} skipped - not enough points`)
                     return null
                 }
                 
@@ -42,17 +31,18 @@ export default function PathDisplay({lineWidth}: PathDisplayProps) {
                     properties: {}
                 }
                 
-                const routeId = typeof route.id === 'object' ? route.id.value : route.id
+                // Use stable index-based key to prevent remounting
+                const stableKey = `route-${index}`;
                 
                 return (
                     <Source 
-                        key={`route-${routeId || index}`}
-                        id={`route-source-${routeId || index}`}
+                        key={stableKey}
+                        id={`route-source-${index}`}
                         type='geojson' 
                         data={geojson}
                     >
                         <Layer 
-                            id={`route-layer-${routeId || index}`}
+                            id={`route-layer-${index}`}
                             type='line' 
                             paint={{
                                 'line-width': lineWidth,

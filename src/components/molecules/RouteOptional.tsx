@@ -1,35 +1,16 @@
 import { useState } from 'react';
 import TextInput from '../atoms/TextInput';
 import SelectInput from '../atoms/SelectInput';
+import FormInput from './FormInput';
 
-interface RouteOptionalProps {
-  routeLongName?: string;
-  routeUrl?: string;
-  continuousPickup?: string;
-  continuousDropOff?: string;
-  networkId?: string;
-  cemvSupport?: string;
-  routeSortOrder?: string;
-  routeDesc?: string;
-  onFieldChange: (field: string, value: string) => void;
-}
 
-export default function RouteOptional({
-  routeLongName = '',
-  routeUrl = '',
-  continuousPickup = '',
-  continuousDropOff = '',
-  networkId = '',
-  cemvSupport = '',
-  routeSortOrder = '',
-  routeDesc = '',
-  onFieldChange
-}: RouteOptionalProps) {
+export default function RouteOptional() {
   const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   return (
     <div className="relative w-full">
       <button
+        type="button"
         onClick={() => setShowOptionalFields(!showOptionalFields)}
         className="w-full flex justify-between items-center py-2 px-3 border border-gray-300 rounded bg-white hover:bg-gray-50 transition-colors"
       >
@@ -47,22 +28,12 @@ export default function RouteOptional({
       {showOptionalFields && (
         <div className="absolute top-full left-0 w-full mt-2 p-4 space-y-4 border border-gray-200 rounded shadow-xl bg-white z-50">
           <div className="grid grid-cols-2 gap-3">
-            <TextInput 
-              label="route long name"
-              value={routeLongName}
-              onChange={(value) => onFieldChange('routeLongName', value)}
-              placeholder="input"
-            />
-            <TextInput 
-              label="route url"
-              value={routeUrl}
-              onChange={(value) => onFieldChange('routeUrl', value)}
-              placeholder="input"
-            />
+            <FormInput name="route_long_name" label="route long name" placeholder="route long name" />
+            <FormInput name="route_url" label="route url" placeholder="route url" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <SelectInput 
+            {/* <SelectInput 
               label="continuous pickup"
               value={continuousPickup}
               onChange={(value) => onFieldChange('continuousPickup', value)}
@@ -73,11 +44,11 @@ export default function RouteOptional({
               value={continuousDropOff}
               onChange={(value) => onFieldChange('continuousDropOff', value)}
               placeholder="select"
-            />
+            /> */}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TextInput 
+            {/* <TextInput 
               label="network id"
               value={networkId}
               onChange={(value) => onFieldChange('networkId', value)}
@@ -88,10 +59,10 @@ export default function RouteOptional({
               value={cemvSupport}
               onChange={(value) => onFieldChange('cemvSupport', value)}
               placeholder="select"
-            />
+            /> */}
           </div>
 
-          <TextInput 
+          {/* <TextInput 
             label="route sort order"
             value={routeSortOrder}
             onChange={(value) => onFieldChange('routeSortOrder', value)}
@@ -103,7 +74,7 @@ export default function RouteOptional({
             value={routeDesc}
             onChange={(value) => onFieldChange('routeDesc', value)}
             placeholder="input"
-          />
+          /> */}
         </div>
       )}
     </div>

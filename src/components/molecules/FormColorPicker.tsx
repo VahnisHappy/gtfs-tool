@@ -1,11 +1,11 @@
 import { Controller, useFormContext } from "react-hook-form";
-import SelectInput, { type SelectInputProps } from "../atoms/SelectInput";
+import ColorPicker, { type ColorPickerProps } from "../atoms/ColorPicker";
 
-interface FormSelectInputProps extends Omit<SelectInputProps, 'value' | 'onChange'> {
+interface FormColorPickerProps extends Omit<ColorPickerProps, 'value' | 'onChange'> {
   name: string;
 }
 
-export default function FormSelectInput({ name, ...rest }: FormSelectInputProps) {
+export default function FormColorPicker({ name, ...rest }: FormColorPickerProps) {
     const { control } = useFormContext();
 
     return (
@@ -13,9 +13,9 @@ export default function FormSelectInput({ name, ...rest }: FormSelectInputProps)
             name={name}
             control={control}
             render={({ field }) => (
-                <SelectInput
+                <ColorPicker
                     {...rest}
-                    value={field.value}
+                    value={field.value || '#000000'}
                     onChange={field.onChange}
                 />
             )}

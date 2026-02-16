@@ -10,6 +10,8 @@ export type RouteCardProps = {
 } 
 
 export default function RouteCard({ route, index, isSelected, onSelect }: RouteCardProps) {
+    const isEmpty = !route.id.value && !route.name.value;
+
     return (
         // <div>
         //     <li key={route.id.value}>{route.name.value}</li>
@@ -25,12 +27,21 @@ export default function RouteCard({ route, index, isSelected, onSelect }: RouteC
             <div className="flex items-center gap-4">
                 <div className="flex-1">
                     <div className="flex items-baseline gap-4">
-                        <span className="font-semibold text-gray-900">
+                        {isEmpty ? (
+                            <span className="text-gray-400 italic">
+                                New Route (unsaved)
+                            </span>
+                        ) : (
+                            <>
+                            <span className="font-semibold text-gray-900">
                             {route.id.value}
-                        </span>
-                        <span className="text-gray-900">
-                            {route.name.value}
-                        </span>
+                            </span>
+                            <span className="text-gray-900">
+                                {route.name.value}
+                            </span>
+                            </>
+                        )
+                    }
                     </div>
 
                 </div>

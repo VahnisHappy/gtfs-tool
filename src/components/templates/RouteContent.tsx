@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
 import { openRouteDetail } from "../../store/slices/appSlice"
-import { RouteActions } from "../../store/actions"
+import { RouteActions, AppActions } from "../../store/actions"
 import ButtonAction from "../atoms/ButtonAction"
 import RouteContentDetail from "../organisms/RouteContentDetail"
 import { useEffect, useRef, useState } from "react"
@@ -36,6 +36,7 @@ export default function RouteContent() {
         if (selectedRouteIndex === null) return;
         const route = routes[selectedRouteIndex];
         dispatch(RouteActions.startEditingRoute(selectedRouteIndex));
+        dispatch(AppActions.setMode('draw')); // Set mode to draw so stops can be added
         dispatch(openRouteDetail({
             mode: 'edit',
             ...route,
@@ -66,14 +67,6 @@ export default function RouteContent() {
             }
         }
     }
-
-    useEffect(() => {
-            const timer = setTimeout(() => {
-                window.dispatchEvent(new Event('resize'));
-            }, 300);
-            return () => clearTimeout(timer);
-        }, [isRouteDetailOpen]);
-    
 
     return (
         <div className="flex h-full w-full">

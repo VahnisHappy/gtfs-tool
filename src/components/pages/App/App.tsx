@@ -6,11 +6,13 @@ import Sidebar from '../../organisms/Sidebar'
 import Content from '../Content'
 import { useLoadStops } from '../../../services/useLoadStops'
 import { useLoadRoutes } from '../../../services/useLoadRoutes'
+import { useLoadCalendars } from '../../../services/useLoadCalendars'
 
 export default function App() {
-  // Load stops and routes from backend on app initialization
+  // Load stops, routes, and calendars from backend on app initialization
   useLoadStops();
   useLoadRoutes();
+  useLoadCalendars();
 
   const isDetailOpen = useSelector((state: RootState) => state.appState.isStopDetailOpen || 
       state.appState.isRouteDetailOpen || state.appState.isCalendarDetailOpen || state.appState.isTripDetailOpen);

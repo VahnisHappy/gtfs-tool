@@ -33,15 +33,13 @@ const routeSlice = createSlice({
             state.currentRoute = newRoute;
         },
         startEditingRoute: (state, {payload}: PayloadAction<RouteIndex>) => {
-            // Close any existing route being edited
-            state.data = state.data.map(r => ({...r, edit: false}));
-            // Set the selected route to edit mode
-            const route = state.data[payload];
-            if (route) {
-                route.edit = true;
-                route.isNew = false;
-                state.currentRoute = route;
-            }
+            // Close any existing route being edited and set the selected route to edit mode
+            state.data = state.data.map((r, index) => ({
+                ...r, 
+                edit: index === payload,
+                isNew: index === payload ? false : r.isNew
+            }));
+            state.currentRoute = state.data[payload] || null;
         },
         addStopToRoute: (state, {payload}: PayloadAction<StopIndex>) => {
             const route = state.data.find(r => r.edit);

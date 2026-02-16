@@ -26,8 +26,12 @@ async function handleResponse<T>(response: Response): Promise<T> {
   }
   
   // Handle empty responses (e.g., 204 No Content)
-  const contentLength = response.headers.get('content-length');
-  if (response.status === 204 || contentLength === '0') {
+  if (response.status === 204) {
+    return undefined as T;
+  }
+  
+  const contentLength = response.headers?.get?.('content-length');
+  if (contentLength === '0') {
     return undefined as T;
   }
   
@@ -187,3 +191,119 @@ export interface CreateRoutePayload {
 
 export interface UpdateStopPayload extends Partial<CreateStopPayload> {}
 export interface UpdateRoutePayload extends Partial<CreateRoutePayload> {}
+
+// Calendar API payloads
+export interface CreateCalendarPayload {
+  service_id: string;
+  monday: number;
+  tuesday: number;
+  wednesday: number;
+  thursday: number;
+  friday: number;
+  saturday: number;
+  sunday: number;
+  start_date: string; // Format: YYYYMMDD
+  end_date: string; // Format: YYYYMMDD
+}
+
+export interface UpdateCalendarPayload extends Partial<CreateCalendarPayload> {}
+
+// Calendar Dates API payloads (exceptions)
+export interface CreateCalendarDatePayload {
+  service_id: string;
+  date: string; // Format: YYYYMMDD
+  exception_type: number; // 1 = Service Added, 2 = Service Removed
+}
+
+export interface UpdateCalendarDatePayload extends Partial<CreateCalendarDatePayload> {}
+
+// Calendar API functions
+export const calendarsApi = {
+  async getAll() {
+    const response = await fetch(`${API_BASE_URL}/calendars`);
+    return handleResponse(response);
+  },
+
+  async getById(id: string) {
+    const response = await fetch(`${API_BASE_URL}/calendars/${id}`);
+    return handleResponse(response);
+  },
+
+  async create(calendarData: CreateCalendarPayload) {
+    const response = await fetch(`${API_BASE_URL}/calendars`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(calendarData),
+    });
+    return handleResponse(response);
+  },
+
+  async update(id: string, calendarData: UpdateCalendarPayload) {
+    const response = await fetch(`${API_BASE_URL}/calendars/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(calendarData),
+    });
+    return handleResponse(response);
+  },
+
+  async delete(id: string) {
+    const response = await fetch(`${API_BASE_URL}/calendars/${id}`, {
+      method: 'DELETE',
+    });
+    return handleResponse(response);
+  }
+};
+
+// Calendar Dates API functions (exceptions)
+export const calendarDatesApi = {
+  async getAll() {
+    const response = await fetch(`${API_BASE_URL}/calendar-dates`);
+    return handleResponse(response);
+  },
+
+  async getByServiceId(serviceId: string) {
+    const response = await fetch(`${API_BASE_URL}/calendar-dates/service/${serviceId}`);
+    return handleResponse(response);
+  },
+
+  async create(calendarDateData: CreateCalendarDatePayload) {
+    const response = await fetch(`${API_BASE_URL}/calendar-dates`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(calendarDateData),
+    });
+    return handleResponse(response);
+  },
+
+  async update(serviceId: string, date: string, calendarDateData: UpdateCalendarDatePayload) {
+    const response = await fetch(`${API_BASE_URL}/calendar-dates/${serviceId}/${date}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(calendarDateData),
+    });
+    return handleResponse(response);
+  },
+
+  async delete(serviceId: string, date: string) {
+    const response = await fetch(`${API_BASE_URL}/calendar-dates/${serviceId}/${date}`, {
+      method: 'DELETE',
+    });
+    return handleResponse(response);
+  },
+
+  async deleteByServiceId(serviceId: string) {
+    const response = await fetch(`${API_BASE_URL}/calendar-dates/service/${serviceId}`, {
+      method: 'DELETE',
+    });
+    return handleResponse(response);
+  }
+};

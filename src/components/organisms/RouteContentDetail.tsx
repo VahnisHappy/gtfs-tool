@@ -1,218 +1,179 @@
-import { useDispatch, useSelector } from "react-redux"
-import type { RootState } from "../../store"
+import { useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useForm, FormProvider } from "react-hook-form";
+import type { RootState } from "../../store";
 import { closeRouteDetail } from "../../store/slices/appSlice";
 import { RouteActions } from "../../store/actions";
-import TextInput from "../atoms/TextInput";
-import SelectInput from "../atoms/SelectInput";
+import { routesApi, ApiError } from "../../services/api";
 import { routeTypeOptions } from "../../data";
-import ColorPicker from "../atoms/ColorPicker";
-import RouteOptional from "../molecules/RotueOptional";
+import RouteOptional from "../molecules/RouteOptional";
+import RouteStopsSection from "../molecules/RouteStopsSection";
 import CancelSaveButton from "../molecules/CancelSaveButton";
-import { routeToCreatePayload, routeToUpdatePayload } from "../../services/routeMapper";
-import { useState, useEffect } from "react";
-import type { Route, RouteFormData } from "../../types";
-import { ApiError, routesApi } from "../../services/api";
+import FormInput from "../molecules/FormInput";
+import FormSelectInput from "../molecules/FormSelectInput";
+import FormColorPicker from "../molecules/FormColorPicker";
 
-const initialRouteFormData: RouteFormData = {
-    id: { value: '', error: false },
-    routeName: { value: '', error: false },
-    routeType: 0,
+interface RouteFormData {
+    route_id: string;
+    route_short_name: string;
+    route_type: number;
+    route_color: string;
+    route_desc?: string;
+    route_long_name?: string;
+    route_url?: string;
+    route_text_color?: string;
+    route_sort_order?: number;
+    continuous_pickup?: string;
+    continuous_drop_off?: string;
+    network_id?: string;
+    cemv_support?: string;
+    agent_id?: string;
 }
 
 export default function RouteContentDetail() {
     const dispatch = useDispatch();
-    const isOpen = useSelector((state: RootState) => state.appState.isRouteDetailOpen)
+    const isOpen = useSelector((state: RootState) => state.appState.isRouteDetailOpen);
     const selectedRoute = useSelector((state: RootState) => state.appState.selectedRoute);
-    const routes = useSelector((state: RootState) => state.routeState.data)
-    const stops = useSelector((state: RootState) => state.stopState.data)
+    const routes = useSelector((state: RootState) => state.routeState.data);
+    const stops = useSelector((state: RootState) => state.stopState.data);
 
-    // Local form state for managing form inputs
-    const [routeFormData, setRouteFormData] = useState<RouteFormData>(initialRouteFormData);
-    const [isSaving, setIsSaving] = useState(false);
-
-    // Find the route being edited from Redux
+    // Find the route currently being edited
     const editingRoute = routes.find(r => r.edit);
+    const editingRouteRef = useRef(editingRoute);
+    const isInitialMount = useRef(true);
 
-    // Sync Redux route state to local form state
+    const methods = useForm<RouteFormData>({
+        defaultValues: {
+            route_id: '',
+            route_short_name: '',
+            route_type: 3, // Default to Bus
+            route_color: '#3b82f6',
+        }
+    });
+
+    const { handleSubmit, reset, watch } = methods;
+    const watchedName = watch("route_short_name"); // Watch name for the header title
+    const watchedColor = watch("route_color"); // Watch color for real-time map update
+
+    // Sync color changes to Redux for real-time map update
+    // Only sync user-initiated color changes, not initial form load
+    useEffect(() => {
+        if (isInitialMount.current) {
+            return;
+        }
+        if (editingRoute && watchedColor && watchedColor !== editingRoute.color) {
+            dispatch(RouteActions.setRouteColor(watchedColor));
+        }
+    }, [watchedColor, dispatch]);
+
     useEffect(() => {
         if (editingRoute) {
-            setRouteFormData({
-                id: editingRoute.id,
-                routeName: editingRoute.name,
-                routeType: editingRoute.routeType,
-                routeColor: { value: editingRoute.color, error: false },
-                // Initialize optional fields as needed
-                routeLongName: { value: '', error: false },
-                routeDesc: { value: '', error: false },
-                routeUrl: { value: '', error: false },
-                routeTextColor: { value: '', error: false },
-                routeSortOrder: undefined,
-                continuousPickup: { value: '', error: false },
-                continuousDropOff: { value: '', error: false },
-                networkId: { value: '', error: false },
-                cemvSupport: { value: '', error: false },
+            // Track if this is a new route being edited
+            const isNewRoute = editingRouteRef.current?.id.value !== editingRoute.id.value;
+            editingRouteRef.current = editingRoute;
+            
+            if (isNewRoute || isInitialMount.current) {
+                reset({
+                    route_id: editingRoute.id.value,
+                    route_short_name: editingRoute.name.value,
+                    route_type: editingRoute.routeType,
+                    route_color: editingRoute.color,
+                });
+                // Allow color sync after initial mount
+                setTimeout(() => {
+                    isInitialMount.current = false;
+                }, 100);
+            }
+        } else if (selectedRoute?.mode === 'new') {
+            reset({
+                route_id: '',
+                route_short_name: '',
+                route_type: 3,
+                route_color: '#3b82f6'
             });
+            setTimeout(() => {
+                isInitialMount.current = false;
+            }, 100);
         }
-    }, [editingRoute]);
+    }, [editingRoute?.id.value, selectedRoute, reset]);
 
     const handleClose = () => {
         if (selectedRoute?.mode === 'new' && selectedRoute.routeIndex !== undefined) {
             dispatch(RouteActions.removeRoute(selectedRoute.routeIndex));
         }
         dispatch(closeRouteDetail());
-        setRouteFormData(initialRouteFormData); // Reset form
-    }
+    };
 
-    const handleSave = async () => {
+
+    const onSubmit = async (data: RouteFormData) => {
         if (!editingRoute) return;
-        if (!routeFormData.routeName?.value || !routeFormData.id?.value) return;
-        if (routeFormData.routeName.value.trim() === '' || routeFormData.id.value.trim() === '') return;
-        
-        setIsSaving(true);
+
         try {
-            // Create the final route object for Redux (UI state)
-            const finalRoute: Route = {
-                id: { value: routeFormData.id?.value ?? '', error: false },
-                name: { value: routeFormData.routeName?.value ?? '', error: false },
-                routeType: routeFormData.routeType,
-                color: routeFormData.routeColor?.value || '#3b82f6',
-                stopIndexes: editingRoute.stopIndexes,
-                path: editingRoute.path,
-                edit: false,
-                isNew: false
+            // Convert stopIndexes to stop IDs for saving to database
+            const stopIds = editingRoute.stopIndexes
+                .map(idx => stops[idx]?.id.value)
+                .filter((id): id is string => !!id);
+
+            // Ensure route_type is a number (select returns string)
+            // Include route_path and route_stop_ids from editingRoute
+            // Remove "#" from color for backend storage
+            const apiData = {
+                ...data,
+                route_type: Number(data.route_type),
+                route_color: data.route_color.replace('#', ''),
+                route_path: editingRoute.path,
+                route_stop_ids: stopIds,
             };
 
             if (selectedRoute?.mode === 'new') {
-                // Convert form data to API payload
-                const formDataForApi: RouteFormData = {
-                    id: { value: routeFormData.id?.value ?? '', error: false },
-                    routeName: { value: routeFormData.routeName?.value ?? '', error: false },
-                    routeType: routeFormData.routeType,
-                    routeColor: routeFormData.routeColor,
-                    routeLongName: routeFormData.routeLongName,
-                    routeDesc: routeFormData.routeDesc,
-                    routeUrl: routeFormData.routeUrl,
-                    routeTextColor: routeFormData.routeTextColor,
-                    routeSortOrder: routeFormData.routeSortOrder,
-                    continuousPickup: routeFormData.continuousPickup,
-                    continuousDropOff: routeFormData.continuousDropOff,
-                    networkId: routeFormData.networkId,
-                    cemvSupport: routeFormData.cemvSupport,
-                };
-                const payload = routeToCreatePayload(formDataForApi, editingRoute.path);
-                console.log('Creating route with payload:', payload);
-                
-                await routesApi.create(payload);
-                
-                // Update Redux with the saved route
+                await routesApi.create(apiData);
+
                 dispatch(RouteActions.updateRoute({
                     index: selectedRoute.routeIndex!, 
-                    route: finalRoute
+                    route: {
+                        id: { value: data.route_id, error: false },
+                        name: { value: data.route_short_name, error: false },
+                        routeType: Number(data.route_type),
+                        color: data.route_color,
+                        stopIndexes: editingRoute.stopIndexes,
+                        stopIds: stopIds,
+                        path: editingRoute.path,
+                        edit: false,
+                        isNew: false
+                    }
                 }));
+            } else {
+                await routesApi.update(data.route_id, apiData);
 
-            } else if (selectedRoute?.mode === 'edit' && selectedRoute.routeIndex !== undefined) {
-                // Convert form data to API payload
-                const formDataForApi: RouteFormData = {
-                    id: { value: routeFormData.id?.value ?? '', error: false },
-                    routeName: { value: routeFormData.routeName?.value ?? '', error: false },
-                    routeType: routeFormData.routeType,
-                    routeColor: routeFormData.routeColor,
-                    routeLongName: routeFormData.routeLongName,
-                    routeDesc: routeFormData.routeDesc,
-                    routeUrl: routeFormData.routeUrl,
-                    routeTextColor: routeFormData.routeTextColor,
-                    routeSortOrder: routeFormData.routeSortOrder,
-                    continuousPickup: routeFormData.continuousPickup,
-                    continuousDropOff: routeFormData.continuousDropOff,
-                    networkId: routeFormData.networkId,
-                    cemvSupport: routeFormData.cemvSupport,
-                };
-                const payload = routeToUpdatePayload(formDataForApi, editingRoute.path);
-                console.log('Updating route with payload:', payload);
-
-                await routesApi.update(routeFormData.id.value, payload);
-                
-                // Update Redux with the saved route
-                dispatch(RouteActions.updateRoute({
-                    index: selectedRoute.routeIndex,
-                    route: finalRoute
-                }));
+                if (selectedRoute?.routeIndex !== undefined) {
+                    dispatch(RouteActions.updateRoute({
+                        index: selectedRoute.routeIndex,
+                        route: {
+                            id: { value: data.route_id, error: false },
+                            name: { value: data.route_short_name, error: false },
+                            routeType: Number(data.route_type),
+                            color: data.route_color,
+                            stopIndexes: editingRoute.stopIndexes,
+                            stopIds: stopIds,
+                            path: editingRoute.path,
+                            edit: false,
+                            isNew: false
+                        }
+                    }));
+                }
             }
             
             dispatch(closeRouteDetail());
-            setRouteFormData(initialRouteFormData); // Reset form
-
         } catch (err) {
             console.error("Failed to save route:", err);
-            
             if (err instanceof ApiError) {
-                console.error(`API Error: ${err.message}`);
-                // TODO: Add user-facing error notification
-                // e.g., dispatch(showErrorNotification(err.message))
+                alert(`API Error: ${err.message}`);
+            } else {
+                alert("An unexpected error occurred.");
             }
-        } finally {
-            setIsSaving(false);
         }
-    }
-    
-    const handleIdChange = (value: string) => {
-        setRouteFormData(prev => ({
-            ...prev,
-            id: { value, error: value.trim() === '' }
-        }));
-        dispatch(RouteActions.updateRouteId(value));
-    }
+    };
 
-    const handleNameChange = (value: string) => {
-        setRouteFormData(prev => ({
-            ...prev,
-            routeName: { value, error: value.trim() === '' }
-        }));
-        dispatch(RouteActions.updateRouteName(value));
-    }
-    
-    const handleColorChange = (color: string) => {
-        setRouteFormData(prev => ({
-            ...prev,
-            routeColor: { value: color, error: false }
-        }));
-        dispatch(RouteActions.setRouteColor(color));
-    }
-
-    const handleRouteTypeChange = (value: string) => {
-        const num = Number(value);
-        if (!Number.isNaN(num)) {
-            setRouteFormData(prev => ({
-                ...prev,
-                routeType: num
-            }));
-            dispatch(RouteActions.updateRouteType(num));
-        }
-    }
-
-    const handleOptionalFieldChange = (field: string, value: string) => {
-        setRouteFormData(prev => ({
-            ...prev,
-            [field]: { value, error: false }
-        }));
-        // TODO: Dispatch Redux action for optional fields if needed
-    }
-    
-    // Validation: check if route can be saved
-    const canSave = (routeFormData.routeName?.value ?? '').trim() !== '' 
-        && (routeFormData.id?.value ?? '').trim() !== ''
-        && !isSaving;
-    
-    // Get unique stops for display
-    const uniqueStops = editingRoute 
-        ? Array.from(new Set(editingRoute.stopIndexes))
-        : [];
-    
-    
-    const handleRemoveStop = (stopIndex: number) => {
-        if (!editingRoute) return;
-        dispatch(RouteActions.removeStopFromRoute(stopIndex));
-    }
     return (
         <aside 
            className={`fixed right-0 top-0 h-screen w-[350px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${
@@ -220,131 +181,58 @@ export default function RouteContentDetail() {
             }`}
         >
             <div className="flex flex-col h-full">
-                {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b">
                     <h3 className="text-xl font-semibold">
                         {selectedRoute?.mode === 'new' 
-                        ? (routeFormData.routeName.value || `new  route`) 
-                        : `${routeFormData.routeName.value}(edit)`
-                    }
+                            ? (watchedName || `new route`) 
+                            : `${watchedName} (edit)`
+                        }
                     </h3>
                     <button 
                         onClick={handleClose} 
                         className="text-gray-400 hover:text-gray-600 text-2xl"
-                        disabled={isSaving}
+                        type="button"
                     >
                         ✕
                     </button>
                 </div>
                 
-                {/* Form Content */}
-                <div className="flex-1 overflow-y-auto p-4">
-                    {editingRoute ? (
-                        <div className="space-y-6">
-                            {/* Required Fields */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <TextInput 
-                                    label="route id" 
-                                    value={routeFormData.id?.value ?? ''} 
-                                    onChange={handleIdChange} 
-                                    placeholder="route id" 
-                                    disabled={isSaving}
-                                />
-                                <TextInput 
-                                    label="route name" 
-                                    value={routeFormData.routeName?.value ?? ''} 
-                                    onChange={handleNameChange} 
-                                    placeholder="route name" 
-                                    disabled={isSaving}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <SelectInput 
-                                    label="route type"
-                                    value={String(routeFormData.routeType)}
-                                    onChange={handleRouteTypeChange}
-                                    options={routeTypeOptions}
-                                    placeholder="Select type"
-                                />
-                                
-                                <div>
-                                    <ColorPicker 
-                                        color={routeFormData.routeColor?.value || '#3b82f6'} 
-                                        onChange={handleColorChange}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Optional Fields */}
-                            <RouteOptional
-                                routeLongName={routeFormData.routeLongName?.value || ""}
-                                routeUrl={routeFormData.routeUrl?.value || ""}
-                                continuousPickup={routeFormData.continuousPickup?.value || ""}
-                                continuousDropOff={routeFormData.continuousDropOff?.value || ""}
-                                networkId={routeFormData.networkId?.value || ""}
-                                cemvSupport={routeFormData.cemvSupport?.value || ""}
-                                routeSortOrder={routeFormData.routeSortOrder?.toString() || ""}
-                                routeDesc={routeFormData.routeDesc?.value || ""}
-                                onFieldChange={handleOptionalFieldChange}
-                            />
-
-                            {/* Stops Section */}
-                            <div className="border-t pt-4">
-                                <label className="block text-sm font-medium mb-2">
-                                    stops ({uniqueStops.length})
-                                </label>
-                                
-                                {uniqueStops.length > 0 ? (
-                                    <div className="space-y-1 border border-gray-200 rounded-md overflow-hidden">
-                                        {uniqueStops.map((stopIdx, idx) => {
-                                            const stop = stops[stopIdx];
-                                            return (
-                                                <div
-                                                        key={idx}
-                                                        className="flex items-center gap-3 p-3 bg-white hover:bg-gray-50 border-b last:border-b-0 group"
-                                                    >
-                                                        <span className="text-sm font-semibold text-gray-600 min-w-[60px]">
-                                                            {stop?.id.value || stopIdx}
-                                                        </span>
-                                                        <span className="text-sm flex-1">
-                                                            {stop?.name.value || `Stop ${stopIdx}`}
-                                                        </span>
-                                                        <button
-                                                            onClick={() => handleRemoveStop(stopIdx)}
-                                                            disabled={isSaving}
-                                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed p-1"
-                                                            title="Remove stop"
-                                                        >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                            </svg>
-                                                        </button>
-                                                </div>
-                                            );
-                                        })}
+                <FormProvider {...methods}>
+                    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                            {editingRoute ? (
+                                <>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <FormInput name="route_id" label="route id" placeholder="route id" />
+                                        <FormInput name="route_short_name" label="route name" placeholder="route name" />
                                     </div>
-                                ) : (
-                                    <p className="text-sm text-gray-500 italic">
-                                        No stops added yet. Click on the map to add stops.
-                                    </p>
-                                )}
-                            </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormSelectInput name="route_type" label="route type" options={routeTypeOptions} placeholder="Select type"/>
+                                        <FormColorPicker name="route_color" label="route color" />
+                                    </div>
+
+                                    <RouteOptional />
+
+                                    <RouteStopsSection stopIndexes={editingRoute.stopIndexes} />
+                                </>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-gray-500">No route selected</p>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="flex items-center justify-center h-full">
-                            <p className="text-gray-500">No route selected</p>
-                        </div>
-                    )}
-                </div>
-                
-                {/* Footer Buttons */}
-                <CancelSaveButton 
-                    onCancel={handleClose}
-                    onSave={handleSave} 
-                    disabled={!canSave}
-                />
+                        
+                        {editingRoute && (
+                            <CancelSaveButton 
+                                onCancel={handleClose}
+                                onSave={handleSubmit(onSubmit)} 
+                                disabled={false} // Use RHF's loading state
+                            />
+                        )}
+                    </form>
+                </FormProvider>
             </div>
         </aside>
-    )
+    );
 }

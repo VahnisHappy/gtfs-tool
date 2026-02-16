@@ -23,6 +23,9 @@ const calendarSlice = createSlice({
         },
         setCalendar: (state, {payload}: PayloadAction<Calendar[]>) =>{
             state.data = payload
+        },
+        removeLastCalendar: (state) => {
+            state.data.pop();
         }
     }
 });

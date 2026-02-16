@@ -18,13 +18,14 @@ export default function CalendarCard({ calendar, isSelected, onSelect }: Calenda
                     : 'bg-white hover:bg-gray-50'
             }`}
         >
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
+            <div className="space-y-1">
+                {/* <div className=""> */}
                     <div className="flex items-center justify-between">
                         <span className="font-semibold text-gray-900">
                             {calendar.id.value}
                         </span>
-                        <div className="flex gap-1">
+                    </div>
+                    <div className="flex gap-1">
                             {calendar.days.map((isActive, idx) => (
                                 <div
                                     key={idx}
@@ -38,9 +39,8 @@ export default function CalendarCard({ calendar, isSelected, onSelect }: Calenda
                                     {dayLabels[idx]}
                                 </div>
                             ))}
-                        </div>
                     </div>
-                </div>
+                {/* </div> */}
             </div>
         </li>
     );

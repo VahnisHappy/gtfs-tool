@@ -46,6 +46,7 @@ export type Route = {
     name: Field<string>,
     routeType: number,
     stopIndexes: StopIndex[],
+    stopIds?: string[], // For saving to database - actual stop IDs
     path: Point[],
     color: string,
     edit?: boolean,
@@ -70,16 +71,16 @@ export type RouteFormData = {
 
 export type BooleanDays = [boolean, boolean, boolean, boolean, boolean, boolean, boolean];
 
-export type ADate = {
-    date: number,
-    month: number,
-    year: number,
-}
+// export type ADate = {
+//     date: number,
+//     month: number,
+//     year: number,
+// }
 
 export type Calendar = {
     id: Field<string>,
-    startDate: Field<ADate | null>,
-    endDate: Field<ADate | null>,
+    startDate: Field<string | null>,
+    endDate: Field<string | null>,
     days: BooleanDays,
     exception: number,
     exceptions?: ExceptionDate[]
@@ -87,7 +88,7 @@ export type Calendar = {
 
 export type ExceptionDate ={
     id: Field<string>,
-    date: Field<ADate | null>,
+    date: Field<string | null>,
     type: Field<string>,
 }
 
