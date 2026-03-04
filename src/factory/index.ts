@@ -1,4 +1,4 @@
-import type { Field, Point, Route, Stop, StopGeoJSON } from "../types"
+import type { Calendar, ExceptionDate, Field, Point, Route, Stop, StopTime, Time, Trip } from "../types"
 
 export function createField<T>(value: T, optional?: boolean): Field<T> {
     return {value, error: !optional}
@@ -7,29 +7,8 @@ export function createField<T>(value: T, optional?: boolean): Field<T> {
 export function createStop(point: Point): Stop {
     return {
         ...point,
-        id: createField(`stop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`),
-        name: createField(`Stop ${Date.now()}`)
-    }
-}
-
-export const stopToGeoJSON = (stop: Stop): StopGeoJSON => {
-    return {
-        type: 'Feature',
-        geometry: {
-            type: 'Point',
-            coordinates: [stop.lng, stop.lat]
-        },
-        properties: {
-            id: stop.id.value,  // Extract the value from Field
-            name: stop.name.value  // Extract the value from Field
-        }
-    }
-}
-
-export const stopsToGeoJSONCollection = (stops: Stop[]): GeoJSON.FeatureCollection => {
-    return {
-        type: 'FeatureCollection',
-        features: stops.map(stopToGeoJSON)
+        id: createField(""),
+        name: createField("")
     }
 }
 
@@ -38,8 +17,46 @@ export function createRoute(color: string): Route {
         id: createField(""),
         name: createField(""),
         path: [],
-        stopIndexes:[],
+        stopIndexes: [],
         color,
-        edit: false
+        routeType: 3, // Default to bus
+        stopIds: [],
+        edit: false,
+    }
+}
+
+export function createCalendar(): Calendar {
+    return {
+        id: createField(""),
+        startDate: createField<string | null>(null),
+        endDate: createField<string | null>(null),
+        days: [false, false, false, false, false, false, false], // Mon-Sun
+        exception: 0,
+        exceptions: []
+    }
+}
+
+export function createTrip(): Trip {
+    return {
+        id: createField(""),
+        route: createField<number | null>(null),
+        calendar: createField<number | null>(null),
+        stopTimes: []
+    }
+}
+
+export function createStopTime(): StopTime {
+    return {
+        arrivalTime: createField<Time | null>(null),
+        departureTime: createField<Time | null>(null),
+        stopIndex: -1
+    }
+}
+
+export function createExceptionDate(): ExceptionDate {
+    return {
+        id: createField(""),
+        date: createField<string | null>(null),
+        type: createField("1") // Default to "1" (service added)
     }
 }

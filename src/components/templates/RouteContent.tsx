@@ -4,7 +4,7 @@ import { openRouteDetail } from "../../store/slices/appSlice"
 import { RouteActions, AppActions } from "../../store/actions"
 import ButtonAction from "../atoms/ButtonAction"
 import RouteContentDetail from "../organisms/RouteContentDetail"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import EditDeleteButton from "../molecules/EditDeleteButton"
 import RouteCard from "../molecules/RouteCard"
 import { ApiError, routesApi } from "../../services/api"
@@ -12,7 +12,7 @@ import { ApiError, routesApi } from "../../services/api"
 export default function RouteContent() {
     const routes = useSelector((state: RootState) => state.routeState.data)
     const dispatch = useDispatch()
-    const isRouteDetailOpen = useSelector((state: RootState) => state.appState.isRouteDetailOpen)
+    // const isRouteDetailOpen = useSelector((state: RootState) => state.appState.isRouteDetailOpen)
     const [selectedRouteIndex, setSelectedRouteIndex] = useState<number | null>(null);
     const routeListRef = useRef<HTMLDivElement>(null);
 

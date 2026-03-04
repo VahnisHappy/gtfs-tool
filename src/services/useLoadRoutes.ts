@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { routesApi } from './api';
 import { RouteActions } from '../store/actions';
@@ -30,10 +30,31 @@ export function useLoadRoutes() {
   const dispatch = useDispatch();
   const stops = useSelector((state: RootState) => state.stopState.data);
   const hasLoadedRoutes = useRef(false);
+  const [stopsReadyTimeout, setStopsReadyTimeout] = useState(false);
+
+  // Fallback: if stops don't load within 500ms, proceed anyway
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setStopsReadyTimeout(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Stops are "ready" when they've loaded OR timeout has passed
+  const stopsReady = stops.length > 0 || stopsReadyTimeout;
 
   useEffect(() => {
     // Only load routes once
     if (hasLoadedRoutes.current) return;
+    
+    // Wait for stops to be ready
+    if (!stopsReady) {
+      console.log('Waiting for stops to load before loading routes...');
+      return;
+    }
+
+    // Mark as loaded immediately to prevent race conditions
+    hasLoadedRoutes.current = true;
 
     const loadRoutes = async () => {
       try {
@@ -70,7 +91,6 @@ export function useLoadRoutes() {
         });
 
         console.log(`Loaded ${routes.length} routes from backend`);
-        hasLoadedRoutes.current = true;
         
         // Load all routes into Redux store
         dispatch(RouteActions.setRoutes(routes));
@@ -81,11 +101,7 @@ export function useLoadRoutes() {
       }
     };
 
-    // Load routes after a small delay to ensure stops are loaded first
-    const timer = setTimeout(() => {
-      loadRoutes();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [dispatch, stops]);
+    // Load routes immediately since we've already waited for stops
+    loadRoutes();
+  }, [dispatch, stops, stopsReady]);
 }

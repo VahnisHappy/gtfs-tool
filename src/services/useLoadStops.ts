@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { stopsApi } from './api';
 import { StopActions } from '../store/actions';
@@ -28,8 +28,15 @@ interface GeoJSONFeatureCollection {
  */
 export function useLoadStops() {
   const dispatch = useDispatch();
+  const hasLoadedStops = useRef(false);
 
   useEffect(() => {
+    // Only load stops once
+    if (hasLoadedStops.current) return;
+    
+    // Mark as loaded immediately to prevent race conditions
+    hasLoadedStops.current = true;
+
     const loadStops = async () => {
       try {
         console.log('Loading stops from backend...');

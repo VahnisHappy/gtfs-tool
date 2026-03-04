@@ -31,7 +31,7 @@ export default function CalendarCard({ calendar, isSelected, onSelect }: Calenda
                                     key={idx}
                                     className={`w-6 h-6 flex items-center justify-center text-xs rounded ${
                                         isActive
-                                            ? 'bg-blue-500 text-white font-medium'
+                                            ? 'bg-[#f3a80f] text-white font-medium'
                                             : 'bg-gray-200 text-gray-400'
                                     }`}
                                     title={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][idx]}

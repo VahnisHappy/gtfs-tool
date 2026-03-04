@@ -26,6 +26,10 @@ const stopSlice = createSlice({
             state.data = state.data.slice(0, -1);
             state.selectedIndex = null;
         },
+        removeStopByIndex: (state, {payload}: PayloadAction<StopIndex>) => {
+            state.data = state.data.filter((_, idx) => idx !== payload);
+            state.selectedIndex = null;
+        },
         updateStop: (state, {payload}: PayloadAction<{index: StopIndex, stop: Stop}>) => {
             state.data[payload.index] = payload.stop;
         },

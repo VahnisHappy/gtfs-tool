@@ -124,9 +124,9 @@ export default function StopContentDetail() {
   };
 
   const handleCancel = () => {
-    // If it's a new stop that hasn't been saved, remove the placeholder
-    if (selectedStop?.mode === 'new') {
-      dispatch(StopActions.removeLastStop());
+    // If it's a new stop that hasn't been saved, remove the placeholder by its index
+    if (selectedStop?.mode === 'new' && selectedStop.stopIndex !== undefined) {
+      dispatch(StopActions.removeStopByIndex(selectedStop.stopIndex));
     }
     dispatch(closeStopDetail());
   };

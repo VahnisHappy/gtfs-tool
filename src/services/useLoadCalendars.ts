@@ -41,6 +41,9 @@ export function useLoadCalendars() {
   useEffect(() => {
     // Only load calendars once
     if (hasLoadedCalendars.current) return;
+    
+    // Mark as loaded immediately to prevent race conditions
+    hasLoadedCalendars.current = true;
 
     const loadCalendars = async () => {
       try {
@@ -88,7 +91,6 @@ export function useLoadCalendars() {
         });
 
         console.log(`Loaded ${calendars.length} calendars from backend`);
-        hasLoadedCalendars.current = true;
         
         // Load all calendars into Redux store
         dispatch(CalendarActions.setCalendar(calendars));

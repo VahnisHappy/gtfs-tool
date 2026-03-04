@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit"
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { Point, Route, RouteIndex, StopIndex } from "../../types";
 import type { RouteState } from "../states";
+import { createRoute as createRouteFactory } from "../../factory";
 
 const initialState: RouteState = {
     data: [],
@@ -20,12 +21,7 @@ const routeSlice = createSlice({
             state.data = state.data.map(r => ({...r, edit: false}));
             // Create new route with edit mode
             const newRoute: Route = {
-                id: { value: '', error: true },
-                name: { value: '', error: true },
-                routeType: '' as unknown as number,
-                stopIndexes: [],
-                path: [],
-                color: payload,
+                ...createRouteFactory(payload),
                 edit: true,
                 isNew: true
             };
@@ -114,6 +110,19 @@ const routeSlice = createSlice({
             const route = state.data.find(r => r.edit);
             if (!route) return;
             route.stopIndexes = route.stopIndexes.filter(idx => idx !== payload);
+        },
+        removeStopFromRouteByArrayIndex: (state, {payload}: PayloadAction<number>) => {
+            const route = state.data.find(r => r.edit);
+            if (!route) return;
+            route.stopIndexes = route.stopIndexes.filter((_, idx) => idx !== payload);
+        },
+        reorderStopsInRoute: (state, {payload}: PayloadAction<{fromIndex: number, toIndex: number}>) => {
+            const route = state.data.find(r => r.edit);
+            if (!route) return;
+            const stops = [...route.stopIndexes];
+            const [removed] = stops.splice(payload.fromIndex, 1);
+            stops.splice(payload.toIndex, 0, removed);
+            route.stopIndexes = stops;
         }
     }
 })

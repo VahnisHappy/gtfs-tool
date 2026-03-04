@@ -5,7 +5,6 @@ import { createStop } from "../factory";
 import type { Point, StopIndex } from "../types";
 import { useCallback, useEffect, useMemo } from "react";
 import MapDisplay from "./organisms/MapDisplay";
-import { stopsToGeoJSONCollection } from "../factory";
 import StopDisplay from "./molecules/StopDisplay";
 import PathDisplay from "./organisms/PathDisplay";
 import { direction } from "../services/useMapInteractions";
@@ -19,15 +18,11 @@ export default function Map() {
   const currentRoute = useSelector((state: RootState) => state.routeState.currentRoute)
   
   const handleMark = (point: Point) => {
-    // Create empty placeholder stop with only coordinates (no auto-generated id/name)
-    const placeholderStop = {
-      id: { value: '', error: undefined },
-      name: { value: '', error: undefined },
-      lat: point.lat,
-      lng: point.lng
-    };
+    // Create empty placeholder stop with only coordinates
+    const placeholderStop = createStop(point);
     dispatch(StopActions.addStop(placeholderStop))
-    dispatch(AppActions.updateStopCoordinates({ lat: point.lat, lng: point.lng }))
+    // Store both coordinates and the index of the newly added stop
+    dispatch(AppActions.updateStopCoordinates({ lat: point.lat, lng: point.lng, stopIndex: stops.length }))
     dispatch(AppActions.setMode('view'))
   }
   
@@ -65,7 +60,20 @@ export default function Map() {
   }, [currentEditedRoute?.stopIndexes?.length, stops])
 
   const stopsGeoJSON = useMemo(() => {
-    return stopsToGeoJSONCollection(stops)
+    return {
+        type: 'FeatureCollection' as const,
+        features: stops.map(stop => ({
+            type: 'Feature' as const,
+            geometry: {
+                type: 'Point' as const,
+                coordinates: [stop.lng, stop.lat]
+            },
+            properties: {
+                id: stop.id.value,
+                name: stop.name.value
+            }
+        }))
+    };
   }, [stops])
 
   const handleMapDisplayClick = useCallback((e: MapMouseEvent) => {

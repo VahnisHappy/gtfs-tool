@@ -2,32 +2,26 @@ import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../../store"
 import ButtonAction from "../atoms/ButtonAction"
 import { openCalendarDetail } from "../../store/slices/appSlice"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import CalendarContentDetail from "../organisms/CalendarContentDetail"
 import EditDeleteButton from "../molecules/EditDeleteButton"
 import CalendarCard from "../molecules/CalendarCard"
 import { CalendarActions } from "../../store/actions"
 import { calendarsApi, calendarDatesApi } from "../../services/api"
+import { createCalendar } from "../../factory"
 
 export default function CalendarContent() {
     const calendars = useSelector((state: RootState) => state.calendarState.data)
     const dispatch = useDispatch()
-    const isCalendarDetailOpen = useSelector((state: RootState) => state.appState.isCalendarDetailOpen)
+    // const isCalendarDetailOpen = useSelector((state: RootState) => state.appState.isCalendarDetailOpen)
     const [selectedCalendarIndex, setSelectedCalendarIndex] = useState<number | null>(null)
     const calendarListRef = useRef<HTMLDivElement>(null)
 
     const handleNewCalendar = () => {
         // Add placeholder calendar to Redux
-        const newCalendar = {
-            id: { value: '', error: undefined },
-            startDate: { value: null, error: undefined },
-            endDate: { value: null, error: undefined },
-            days: [false, false, false, false, false, false, false] as [boolean, boolean, boolean, boolean, boolean, boolean, boolean],
-            exception: 0,
-            exceptions: []
-        };
+        const newCalendar = createCalendar();
         dispatch(CalendarActions.addCalendar(newCalendar));
-        setSelectedCalendarIndex(calendars.length); // Select the new calendar
+        // setSelectedCalendarIndex(calendars.length); // Select the new calendar
         dispatch(openCalendarDetail({ mode: 'new' }))
     }
 
@@ -65,12 +59,11 @@ export default function CalendarContent() {
         }
     }
 
-    useEffect (() => {
-        const timer = setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [isCalendarDetailOpen])
+    const handleSelectCalendar = (index: number) => {
+        // Toggle selection: if clicking the same calendar, deselect it
+        const newSelection = selectedCalendarIndex === index ? null : index;
+        setSelectedCalendarIndex(newSelection);
+    }
 
     return (
         <div className="flex h-full w-full">
@@ -99,7 +92,7 @@ export default function CalendarContent() {
                                         key={index}
                                         calendar={calendar}
                                         isSelected={selectedCalendarIndex === index}
-                                        onSelect={() => setSelectedCalendarIndex(index)}
+                                        onSelect={() => handleSelectCalendar(index)}
                                     />
                                 ))}
                             </ul>

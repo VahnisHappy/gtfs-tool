@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../store';
 import { RouteActions } from '../../store/actions';
@@ -9,25 +10,71 @@ interface RouteStopsSectionProps {
 export default function RouteStopsSection({ stopIndexes }: RouteStopsSectionProps) {
     const dispatch = useDispatch();
     const stops = useSelector((state: RootState) => state.stopState.data);
+    const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+    const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
-    const uniqueStops = Array.from(new Set(stopIndexes));
+    // Use the actual stopIndexes array (preserving order and allowing duplicates)
+    const orderedStops = stopIndexes;
 
-    const handleRemoveStop = (stopIndex: number) => {
-        dispatch(RouteActions.removeStopFromRoute(stopIndex));
+    const handleRemoveStop = (arrayIndex: number) => {
+        dispatch(RouteActions.removeStopFromRouteByArrayIndex(arrayIndex));
+    };
+
+    const handleDragStart = (idx: number) => {
+        setDraggedIdx(idx);
+    };
+
+    const handleDragOver = (e: React.DragEvent, idx: number) => {
+        e.preventDefault();
+        setDragOverIdx(idx);
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIdx(null);
+    };
+
+    const handleDrop = (toIdx: number) => {
+        if (draggedIdx !== null && draggedIdx !== toIdx) {
+            dispatch(RouteActions.reorderStopsInRoute({ fromIndex: draggedIdx, toIndex: toIdx }));
+        }
+        setDraggedIdx(null);
+        setDragOverIdx(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIdx(null);
+        setDragOverIdx(null);
     };
 
     return (
         <div className="border-t pt-4">
             <label className="block text-sm font-medium mb-2">
-                stops ({uniqueStops.length})
+                stops ({orderedStops.length})
             </label>
             
-            {uniqueStops.length > 0 ? (
+            {orderedStops.length > 0 ? (
                 <div className="space-y-1 border border-gray-200 rounded-md overflow-hidden">
-                    {uniqueStops.map((stopIdx, idx) => {
+                    {orderedStops.map((stopIdx, idx) => {
                         const stop = stops[stopIdx];
+                        const isDragging = draggedIdx === idx;
+                        const isDragOver = dragOverIdx === idx;
                         return (
-                            <div key={idx} className="flex items-center gap-3 p-3 bg-white hover:bg-gray-50 border-b last:border-b-0 group">
+                            <div 
+                                key={`${stopIdx}-${idx}`} 
+                                draggable
+                                onDragStart={() => handleDragStart(idx)}
+                                onDragOver={(e) => handleDragOver(e, idx)}
+                                onDragLeave={handleDragLeave}
+                                onDrop={() => handleDrop(idx)}
+                                onDragEnd={handleDragEnd}
+                                className={`flex items-center gap-3 p-3 bg-white hover:bg-gray-50 border-b last:border-b-0 group cursor-move transition-all ${
+                                    isDragging ? 'opacity-50 bg-gray-100' : ''
+                                } ${isDragOver ? 'border-t-2 border-t-blue-500' : ''}`}
+                            >
+                                <svg className="w-4 h-4 text-gray-400 cursor-grab" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
+                                </svg>
+                                <span className="text-xs font-medium text-gray-400 w-5">{idx + 1}</span>
                                 <span className="text-sm font-semibold text-gray-600 min-w-[60px]">
                                     {stop?.id.value || stopIdx}
                                 </span>
@@ -36,7 +83,7 @@ export default function RouteStopsSection({ stopIndexes }: RouteStopsSectionProp
                                 </span>
                                 <button
                                     type="button"
-                                    onClick={() => handleRemoveStop(stopIdx)}
+                                    onClick={() => handleRemoveStop(idx)}
                                     className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700"
                                     title="Remove stop"
                                 >

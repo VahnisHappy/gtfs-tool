@@ -39,10 +39,13 @@ const appSlice = createSlice({
         setMode: (state, action: PayloadAction<typeof modes[number]>) => {
             state.mode = action.payload;
         },
-        updateStopCoordinates: (state, action: PayloadAction<{ lat: number; lng: number }>) => {
+        updateStopCoordinates: (state, action: PayloadAction<{ lat: number; lng: number; stopIndex?: number }>) => {
             if (state.selectedStop) {
                 state.selectedStop.lat = action.payload.lat;
                 state.selectedStop.lng = action.payload.lng;
+                if (action.payload.stopIndex !== undefined) {
+                    state.selectedStop.stopIndex = action.payload.stopIndex;
+                }
             }
         },
         openRouteDetail: (state, action: PayloadAction<any>) => {

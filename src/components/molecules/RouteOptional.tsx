@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import TextInput from '../atoms/TextInput';
-import SelectInput from '../atoms/SelectInput';
 import FormInput from './FormInput';
+import FormSelectInput from './FormSelectInput';
 
 
 export default function RouteOptional() {
@@ -33,48 +32,58 @@ export default function RouteOptional() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* <SelectInput 
+            <FormSelectInput
+              name="continuousPickup"
               label="continuous pickup"
-              value={continuousPickup}
-              onChange={(value) => onFieldChange('continuousPickup', value)}
+              options={[
+                { value: "0", label: "Continuous stopping pickup" },
+                { value: "1", label: "No continuous stopping pickup" },
+                { value: "2", label: "Must phone agency" },
+                { value: "3", label: "Must coordinate with driver" }
+              ]}
               placeholder="select"
             />
-            <SelectInput 
+            <FormSelectInput
+              name="continuousDropOff"
               label="continuous drop off"
-              value={continuousDropOff}
-              onChange={(value) => onFieldChange('continuousDropOff', value)}
+              options={[
+                { value: "0", label: "Continuous stopping drop off" },
+                { value: "1", label: "No continuous stopping drop off" },
+                { value: "2", label: "Must phone agency" },
+                { value: "3", label: "Must coordinate with driver" }
+              ]}
               placeholder="select"
-            /> */}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* <TextInput 
+            <FormInput
+              name="networkId"
               label="network id"
-              value={networkId}
-              onChange={(value) => onFieldChange('networkId', value)}
               placeholder="input"
             />
-            <SelectInput 
+            <FormSelectInput
+              name="cemvSupport"
               label="cemv support"
-              value={cemvSupport}
-              onChange={(value) => onFieldChange('cemvSupport', value)}
+              options={[
+                { value: "0", label: "No support" },
+                { value: "1", label: "Supported" }
+              ]}
               placeholder="select"
-            /> */}
+            />
           </div>
 
-          {/* <TextInput 
+          <FormInput
+            name="routeSortOrder"
             label="route sort order"
-            value={routeSortOrder}
-            onChange={(value) => onFieldChange('routeSortOrder', value)}
             placeholder="input"
           />
 
-          <TextInput 
+          <FormInput
+            name="routeDesc"
             label="route desc"
-            value={routeDesc}
-            onChange={(value) => onFieldChange('routeDesc', value)}
             placeholder="input"
-          /> */}
+          />
         </div>
       )}
     </div>

@@ -14,13 +14,18 @@ export default function TripContent() {
     const calendars = useSelector((state: RootState) => state.calendarState.data);
 
     const dispatch = useDispatch();
-    const isTripDetailOpen = useSelector((state: RootState) => state.appState.isTripDetailOpen);
+    // const isTripDetailOpen = useSelector((state: RootState) => state.appState.isTripDetailOpen);
     const [selectedTrip, setSelectedTrip] = useState<number | null>(null);
     const [deleteTrip] = useDeleteTripMutation();
     
     const handleNewTrip = () => {
         setSelectedTrip(null);
         dispatch(openTripDetail({ mode: 'new' }));
+    }
+
+    const handleSelectTrip = (index: number) => {
+        const newSelection = selectedTrip === index ? null : index;
+        setSelectedTrip(newSelection);
     }
 
     const handleEditTrip = () => {
@@ -48,13 +53,6 @@ export default function TripContent() {
         }
     }
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [isTripDetailOpen]);
-
     return (
         <div className="flex h-full w-full">
             <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full">
@@ -81,7 +79,7 @@ export default function TripContent() {
                                     routeName={routeName}
                                     calendarId={calendarId}
                                     isSelected={selectedTrip === index}
-                                    onSelect={() => setSelectedTrip(index)}
+                                    onSelect={() => handleSelectTrip(index)}
                                 />
                             );
                         })}
