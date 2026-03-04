@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../store"
-import { StopActions, AppActions, RouteActions } from "../store/actions";
+import { StopActions, AppActions, RouteActions, MapActions } from "../store/actions";
 import { createStop } from "../factory";
 import type { Point, StopIndex } from "../types";
 import { useCallback, useEffect, useMemo } from "react";
@@ -105,6 +105,12 @@ export default function Map() {
     // Toggle selection when clicking marker
     const currentSelected = stops[index] ? index : null;
     dispatch(StopActions.selectStop(currentSelected));
+    
+    // Fly to the selected stop
+    if (currentSelected !== null) {
+      const stop = stops[currentSelected];
+      dispatch(MapActions.flyToLocation({ lat: stop.lat, lng: stop.lng, zoom: 16 }));
+    }
     
     if (mode === 'draw') {
       if (!currentEditedRoute) {

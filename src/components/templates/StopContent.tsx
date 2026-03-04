@@ -48,7 +48,7 @@ export default function StopContent() {
                 console.log('Stop deleted from backend successfully');
                 
                 // Remove from local state
-                dispatch(StopActions.removeStop(stop.id.value))
+                dispatch(StopActions.removeStopByIndex(selectedStopIndex));
                 dispatch(StopActions.selectStop(null));
             } catch (err) {
                 console.error('Failed to delete stop:', err);
@@ -93,7 +93,7 @@ export default function StopContent() {
                         <h3 className="font-semibold mb-2">stop list ({stops.length})</h3>
                     </div>
                     {stops.length === 0 ? (
-                        <p className="text-gray-500 text-sm px-4">No stops created yet. Click "New Stop" to add one.</p>
+                        <p className="text-gray-500 text-sm px-4">No stops created yet. Click "new stop" to add one.</p>
                     ) : (
                         <ul className="space-y-0">
                             {stops.map((stop, index) => (
