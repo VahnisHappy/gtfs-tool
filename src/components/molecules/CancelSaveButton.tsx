@@ -14,6 +14,7 @@ export default function CancelSaveButton({
   return (
     <div className="p-4 flex justify-end gap-3">
       <button
+        type="button"
         onClick={onCancel}
         className="px-6 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
       >

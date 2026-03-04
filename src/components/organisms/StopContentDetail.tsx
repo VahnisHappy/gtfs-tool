@@ -156,7 +156,7 @@ export default function StopContentDetail() {
                 min={-90}
                 max={90}
               />
-              <FormNumberInput 
+              <FormNumberInput
                 name="stop_lon" 
                 label="stop lon" 
                 placeholder="longitude"

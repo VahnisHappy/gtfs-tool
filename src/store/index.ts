@@ -6,6 +6,7 @@ import mapSlice from './slices/mapSlice';
 import { stopsToGeoJSONCollection } from '../factory';
 import calendarSlice from './slices/calendarSlice';
 import tripSlice from './slices/tripSlice';
+import { gtfsApi } from '../services/gtfsApi';
 
 const store = configureStore({
   reducer: {
@@ -15,7 +16,10 @@ const store = configureStore({
     calendarState: calendarSlice.reducer,
     mapState: mapSlice.reducer,
     tripState: tripSlice.reducer,
+    [gtfsApi.reducerPath]: gtfsApi.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(gtfsApi.middleware),
 })
 
 export default store;

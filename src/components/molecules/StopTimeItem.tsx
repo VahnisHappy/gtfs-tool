@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import TextInput from '../atoms/TextInput';
+import FormInput from './FormInput';
+import FormSelectInput from './FormSelectInput';
 
 interface StopTimeData {
     arrivalTime: string;
@@ -39,6 +42,19 @@ export default function StopSequenceItem({
     const [shapeDistTraveled, setShapeDistTraveled] = useState(stopTime.shapeDistTraveled || '');
     const [timepoint, setTimepoint] = useState(stopTime.timepoint || '');
 
+    // Sync local state with props when stopTime changes (e.g., from auto-calculation)
+    useEffect(() => {
+        if (stopTime.arrivalTime !== undefined) {
+            setArrivalTime(stopTime.arrivalTime);
+        }
+        if (stopTime.departureTime !== undefined) {
+            setDepartureTime(stopTime.departureTime);
+        }
+        if (stopTime.shapeDistTraveled !== undefined) {
+            setShapeDistTraveled(stopTime.shapeDistTraveled);
+        }
+    }, [stopTime.arrivalTime, stopTime.departureTime, stopTime.shapeDistTraveled]);
+
     const handleArrivalTimeChange = (value: string) => {
         setArrivalTime(value);
         onTimeChange?.(value, departureTime);
@@ -49,188 +65,117 @@ export default function StopSequenceItem({
         onTimeChange?.(arrivalTime, value);
     };
 
-    // Generate time options (24-hour format with 30-minute intervals)
-    const generateTimeOptions = () => {
-        const times = [];
-        for (let hour = 0; hour < 24; hour++) {
-            for (let minute = 0; minute < 60; minute += 30) {
-                const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
-                times.push(timeStr);
-            }
-        }
-        return times;
-    };
-
-    const timeOptions = generateTimeOptions();
-
     return (
-        <div className="border border-gray-300 rounded-md mb-3 bg-white overflow-hidden">
+        <div className="border border-gray-300 rounded-sm mb-1 bg-white overflow-hidden">
             {/* Stop Header - Collapsible */}
             <button
+                type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-1 hover:bg-gray-50 transition-colors"
             >
-                <div className="flex items-center gap-3">
-                    <span className="text-base font-medium">{stopId}</span>
-                    <span className="text-base text-gray-600">{stopName}</span>
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-base font-medium truncate">{stopId}</span>
+                    <span className="text-base text-gray-600 truncate">{stopName}</span>
                 </div>
-                <svg 
-                    className={`w-5 h-5 text-gray-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <div className="flex items-center gap-3">
+                    <svg 
+                        className={`w-5 h-5 text-gray-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
             </button>
 
             {/* Expanded Content */}
             {isExpanded && (
-                <div className="px-4 pb-4 space-y-4 border-t border-gray-200 bg-gray-50">
-                    {/* Stop Time Header with Copy/Paste Actions */}
-                    <div className="flex items-center justify-between pt-4">
-                        <h4 className="text-base font-medium">stop time</h4>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onCopyTime?.();
-                                }}
-                                className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                                title="Copy time"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onPasteTime?.();
-                                }}
-                                className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                                title="Paste time"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Arrival and Departure Time */}
+                <div className="p-2 space-y-4 border-t border-gray-200 bg-gray-50">
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">arrival time</label>
-                            <select
-                                value={arrivalTime}
-                                onChange={(e) => handleArrivalTimeChange(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">time</option>
-                                {timeOptions.map(time => (
-                                    <option key={time} value={time}>{time}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2">departure time</label>
-                            <select
-                                value={departureTime}
-                                onChange={(e) => handleDepartureTimeChange(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">time</option>
-                                {timeOptions.map(time => (
-                                    <option key={time} value={time}>{time}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <TextInput 
+                            label="arrival time" 
+                            value={arrivalTime} 
+                            onChange={handleArrivalTimeChange}
+                            placeholder="HH:MM:SS" 
+                            labelClassName="text-sm"
+                        />
+                        <TextInput 
+                            label="departure time" 
+                            value={departureTime} 
+                            onChange={handleDepartureTimeChange}
+                            placeholder="HH:MM:SS" 
+                            labelClassName="text-sm"
+                        />
                     </div>
 
                     {/* Optional Fields Accordion */}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
+                    <div className="relative w-full">
+                        <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation();
                             setShowOptionalFields(!showOptionalFields);
                         }}
-                        className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+                        className="w-full flex items-center justify-between px-2 py-3 bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
                     >
-                        <span className="text-sm font-medium">optional fields</span>
-                        <svg 
-                            className={`w-5 h-5 transition-transform ${showOptionalFields ? 'rotate-180' : ''}`}
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
+                            <span className="text-sm font-medium">optional fields</span>
+                            <svg 
+                                className={`w-5 h-5 transition-transform ${showOptionalFields ? 'rotate-180' : ''}`}
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
 
-                    {showOptionalFields && (
-                        <div className="space-y-4 pt-2">
-                            <div>
-                                <label className="block text-sm font-medium mb-2">stop headsign</label>
-                                <input
-                                    type="text"
-                                    value={stopHeadsign}
-                                    onChange={(e) => setStopHeadsign(e.target.value)}
-                                    placeholder="input"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+                        {showOptionalFields && (
+                            <div className="space-y-4 p-2 bg-white border border-gray-300 rounded-md mt-1">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormInput name="stopHeadsign" label="stop headsign" placeholder="input" labelClassName="text-sm"/>
+                                    <FormSelectInput
+                                        name="timepoint"
+                                        label="timepoint"
+                                        options={[
+                                            { value: "", label: "select" },
+                                            { value: "0", label: "Times are approximate" },
+                                            { value: "1", label: "Times are exact" }
+                                        ]}
+                                        labelClassName="text-sm"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormSelectInput
+                                        name="pickupType"
+                                        label="pickup type"
+                                        options={[
+                                            { value: "", label: "select" },
+                                            { value: "0", label: "Regular pickup" },
+                                            { value: "1", label: "No pickup available" },
+                                            { value: "2", label: "Must phone agency" },
+                                            { value: "3", label: "Must coordinate with driver" }
+                                        ]}
+                                        labelClassName="text-sm"
+                                    />
+                                    <FormSelectInput
+                                        name="dropOffType"
+                                        label="drop off type"
+                                        options={[
+                                            { value: "", label: "select" },
+                                            { value: "0", label: "Regular drop off" },
+                                            { value: "1", label: "No drop off available" },
+                                            { value: "2", label: "Must phone agency" },
+                                            { value: "3", label: "Must coordinate with driver" }
+                                        ]}
+                                        labelClassName="text-sm"
+                                    />
+                                </div>
+
+                                <FormInput name="shapeDistTraveled" label="shape dist traveled" placeholder="input" labelClassName="text-sm"/>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">pickup type</label>
-                                <select
-                                    value={pickupType}
-                                    onChange={(e) => setPickupType(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">select</option>
-                                    <option value="0">Regular pickup</option>
-                                    <option value="1">No pickup available</option>
-                                    <option value="2">Must phone agency</option>
-                                    <option value="3">Must coordinate with driver</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">drop off type</label>
-                                <select
-                                    value={dropOffType}
-                                    onChange={(e) => setDropOffType(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">select</option>
-                                    <option value="0">Regular drop off</option>
-                                    <option value="1">No drop off available</option>
-                                    <option value="2">Must phone agency</option>
-                                    <option value="3">Must coordinate with driver</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">shape dist traveled</label>
-                                <input
-                                    type="text"
-                                    value={shapeDistTraveled}
-                                    onChange={(e) => setShapeDistTraveled(e.target.value)}
-                                    placeholder="input"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">timepoint</label>
-                                <select
-                                    value={timepoint}
-                                    onChange={(e) => setTimepoint(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">select</option>
-                                    <option value="0">Times are approximate</option>
-                                    <option value="1">Times are exact</option>
-                                </select>
-                            </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             )}
         </div>

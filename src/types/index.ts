@@ -107,7 +107,8 @@ export type Time = {
 export type StopTime = {
     arrivalTime: Field<Time | null>,
     departureTime: Field<Time | null>,
-    stopIndex: number
+    stopIndex: number,
+    stopId?: string  // Optional: used for backend mapping
 }
 
 export type Trip = {

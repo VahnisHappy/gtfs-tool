@@ -46,7 +46,7 @@ export default function SelectInput({ label, value, onChange, options = [], plac
                     onClick={() => setIsOpen(!isOpen)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
                 >
-                    <span className={`block truncate mr-2 ${value ? 'text-gray-900' : 'text-gray-500'}`}
+                    <span className={`block truncate mr-2 ${selectedOption ? 'text-gray-900' : 'text-gray-500'}`}
                         title={displayText}>
                         {displayText}
                     </span>

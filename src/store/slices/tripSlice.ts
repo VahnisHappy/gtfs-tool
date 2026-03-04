@@ -19,6 +19,11 @@ const tripSlice = createSlice({
         setTrips: (state, {payload}: PayloadAction<Trip[]>) => {
             state.data = payload;
         },
+        updateTrip: (state, {payload}: PayloadAction<{index: number; trip: Trip}>) => {
+            if (payload.index >= 0 && payload.index < state.data.length) {
+                state.data[payload.index] = payload.trip;
+            }
+        },
     }
 });
 
