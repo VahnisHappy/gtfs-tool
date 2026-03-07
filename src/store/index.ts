@@ -5,8 +5,8 @@ import routeSlice from './slices/routeSlice';
 import mapSlice from './slices/mapSlice';
 import calendarSlice from './slices/calendarSlice';
 import tripSlice from './slices/tripSlice';
+import agencySlice from './slices/agencySlice';
 import { gtfsApi } from '../services/gtfsApi';
-import type { Stop } from '../types';
 
 const store = configureStore({
   reducer: {
@@ -16,6 +16,7 @@ const store = configureStore({
     calendarState: calendarSlice.reducer,
     mapState: mapSlice.reducer,
     tripState: tripSlice.reducer,
+    agencyState: agencySlice.reducer,
     [gtfsApi.reducerPath]: gtfsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -27,24 +28,24 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
 // Helper function to convert stops to GeoJSON
-const stopsToGeoJSONCollection = (stops: Stop[]): GeoJSON.FeatureCollection => {
-    return {
-        type: 'FeatureCollection',
-        features: stops.map(stop => ({
-            type: 'Feature' as const,
-            geometry: {
-                type: 'Point' as const,
-                coordinates: [stop.lng, stop.lat]
-            },
-            properties: {
-                id: stop.id.value,
-                name: stop.name.value
-            }
-        }))
-    };
-};
+// const stopsToGeoJSONCollection = (stops: Stop[]): GeoJSON.FeatureCollection => {
+//     return {
+//         type: 'FeatureCollection',
+//         features: stops.map(stop => ({
+//             type: 'Feature' as const,
+//             geometry: {
+//                 type: 'Point' as const,
+//                 coordinates: [stop.lng, stop.lat]
+//             },
+//             properties: {
+//                 id: stop.id.value,
+//                 name: stop.name.value
+//             }
+//         }))
+//     };
+// };
 
-export const selectStopsGeoJSON = (state: RootState): GeoJSON.FeatureCollection => {
-    const stops = state.stopState.data
-    return stopsToGeoJSONCollection(stops)
-}
+// export const selectStopsGeoJSON = (state: RootState): GeoJSON.FeatureCollection => {
+//     const stops = state.stopState.data
+//     return stopsToGeoJSONCollection(stops)
+// }

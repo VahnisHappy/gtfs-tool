@@ -122,11 +122,33 @@ export type TripIndex = number
 
 export type StopTimeIndex = number
 
-export type StopGeoJSON = GeoJSON.Feature<GeoJSON.Point, {
-    id: string
-    name?: string
-}>
+export type Agency = {
+    id: Field<string>,
+    name: Field<string>,
+    url: Field<string>,
+    timezone: Field<string>,
+    lang?: Field<string>,
+    phone?: Field<string>,
+    fareUrl?: Field<string>,
+    email?: Field<string>,
+}
 
-export type StopsGeoJSONCollection = GeoJSON.FeatureCollection<GeoJSON.Point>
+export type AgencyFormData = {
+    agency_id: string,
+    agency_name: string,
+    agency_url: string,
+    agency_timezone: string,
+    agency_lang?: string,
+    agency_phone?: string,
+    agency_fare_url?: string,
+    agency_email?: string,
+}
+
+// export type StopGeoJSON = GeoJSON.Feature<GeoJSON.Point, {
+//     id: string
+//     name?: string
+// }>
+
+// export type StopsGeoJSONCollection = GeoJSON.FeatureCollection<GeoJSON.Point>
 
 export type { Field } from "./Field"

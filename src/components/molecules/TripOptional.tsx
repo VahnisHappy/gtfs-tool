@@ -69,6 +69,19 @@ export default function TripOptional() {
                 
                         />
                     </div>
+                    <div>
+                        <FormSelectInput
+                            name="carsAllowed"
+                            label="cars allowed"
+                            options={[
+                                { value: '0', label: 'No information' },
+                                { value: '1', label: 'Allowed' },
+                                { value: '2', label: 'Not allowed' }
+                            ]}
+                            placeholder="select"
+                
+                        /> 
+                    </div>
                 </div>
             )}
 

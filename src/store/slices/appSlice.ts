@@ -5,7 +5,7 @@ import type { Content } from "../../types";
 import type { modes } from "../../data";
 
 const initialState: AppState = {
-    content: 'stops',
+    content: 'project',
     isStopDetailOpen: false,
     selectedStop: null,
     isRouteDetailOpen: false,

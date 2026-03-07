@@ -44,3 +44,4 @@ export type MapState = {
 export type LocationState = {
     location: Field<string>
 }
+

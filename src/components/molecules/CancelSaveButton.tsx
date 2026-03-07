@@ -12,7 +12,7 @@ export default function CancelSaveButton({
   disabled = false
 }: CancelSaveButtonProps) {
   return (
-    <div className="p-4 flex justify-end gap-3">
+    <div className="flex justify-end gap-3">
       <button
         type="button"
         onClick={onCancel}

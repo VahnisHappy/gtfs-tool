@@ -1,4 +1,3 @@
-
 export const sidebarContent = [ 'stops', 'routes', 'calendar', 'trips', 'project']
 export const modes = [ 'view', 'mark', 'draw', 'drag', 'new']
 export const routeTypeOptions = [
@@ -35,25 +34,12 @@ export const locationTypeOption = [
     {value: `4`, label: 'boarding area'}
 ]
 
-export const timezoneOptions = [
-    { value: 'Asia/Bangkok', label: 'Asia/Bangkok (UTC+7)' },
-    { value: 'Asia/Singapore', label: 'Asia/Singapore (UTC+8)' },
-    { value: 'Asia/Tokyo', label: 'Asia/Tokyo (UTC+9)' },
-    { value: 'Asia/Shanghai', label: 'Asia/Shanghai (UTC+8)' },
-    { value: 'Asia/Hong_Kong', label: 'Asia/Hong_Kong (UTC+8)' },
-    { value: 'Asia/Seoul', label: 'Asia/Seoul (UTC+9)' },
-    { value: 'Asia/Jakarta', label: 'Asia/Jakarta (UTC+7)' },
-    { value: 'Asia/Manila', label: 'Asia/Manila (UTC+8)' },
-    { value: 'Asia/Kolkata', label: 'Asia/Kolkata (UTC+5:30)' },
-    { value: 'Europe/London', label: 'Europe/London (UTC+0)' },
-    { value: 'Europe/Paris', label: 'Europe/Paris (UTC+1)' },
-    { value: 'Europe/Berlin', label: 'Europe/Berlin (UTC+1)' },
-    { value: 'America/New_York', label: 'America/New_York (UTC-5)' },
-    { value: 'America/Los_Angeles', label: 'America/Los_Angeles (UTC-8)' },
-    { value: 'America/Chicago', label: 'America/Chicago (UTC-6)' },
-    { value: 'Australia/Sydney', label: 'Australia/Sydney (UTC+10)' },
-    { value: 'Pacific/Auckland', label: 'Pacific/Auckland (UTC+12)' },
-]
+export const timezoneOptions = Intl.supportedValuesOf('timeZone').map((tz) => {
+    const offset = new Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'shortOffset' })
+        .formatToParts(new Date())
+        .find((p) => p.type === 'timeZoneName')?.value ?? '';
+    return { value: tz, label: `${tz} (${offset})` };
+})
 
 export const wheelchairBoardingOptions = [
     { value: '0', label: 'No information' },

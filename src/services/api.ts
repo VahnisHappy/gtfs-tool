@@ -1,4 +1,3 @@
-// API base URL - adjust based on your backend configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 // Generic API error handler
@@ -306,4 +305,56 @@ export const calendarDatesApi = {
     });
     return handleResponse(response);
   }
+};
+
+// Agency API payloads
+export interface CreateAgencyPayload {
+  agency_id: string;
+  agency_name: string;
+  agency_url: string;
+  agency_timezone: string;
+  agency_lang?: string;
+  agency_phone?: string;
+  agency_fare_url?: string;
+  agency_email?: string;
+}
+
+export interface UpdateAgencyPayload extends Partial<CreateAgencyPayload> {}
+
+// Agency API functions
+export const agencyApi = {
+  async getAll() {
+    const response = await fetch(`${API_BASE_URL}/agencies`);
+    return handleResponse<CreateAgencyPayload[]>(response);
+  },
+
+  async getById(id: string) {
+    const response = await fetch(`${API_BASE_URL}/agencies/${encodeURIComponent(id)}`);
+    return handleResponse<CreateAgencyPayload>(response);
+  },
+
+  async create(data: CreateAgencyPayload) {
+    const response = await fetch(`${API_BASE_URL}/agencies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<CreateAgencyPayload>(response);
+  },
+
+  async update(id: string, data: UpdateAgencyPayload) {
+    const response = await fetch(`${API_BASE_URL}/agencies/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<CreateAgencyPayload>(response);
+  },
+
+  async delete(id: string) {
+    const response = await fetch(`${API_BASE_URL}/agencies/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<void>(response);
+  },
 };

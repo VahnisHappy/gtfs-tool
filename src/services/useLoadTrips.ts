@@ -15,6 +15,7 @@ interface BackendTrip {
   block_id?: string;
   wheelchair_accessible?: number;
   bikes_allowed?: number;
+  cars_allowed?:number;
   stop_times?: Array<{
     stop_sequence: number;
     stop_id: string;
