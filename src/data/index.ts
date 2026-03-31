@@ -1,15 +1,15 @@
-export const sidebarContent = [ 'stops', 'routes', 'calendar', 'trips', 'project']
-export const modes = [ 'view', 'mark', 'draw', 'drag', 'new']
+export const sidebarContent = ['stops', 'routes', 'calendar', 'trips', 'project']
+export const modes = ['view', 'mark', 'draw', 'drag', 'new', 'polygon', 'pickA', 'pickB']
 export const routeTypeOptions = [
-        { value: 0, label: 'Tram, Streetcar, Light rail' },
-        { value: 1, label: 'Subway, Metro' },
-        { value: 2, label: 'Rail' },
-        { value: 3, label: 'Bus' },
-        { value: 4, label: 'Ferry' },
-        { value: 5, label: 'Cable tram' },
-        { value: 6, label: 'Aerial lift' },
-        { value: 7, label: 'Funicular' },
-    ];
+    { value: 0, label: 'Tram, Streetcar, Light rail' },
+    { value: 1, label: 'Subway, Metro' },
+    { value: 2, label: 'Rail' },
+    { value: 3, label: 'Bus' },
+    { value: 4, label: 'Ferry' },
+    { value: 5, label: 'Cable tram' },
+    { value: 6, label: 'Aerial lift' },
+    { value: 7, label: 'Funicular' },
+];
 
 export const days = [
     { index: 0, key: 'sun', label: 'sun' },
@@ -22,16 +22,16 @@ export const days = [
 ] as const
 
 export const exceptionDate = [
-    {index: 1, label: 'added service'},
-    {index: 2, label: 'removed service'}
+    { index: 1, label: 'added service' },
+    { index: 2, label: 'removed service' }
 ]
 
 export const locationTypeOption = [
-    {value: `0`, label: 'stop'},
-    {value: `1`, label: 'station'},
-    {value: `2`, label: 'entrance/exit'},
-    {value: `3`, label: 'generic node'},
-    {value: `4`, label: 'boarding area'}
+    { value: `0`, label: 'stop' },
+    { value: `1`, label: 'station' },
+    { value: `2`, label: 'entrance/exit' },
+    { value: `3`, label: 'generic node' },
+    { value: `4`, label: 'boarding area' }
 ]
 
 export const timezoneOptions = Intl.supportedValuesOf('timeZone').map((tz) => {

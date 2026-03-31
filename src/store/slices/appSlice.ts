@@ -1,8 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { AppState } from "../states";
-import type { Content } from "../../types";
+import type { Content, Point } from "../../types";
 import type { modes } from "../../data";
+import type { PlannedStation } from "../../services/stationPlanner";
+import type { ExternalPOI } from "../../services/mapboxPOI";
 
 const initialState: AppState = {
     content: 'project',
@@ -14,14 +16,23 @@ const initialState: AppState = {
     selectedCalendar: null,
     isTripDetailOpen: false,
     selectedTrip: null,
-    mode: 'view'
+    mode: 'view',
+    polygonVertices: [],
+    polygonClosed: false,
+    isPolygonPanelOpen: false,
+    stationPlanPointA: null,
+    stationPlanPointB: null,
+    stationCount: 3,
+    plannedStations: [],
+    stationPlanRoutePath: [],
+    selectedPOIs: []
 }
 
 const appSlice = createSlice({
     name: "appState",
     initialState,
     reducers: {
-        setContent: (state, {payload}: PayloadAction<Content>) => {
+        setContent: (state, { payload }: PayloadAction<Content>) => {
             state.content = payload;
         },
         openStopDetail: (state, action: PayloadAction<any>) => {
@@ -79,14 +90,71 @@ const appSlice = createSlice({
             state.isTripDetailOpen = false;
             state.selectedTrip = null;
             state.mode = 'view';
+        },
+        enterPolygonMode: (state) => {
+            state.mode = 'polygon';
+            state.polygonVertices = [];
+            state.polygonClosed = false;
+            state.isPolygonPanelOpen = false;
+        },
+        addPolygonVertex: (state, action: PayloadAction<Point>) => {
+            if (!state.polygonClosed) {
+                state.polygonVertices.push(action.payload);
+            }
+        },
+        closePolygon: (state) => {
+            state.polygonClosed = true;
+            state.isPolygonPanelOpen = true;
+        },
+        clearPolygon: (state) => {
+            state.polygonVertices = [];
+            state.polygonClosed = false;
+            state.isPolygonPanelOpen = false;
+            state.stationPlanPointA = null;
+            state.stationPlanPointB = null;
+            state.plannedStations = [];
+            state.stationPlanRoutePath = [];
+            state.selectedPOIs = [];
+            state.mode = 'view';
+        },
+        openPolygonPanel: (state) => {
+            state.isPolygonPanelOpen = true;
+        },
+        closePolygonPanel: (state) => {
+            state.isPolygonPanelOpen = false;
+        },
+        setStationPlanPointA: (state, action: PayloadAction<Point>) => {
+            state.stationPlanPointA = action.payload;
+        },
+        setStationPlanPointB: (state, action: PayloadAction<Point>) => {
+            state.stationPlanPointB = action.payload;
+        },
+        setStationCount: (state, action: PayloadAction<number>) => {
+            state.stationCount = action.payload;
+        },
+        setPlannedStations: (state, action: PayloadAction<PlannedStation[]>) => {
+            state.plannedStations = action.payload;
+        },
+        clearStationPlan: (state) => {
+            state.stationPlanPointA = null;
+            state.stationPlanPointB = null;
+            state.plannedStations = [];
+            state.stationPlanRoutePath = [];
+            state.stationCount = 3;
+        },
+        setStationPlanRoutePath: (state, action: PayloadAction<Point[]>) => {
+            state.stationPlanRoutePath = action.payload;
+        },
+        setSelectedPOIs: (state, action: PayloadAction<ExternalPOI[]>) => {
+            state.selectedPOIs = action.payload;
         }
     }
 })
 
-export const { 
-    openStopDetail, 
-    closeStopDetail, 
-    setMode, 
+export const {
+    openStopDetail,
+    closeStopDetail,
+    setMode,
     updateStopCoordinates,
     setContent,
     openRouteDetail,
@@ -94,6 +162,19 @@ export const {
     openCalendarDetail,
     closeCalendarDetail,
     openTripDetail,
-    closeTripDetail
+    closeTripDetail,
+    enterPolygonMode,
+    addPolygonVertex,
+    closePolygon,
+    clearPolygon,
+    openPolygonPanel,
+    closePolygonPanel,
+    setStationPlanPointA,
+    setStationPlanPointB,
+    setStationCount,
+    setPlannedStations,
+    clearStationPlan,
+    setStationPlanRoutePath,
+    setSelectedPOIs
 } = appSlice.actions;
 export default appSlice;

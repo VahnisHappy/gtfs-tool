@@ -1,12 +1,17 @@
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../store"
 import { StopActions, AppActions, RouteActions, MapActions } from "../store/actions";
+import { addPolygonVertex, setStationPlanPointA, setStationPlanPointB, setMode } from "../store/slices/appSlice";
 import { createStop } from "../factory";
 import type { Point, StopIndex } from "../types";
 import { useCallback, useEffect, useMemo } from "react";
 import MapDisplay from "./organisms/MapDisplay";
 import StopDisplay from "./molecules/StopDisplay";
 import PathDisplay from "./organisms/PathDisplay";
+import PolygonDraw from "./organisms/PolygonDraw";
+import PolygonToolbar from "./molecules/PolygonToolbar";
+import PolygonResultsPanel from "./organisms/PolygonResultsPanel";
+import StationPlanDisplay from "./organisms/StationPlanDisplay";
 import { direction } from "../services/useMapInteractions";
 import type { MapMouseEvent } from "react-map-gl/mapbox";
 
@@ -16,7 +21,7 @@ export default function Map() {
   const stops = useSelector((state: RootState) => state.stopState.data)
   const routes = useSelector((state: RootState) => state.routeState.data)
   const currentRoute = useSelector((state: RootState) => state.routeState.currentRoute)
-  
+
   const handleMark = (point: Point) => {
     // Create empty placeholder stop with only coordinates
     const placeholderStop = createStop(point);
@@ -25,26 +30,26 @@ export default function Map() {
     dispatch(AppActions.updateStopCoordinates({ lat: point.lat, lng: point.lng, stopIndex: stops.length }))
     dispatch(AppActions.setMode('view'))
   }
-  
+
   // Fixed: Use addStopToRoute instead of addStop
   const handleDrawPath = (stop: StopIndex) => {
     dispatch(RouteActions.addStopToRoute(stop))
   }
 
   const currentEditedRoute = routes.find(route => route.edit)
-  
+
   useEffect(() => {
     if (!currentEditedRoute) {
       console.log('No route being edited')
       return
     }
-    
+
     console.log('Current edited route:', currentEditedRoute)
     console.log('Stop indexes:', currentEditedRoute.stopIndexes)
-    
+
     const points: Point[] = currentEditedRoute.stopIndexes.map(idx => stops[idx])
     console.log('Points for direction:', points)
-    
+
     if (points.length < 2) {
       console.log('Not enough points, clearing path')
       dispatch(RouteActions.setPath([]))
@@ -61,18 +66,18 @@ export default function Map() {
 
   const stopsGeoJSON = useMemo(() => {
     return {
-        type: 'FeatureCollection' as const,
-        features: stops.map(stop => ({
-            type: 'Feature' as const,
-            geometry: {
-                type: 'Point' as const,
-                coordinates: [stop.lng, stop.lat]
-            },
-            properties: {
-                id: stop.id.value,
-                name: stop.name.value
-            }
-        }))
+      type: 'FeatureCollection' as const,
+      features: stops.map(stop => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [stop.lng, stop.lat]
+        },
+        properties: {
+          id: stop.id.value,
+          name: stop.name.value
+        }
+      }))
     };
   }, [stops])
 
@@ -86,10 +91,18 @@ export default function Map() {
       longitude: point.lng,
       mode: mode
     })
-    
+
     if (mode === 'mark') {
       handleMark(point)
       console.log('Added stop')
+    } else if (mode === 'polygon') {
+      dispatch(addPolygonVertex({ lat: point.lat, lng: point.lng }))
+    } else if (mode === 'pickA') {
+      dispatch(setStationPlanPointA({ lat: point.lat, lng: point.lng }))
+      dispatch(setMode('polygon'))
+    } else if (mode === 'pickB') {
+      dispatch(setStationPlanPointB({ lat: point.lat, lng: point.lng }))
+      dispatch(setMode('polygon'))
     }
   }, [mode])
 
@@ -101,17 +114,17 @@ export default function Map() {
       currentRoute: currentRoute,
       currentEditedRoute: currentEditedRoute
     })
-    
+
     // Toggle selection when clicking marker
     const currentSelected = stops[index] ? index : null;
     dispatch(StopActions.selectStop(currentSelected));
-    
+
     // Fly to the selected stop
     if (currentSelected !== null) {
       const stop = stops[currentSelected];
       dispatch(MapActions.flyToLocation({ lat: stop.lat, lng: stop.lng, zoom: 16 }));
     }
-    
+
     if (mode === 'draw') {
       if (!currentEditedRoute) {
         console.error('No route being edited! Click "New Route" first.')
@@ -122,11 +135,15 @@ export default function Map() {
   }
 
   return (
-    <div className="w-full h-full" style={{position: `relative`}}>
+    <div className="w-full h-full" style={{ position: `relative` }}>
       <MapDisplay onClick={handleMapDisplayClick} stops={stopsGeoJSON}>
         <StopDisplay onClick={handleDisplayStopClick} />
         <PathDisplay lineWidth={3} />
+        <PolygonDraw />
+        <StationPlanDisplay />
       </MapDisplay>
+      <PolygonToolbar />
+      <PolygonResultsPanel />
     </div>
   )
 }

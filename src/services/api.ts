@@ -3,7 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 // Generic API error handler
 export class ApiError extends Error {
   status: number;
-  
+
   constructor(status: number, message: string) {
     super(message);
     this.name = 'ApiError';
@@ -23,17 +23,17 @@ async function handleResponse<T>(response: Response): Promise<T> {
     }
     throw new ApiError(response.status, errorMessage);
   }
-  
+
   // Handle empty responses (e.g., 204 No Content)
   if (response.status === 204) {
     return undefined as T;
   }
-  
+
   const contentLength = response.headers?.get?.('content-length');
   if (contentLength === '0') {
     return undefined as T;
   }
-  
+
   return response.json();
 }
 
@@ -108,6 +108,21 @@ export const stopsApi = {
     const response = await fetch(
       `${API_BASE_URL}/stops/nearby?lat=${lat}&lon=${lon}&radius=${radius}`
     );
+    return handleResponse(response);
+  },
+
+  /**
+   * Find stops within a polygon
+   * @param polygon Array of [longitude, latitude] pairs
+   */
+  async findWithinPolygon(polygon: [number, number][]) {
+    const response = await fetch(`${API_BASE_URL}/stops/within-polygon`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ polygon }),
+    });
     return handleResponse(response);
   },
 };
@@ -188,8 +203,8 @@ export interface CreateRoutePayload {
   route_path?: { lat: number; lng: number }[];
 }
 
-export interface UpdateStopPayload extends Partial<CreateStopPayload> {}
-export interface UpdateRoutePayload extends Partial<CreateRoutePayload> {}
+export interface UpdateStopPayload extends Partial<CreateStopPayload> { }
+export interface UpdateRoutePayload extends Partial<CreateRoutePayload> { }
 
 // Calendar API payloads
 export interface CreateCalendarPayload {
@@ -205,7 +220,7 @@ export interface CreateCalendarPayload {
   end_date: string; // Format: YYYYMMDD
 }
 
-export interface UpdateCalendarPayload extends Partial<CreateCalendarPayload> {}
+export interface UpdateCalendarPayload extends Partial<CreateCalendarPayload> { }
 
 // Calendar Dates API payloads (exceptions)
 export interface CreateCalendarDatePayload {
@@ -214,7 +229,7 @@ export interface CreateCalendarDatePayload {
   exception_type: number; // 1 = Service Added, 2 = Service Removed
 }
 
-export interface UpdateCalendarDatePayload extends Partial<CreateCalendarDatePayload> {}
+export interface UpdateCalendarDatePayload extends Partial<CreateCalendarDatePayload> { }
 
 // Calendar API functions
 export const calendarsApi = {
@@ -319,7 +334,7 @@ export interface CreateAgencyPayload {
   agency_email?: string;
 }
 
-export interface UpdateAgencyPayload extends Partial<CreateAgencyPayload> {}
+export interface UpdateAgencyPayload extends Partial<CreateAgencyPayload> { }
 
 // Agency API functions
 export const agencyApi = {
