@@ -1,19 +1,22 @@
+import { poi_categories } from '../data';
 import type { Point } from '../types';
 
 const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_APP_MAPBOX_ACCESS_TOKEN || '';
 
-// Important POI categories for transit station planning
-export const POI_CATEGORIES = [
-    { id: 'hospital', label: '🏥 Hospital', color: '#E91E63', weight: 3 },
-    { id: 'education', label: '🏫 Education', color: '#FF9800', weight: 3 },
-    { id: 'shopping_mall', label: '🛍️ Shopping Mall', color: '#3498DB', weight: 2 },
-    { id: 'park', label: '🌳 Park', color: '#27AE60', weight: 1 },
-    { id: 'government_office', label: '🏛️ Government', color: '#607D8B', weight: 2 },
-    { id: 'bus_station', label: '🚌 Bus Station', color: '#00A8E8', weight: 3 },
-    { id: 'train_station', label: '🚉 Train Station', color: '#9C27B0', weight: 3 },
-] as const;
+export const POI_CATEGORIES = poi_categories;
 
 export type POICategory = typeof POI_CATEGORIES[number]['id'];
+
+type POICategoryMeta = (typeof POI_CATEGORIES)[number];
+
+const MAPBOX_CATEGORY_LOOKUP = new Map<string, POICategoryMeta>();
+POI_CATEGORIES.forEach(category => {
+    category.mapboxCategories.forEach(mapboxId => {
+        MAPBOX_CATEGORY_LOOKUP.set(mapboxId, category);
+    });
+});
+
+const DEFAULT_POI_CATEGORY_IDS: POICategory[] = POI_CATEGORIES.map(c => c.id);
 
 export interface ExternalPOI {
     id: string;
@@ -85,14 +88,24 @@ async function searchCategory(
  */
 export async function searchExternalPOIs(
     polygonVertices: Point[],
-    categories: POICategory[] = POI_CATEGORIES.map(c => c.id),
+    categories: POICategory[] = DEFAULT_POI_CATEGORY_IDS,
 ): Promise<ExternalPOI[]> {
     if (polygonVertices.length < 3) return [];
 
     const bbox = computeBBox(polygonVertices);
 
+    const allowedCategoryIds = new Set(categories);
+    const selectedCategories = POI_CATEGORIES.filter(category =>
+        allowedCategoryIds.has(category.id),
+    );
+    if (!selectedCategories.length) return [];
+
+    const mapboxCategories = Array.from(
+        new Set(selectedCategories.flatMap(category => category.mapboxCategories)),
+    );
+
     const results = await Promise.allSettled(
-        categories.map(cat => searchCategory(cat, bbox)),
+        mapboxCategories.map(cat => searchCategory(cat, bbox)),
     );
 
     const allPOIs: ExternalPOI[] = [];
@@ -100,8 +113,8 @@ export async function searchExternalPOIs(
     results.forEach((result, idx) => {
         if (result.status !== 'fulfilled') return;
 
-        const categoryId = categories[idx];
-        const categoryMeta = POI_CATEGORIES.find(c => c.id === categoryId);
+        const mapboxCategoryId = mapboxCategories[idx];
+        const categoryMeta = MAPBOX_CATEGORY_LOOKUP.get(mapboxCategoryId);
 
         for (const feature of result.value) {
             const coords = feature.geometry?.coordinates;
@@ -113,10 +126,13 @@ export async function searchExternalPOIs(
             if (!isPointInPolygon(lat, lon, polygonVertices)) continue;
 
             allPOIs.push({
-                id: feature.properties?.mapbox_id || feature.id || `${categoryId}-${lon}-${lat}`,
+                id:
+                    feature.properties?.mapbox_id ||
+                    feature.id ||
+                    `${categoryMeta?.id || mapboxCategoryId}-${lon}-${lat}`,
                 name: feature.properties?.name || 'Unknown',
-                category: categoryId,
-                categoryLabel: categoryMeta?.label || categoryId,
+                category: categoryMeta?.id || mapboxCategoryId,
+                categoryLabel: categoryMeta?.label || mapboxCategoryId,
                 weight: categoryMeta?.weight || 1,
                 address: feature.properties?.full_address || feature.properties?.address || undefined,
                 coordinates: [lon, lat],

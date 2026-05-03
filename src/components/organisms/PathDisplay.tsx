@@ -1,27 +1,27 @@
-import {useSelector} from "react-redux";
-import type {RootState} from "../../store";
-import {Layer, Source} from "react-map-gl/mapbox";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
+import { Layer, Source } from "react-map-gl/mapbox";
 
 export type PathDisplayProps = {
     lineWidth: number
 }
 
-export default function PathDisplay({lineWidth}: PathDisplayProps) {
+export default function PathDisplay({ lineWidth }: PathDisplayProps) {
     const routes = useSelector((state: RootState) => state.routeState.data);
-    
+
     if (!routes || routes.length === 0) {
         return null
     }
-    
+
     return (
         <>
             {routes.map((route, index) => {
                 const path = route?.path || [];
-                
+
                 if (path.length < 2) {
                     return null
                 }
-                
+
                 const geojson = {
                     type: 'Feature' as const,
                     geometry: {
@@ -30,20 +30,20 @@ export default function PathDisplay({lineWidth}: PathDisplayProps) {
                     },
                     properties: {}
                 }
-                
+
                 // Use stable index-based key to prevent remounting
                 const stableKey = `route-${index}`;
-                
+
                 return (
-                    <Source 
+                    <Source
                         key={stableKey}
                         id={`route-source-${index}`}
-                        type='geojson' 
+                        type='geojson'
                         data={geojson}
                     >
-                        <Layer 
+                        <Layer
                             id={`route-layer-${index}`}
-                            type='line' 
+                            type='line'
                             paint={{
                                 'line-width': lineWidth,
                                 'line-color': route?.color || '#3b82f6',

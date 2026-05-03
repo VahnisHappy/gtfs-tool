@@ -1,4 +1,4 @@
-export const sidebarContent = ['stops', 'routes', 'calendar', 'trips', 'project']
+export const sidebarContent = ['stops', 'routes', 'calendar', 'trips', 'project', 'exportGTFS']
 export const modes = ['view', 'mark', 'draw', 'drag', 'new', 'polygon', 'pickA', 'pickB']
 export const routeTypeOptions = [
     { value: 0, label: 'Tram, Streetcar, Light rail' },
@@ -52,5 +52,26 @@ export const stopAccessOptions = [
     { value: '1', label: 'Restricted access' },
     { value: '2', label: 'Staff only' },
 ]
+
+export const poi_categories = [
+    {
+        id: 'hospital', label: '🏥 Hospital', color: '#E91E63', weight: 3, mapboxCategories: ['hospital'],
+    },
+    {
+        id: 'education', label: '🏫 Education', color: '#FF9800', weight: 3, mapboxCategories: ['school', 'university'],
+    },
+    {
+        id: 'shopping_mall', label: '🛍️ Shopping Mall', color: '#3498DB', weight: 3, mapboxCategories: ['shopping_mall'],
+    },
+    {
+        id: 'park', label: '🌳 Park', color: '#27AE60', weight: 1, mapboxCategories: ['park'],
+    },
+    {
+        id: 'government_office', label: '🏛️ Government', color: '#607D8B', weight: 3, mapboxCategories: ['government_office'],
+    },
+    {
+        id: 'transit_hub', label: '🚉 Transit Hub', color: '#00A8E8', weight: 3, mapboxCategories: ['bus_station', 'train_station'],
+    }
+];
 
 // mode mark will map to new stop in stop state

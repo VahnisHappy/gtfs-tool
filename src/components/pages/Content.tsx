@@ -5,6 +5,8 @@ import StopContent from "../templates/StopContent";
 import RouteContent from "../templates/RouteContent";
 import CalendarContent from "../templates/CalendarContent";
 import TripContent from "../templates/TripContent";
+import ExportGTFSContent from "../templates/ExportGTFSContent";
+
 
 export default function Content () {
     const renderSidebarContent = (panel: ContentType) => {
@@ -13,6 +15,7 @@ export default function Content () {
             case 'routes': return <RouteContent />
             case 'calendar': return <CalendarContent />
             case 'trips': return <TripContent />
+            case 'exportGTFS': return <ExportGTFSContent />
         }
     }
     const {content} = useSelector((state: RootState) => state.appState)

@@ -46,7 +46,7 @@ export function useLoadRoutes() {
   useEffect(() => {
     // Only load routes once
     if (hasLoadedRoutes.current) return;
-    
+
     // Wait for stops to be ready
     if (!stopsReady) {
       console.log('Waiting for stops to load before loading routes...');
@@ -60,23 +60,23 @@ export function useLoadRoutes() {
       try {
         console.log('Loading routes from backend...');
         const backendRoutes = await routesApi.getAll() as BackendRoute[];
-        
+
         // Convert backend route format to frontend Route type
         const routes: Route[] = backendRoutes.map((backendRoute) => {
           // Handle color - might already have # or not
           let color = '#3b82f6'; // default
           if (backendRoute.route_color) {
-            color = backendRoute.route_color.startsWith('#') 
-              ? backendRoute.route_color 
+            color = backendRoute.route_color.startsWith('#')
+              ? backendRoute.route_color
               : `#${backendRoute.route_color}`;
           }
-          
+
           // Convert stop IDs back to indices (using current stops state)
           const stopIds = backendRoute.route_stop_ids || [];
           const stopIndexes = stopIds
             .map(stopId => stops.findIndex(s => s.id.value === stopId))
             .filter(idx => idx !== -1);
-          
+
           return {
             id: { value: backendRoute.route_id, error: false },
             name: { value: backendRoute.route_short_name, error: false },
@@ -91,10 +91,10 @@ export function useLoadRoutes() {
         });
 
         console.log(`Loaded ${routes.length} routes from backend`);
-        
+
         // Load all routes into Redux store
         dispatch(RouteActions.setRoutes(routes));
-        
+
       } catch (error) {
         console.error('Failed to load routes from backend:', error);
         // Don't throw - allow app to work with empty state

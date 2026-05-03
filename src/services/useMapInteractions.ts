@@ -2,7 +2,7 @@ import type { Bounds, Point } from "../types";
 import Directions from '@mapbox/mapbox-sdk/services/directions'
 import type { LineString } from 'geojson';
 
-const directions = Directions({ accessToken: import.meta.env.VITE_APP_MAPBOX_ACCESS_TOKEN || ''})
+const directions = Directions({ accessToken: import.meta.env.VITE_APP_MAPBOX_ACCESS_TOKEN || '' })
 
 export async function direction(routes: Point[]): Promise<Point[]> {
     if (routes.length < 2) {
@@ -13,11 +13,12 @@ export async function direction(routes: Point[]): Promise<Point[]> {
     try {
         const response = await directions.getDirections({
             profile: 'driving',
-            waypoints: routes.map((point) => ({ 
-                coordinates: [point.lng, point.lat] 
+            waypoints: routes.map((point) => ({
+                coordinates: [point.lng, point.lat]
             })),
             geometries: 'geojson',
-        }).send();
+            overview: 'full',
+        } as Parameters<typeof directions.getDirections>[0] & { overview?: string }).send();
 
         console.log('Direction API response:', response.body);
 
@@ -28,7 +29,7 @@ export async function direction(routes: Point[]): Promise<Point[]> {
 
         const route = response.body.routes[0];  // Get first route
         const geometry = route.geometry as LineString;
-        
+
         if (!geometry || !geometry.coordinates || geometry.coordinates.length === 0) {
             console.warn('No coordinates in route geometry');
             return [];
@@ -41,7 +42,7 @@ export async function direction(routes: Point[]): Promise<Point[]> {
 
         console.log(`Direction API returned ${path.length} points`);
         return path;
-        
+
     } catch (error) {
         console.error('Direction API error:', error);
         return [];

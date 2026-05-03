@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRef } from "react";
 import type { RootState } from "../../store";
 import { openStopDetail } from "../../store/slices/appSlice";
-import { StopActions, MapActions } from "../../store/actions";
+import { StopActions, MapActions, RouteActions } from "../../store/actions";
 import ButtonAction from "../atoms/ButtonAction";
 import StopContentDetail from "../organisms/StopContentDetail";
 import EditDeleteButton from "../molecules/EditDeleteButton";
@@ -11,6 +11,7 @@ import { stopsApi, ApiError } from "../../services/api";
 
 export default function StopContent() {
     const stops = useSelector((state: RootState) => state.stopState.data);
+    const routes = useSelector((state: RootState) => state.routeState.data);
     const selectedStopIndex = useSelector((state: RootState) => state.stopState.selectedIndex);
     const dispatch = useDispatch();
     const stopListRef = useRef<HTMLDivElement>(null);
@@ -35,24 +36,50 @@ export default function StopContent() {
             stopIndex: selectedStopIndex
         }));
     }
-    
+
     const handleDeleteStop = async () => {
         if (selectedStopIndex === null) return;
-        
+
         // Confirm deletion
         const stop = stops[selectedStopIndex];
         if (window.confirm(`Are you sure you want to delete "stop: ${stop.name.value}"?`)) {
             try {
-                // Delete from backend
-                await stopsApi.delete(stop.id.value);
+                // Delete from backend (cascades to routes)
+                const result = await stopsApi.delete(stop.id.value) as {
+                    deletedRouteIds?: string[];
+                    updatedRouteIds?: string[];
+                };
                 console.log('Stop deleted from backend successfully');
-                
+
                 // Remove from local state
                 dispatch(StopActions.removeStopByIndex(selectedStopIndex));
                 dispatch(StopActions.selectStop(null));
+
+                // Remove auto-deleted routes from local state
+                if (result.deletedRouteIds && result.deletedRouteIds.length > 0) {
+                    const currentRoutes = routes.filter(
+                        r => !result.deletedRouteIds!.includes(r.id.value)
+                    );
+                    dispatch(RouteActions.setRoutes(currentRoutes));
+                }
+
+                // Update routes that had the stop removed: filter the deleted stop index
+                // from their stopIndexes, and adjust remaining indices for the removed stop
+                if (result.updatedRouteIds && result.updatedRouteIds.length > 0) {
+                    const updatedRoutes = routes.map(r => {
+                        if (!result.updatedRouteIds!.includes(r.id.value)) return r;
+                        return {
+                            ...r,
+                            stopIndexes: r.stopIndexes
+                                .filter(idx => idx !== selectedStopIndex)
+                                .map(idx => idx > selectedStopIndex ? idx - 1 : idx),
+                        };
+                    });
+                    dispatch(RouteActions.setRoutes(updatedRoutes));
+                }
             } catch (err) {
                 console.error('Failed to delete stop:', err);
-                
+
                 if (err instanceof ApiError) {
                     alert(`Failed to delete stop: ${err.message}`);
                 } else {
@@ -61,12 +88,12 @@ export default function StopContent() {
             }
         }
     }
-    
+
     const handleSelectStop = (index: number) => {
         // Toggle selection: if clicking the same stop, deselect it
         const newSelection = selectedStopIndex === index ? null : index;
         dispatch(StopActions.selectStop(newSelection));
-        
+
         // Fly to the selected stop
         if (newSelection !== null) {
             const stop = stops[newSelection];
@@ -76,7 +103,7 @@ export default function StopContent() {
 
     return ( // TODO Can search stops by name or id (searchbox)
         <div className="flex h-full w-full">
-            <div 
+            <div
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full"
                 ref={stopListRef}
             >

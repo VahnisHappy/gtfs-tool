@@ -7,7 +7,7 @@ import type { PlannedStation } from "../../services/stationPlanner";
 import type { ExternalPOI } from "../../services/mapboxPOI";
 
 const initialState: AppState = {
-    content: 'project',
+    content: 'stops',
     isStopDetailOpen: false,
     selectedStop: null,
     isRouteDetailOpen: false,

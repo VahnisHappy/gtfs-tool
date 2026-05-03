@@ -10,21 +10,22 @@ export type SidebarProps = {
     onChange?: (to: Content) => boolean;
 }
 
-export default function Sidebar ({ disableSidebarSel = false, onChange }: SidebarProps) {
+export default function Sidebar({ disableSidebarSel = false, onChange }: SidebarProps) {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const {content} = useSelector((state: RootState) => state.appState);
-    
+    const { content } = useSelector((state: RootState) => state.appState);
+
     const handleChange = (c: Content) => {
         if (c === 'project') {
             navigate('/');
         } else {
             navigate('/app');
         }
-        
+
         if (onChange && !onChange?.(c)) return;
         dispatch(appActions.actions.setContent(c));
     }
+
 
     const menuItems: Content[] = [
         "project" as Content,
@@ -32,14 +33,18 @@ export default function Sidebar ({ disableSidebarSel = false, onChange }: Sideba
         "routes" as Content,
         "calendar" as Content,
         "trips" as Content,
+        "exportGTFS" as Content
     ]
 
     return (
-        <SidebarMenu
-            disableSidebarSel={disableSidebarSel}
-            items={menuItems}
-            value={content}
-            onChange={handleChange}
-        />
+        <div className="flex flex-col h-full">
+            <SidebarMenu
+                disableSidebarSel={disableSidebarSel}
+                items={menuItems}
+                value={content}
+                onChange={handleChange}
+            />
+            
+        </div>
     )
 }

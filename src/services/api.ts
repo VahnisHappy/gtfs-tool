@@ -1,3 +1,5 @@
+import { getToken } from './authService';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 // Generic API error handler
@@ -9,6 +11,18 @@ export class ApiError extends Error {
     this.name = 'ApiError';
     this.status = status;
   }
+}
+
+/**
+ * Wrapper around fetch that automatically attaches JWT Authorization header.
+ */
+async function authFetch(url: string, init?: RequestInit): Promise<Response> {
+  const token = getToken();
+  const headers = new Headers(init?.headers);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  return fetch(url, { ...init, headers });
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -43,7 +57,7 @@ export const stopsApi = {
    * Get all stops as GeoJSON
    */
   async getAll() {
-    const response = await fetch(`${API_BASE_URL}/stops`);
+    const response = await authFetch(`${API_BASE_URL}/stops`);
     return handleResponse(response);
   },
 
@@ -51,7 +65,7 @@ export const stopsApi = {
    * Get stop by ID
    */
   async getById(id: string) {
-    const response = await fetch(`${API_BASE_URL}/stops/${id}`);
+    const response = await authFetch(`${API_BASE_URL}/stops/${id}`);
     return handleResponse(response);
   },
 
@@ -59,7 +73,7 @@ export const stopsApi = {
    * Create a new stop
    */
   async create(stopData: CreateStopPayload) {
-    const response = await fetch(`${API_BASE_URL}/stops`, {
+    const response = await authFetch(`${API_BASE_URL}/stops`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -73,7 +87,7 @@ export const stopsApi = {
    * Update an existing stop
    */
   async update(id: string, stopData: UpdateStopPayload) {
-    const response = await fetch(`${API_BASE_URL}/stops/${id}`, {
+    const response = await authFetch(`${API_BASE_URL}/stops/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -87,7 +101,7 @@ export const stopsApi = {
    * Delete a stop
    */
   async delete(id: string) {
-    const response = await fetch(`${API_BASE_URL}/stops/${id}`, {
+    const response = await authFetch(`${API_BASE_URL}/stops/${id}`, {
       method: 'DELETE',
     });
     return handleResponse(response);
@@ -97,7 +111,7 @@ export const stopsApi = {
    * Search stops by name
    */
   async searchByName(query: string) {
-    const response = await fetch(`${API_BASE_URL}/stops/search/name?q=${encodeURIComponent(query)}`);
+    const response = await authFetch(`${API_BASE_URL}/stops/search/name?q=${encodeURIComponent(query)}`);
     return handleResponse(response);
   },
 
@@ -105,7 +119,7 @@ export const stopsApi = {
    * Find nearby stops
    */
   async findNearby(lat: number, lon: number, radius: number = 1000) {
-    const response = await fetch(
+    const response = await authFetch(
       `${API_BASE_URL}/stops/nearby?lat=${lat}&lon=${lon}&radius=${radius}`
     );
     return handleResponse(response);
@@ -116,7 +130,7 @@ export const stopsApi = {
    * @param polygon Array of [longitude, latitude] pairs
    */
   async findWithinPolygon(polygon: [number, number][]) {
-    const response = await fetch(`${API_BASE_URL}/stops/within-polygon`, {
+    const response = await authFetch(`${API_BASE_URL}/stops/within-polygon`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -129,17 +143,17 @@ export const stopsApi = {
 
 export const routesApi = {
   async getAll() {
-    const response = await fetch(`${API_BASE_URL}/routes`);
+    const response = await authFetch(`${API_BASE_URL}/routes`);
     return handleResponse(response);
   },
 
   async getById(id: string) {
-    const response = await fetch(`${API_BASE_URL}/routes/${id}`);
+    const response = await authFetch(`${API_BASE_URL}/routes/${id}`);
     return handleResponse(response);
   },
 
   async create(routeData: CreateRoutePayload) {
-    const response = await fetch(`${API_BASE_URL}/routes`, {
+    const response = await authFetch(`${API_BASE_URL}/routes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -150,7 +164,7 @@ export const routesApi = {
   },
 
   async update(id: string, routeData: UpdateRoutePayload) {
-    const response = await fetch(`${API_BASE_URL}/routes/${id}`, {
+    const response = await authFetch(`${API_BASE_URL}/routes/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -161,7 +175,7 @@ export const routesApi = {
   },
 
   async delete(id: string) {
-    const response = await fetch(`${API_BASE_URL}/routes/${id}`, {
+    const response = await authFetch(`${API_BASE_URL}/routes/${id}`, {
       method: 'DELETE',
     });
     return handleResponse(response);
@@ -174,6 +188,7 @@ export interface CreateStopPayload {
   stop_name: string;
   stop_lat: number;
   stop_lon: number;
+  tts_stop_name?: string;
   stop_code?: string;
   stop_desc?: string;
   zone_id?: string;
@@ -184,6 +199,7 @@ export interface CreateStopPayload {
   wheelchair_boarding?: number;
   level_id?: string;
   platform_code?: string;
+  stop_access?: number;
 }
 
 export interface CreateRoutePayload {
@@ -234,17 +250,17 @@ export interface UpdateCalendarDatePayload extends Partial<CreateCalendarDatePay
 // Calendar API functions
 export const calendarsApi = {
   async getAll() {
-    const response = await fetch(`${API_BASE_URL}/calendars`);
+    const response = await authFetch(`${API_BASE_URL}/calendars`);
     return handleResponse(response);
   },
 
   async getById(id: string) {
-    const response = await fetch(`${API_BASE_URL}/calendars/${id}`);
+    const response = await authFetch(`${API_BASE_URL}/calendars/${id}`);
     return handleResponse(response);
   },
 
   async create(calendarData: CreateCalendarPayload) {
-    const response = await fetch(`${API_BASE_URL}/calendars`, {
+    const response = await authFetch(`${API_BASE_URL}/calendars`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -255,7 +271,7 @@ export const calendarsApi = {
   },
 
   async update(id: string, calendarData: UpdateCalendarPayload) {
-    const response = await fetch(`${API_BASE_URL}/calendars/${id}`, {
+    const response = await authFetch(`${API_BASE_URL}/calendars/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -266,7 +282,7 @@ export const calendarsApi = {
   },
 
   async delete(id: string) {
-    const response = await fetch(`${API_BASE_URL}/calendars/${id}`, {
+    const response = await authFetch(`${API_BASE_URL}/calendars/${id}`, {
       method: 'DELETE',
     });
     return handleResponse(response);
@@ -276,17 +292,17 @@ export const calendarsApi = {
 // Calendar Dates API functions (exceptions)
 export const calendarDatesApi = {
   async getAll() {
-    const response = await fetch(`${API_BASE_URL}/calendar-dates`);
+    const response = await authFetch(`${API_BASE_URL}/calendar-dates`);
     return handleResponse(response);
   },
 
   async getByServiceId(serviceId: string) {
-    const response = await fetch(`${API_BASE_URL}/calendar-dates/service/${serviceId}`);
+    const response = await authFetch(`${API_BASE_URL}/calendar-dates/service/${serviceId}`);
     return handleResponse(response);
   },
 
   async create(calendarDateData: CreateCalendarDatePayload) {
-    const response = await fetch(`${API_BASE_URL}/calendar-dates`, {
+    const response = await authFetch(`${API_BASE_URL}/calendar-dates`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -297,7 +313,7 @@ export const calendarDatesApi = {
   },
 
   async update(serviceId: string, date: string, calendarDateData: UpdateCalendarDatePayload) {
-    const response = await fetch(`${API_BASE_URL}/calendar-dates/${serviceId}/${date}`, {
+    const response = await authFetch(`${API_BASE_URL}/calendar-dates/${serviceId}/${date}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -308,14 +324,14 @@ export const calendarDatesApi = {
   },
 
   async delete(serviceId: string, date: string) {
-    const response = await fetch(`${API_BASE_URL}/calendar-dates/${serviceId}/${date}`, {
+    const response = await authFetch(`${API_BASE_URL}/calendar-dates/${serviceId}/${date}`, {
       method: 'DELETE',
     });
     return handleResponse(response);
   },
 
   async deleteByServiceId(serviceId: string) {
-    const response = await fetch(`${API_BASE_URL}/calendar-dates/service/${serviceId}`, {
+    const response = await authFetch(`${API_BASE_URL}/calendar-dates/service/${serviceId}`, {
       method: 'DELETE',
     });
     return handleResponse(response);
@@ -339,17 +355,17 @@ export interface UpdateAgencyPayload extends Partial<CreateAgencyPayload> { }
 // Agency API functions
 export const agencyApi = {
   async getAll() {
-    const response = await fetch(`${API_BASE_URL}/agencies`);
+    const response = await authFetch(`${API_BASE_URL}/agencies`);
     return handleResponse<CreateAgencyPayload[]>(response);
   },
 
   async getById(id: string) {
-    const response = await fetch(`${API_BASE_URL}/agencies/${encodeURIComponent(id)}`);
+    const response = await authFetch(`${API_BASE_URL}/agencies/${encodeURIComponent(id)}`);
     return handleResponse<CreateAgencyPayload>(response);
   },
 
   async create(data: CreateAgencyPayload) {
-    const response = await fetch(`${API_BASE_URL}/agencies`, {
+    const response = await authFetch(`${API_BASE_URL}/agencies`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -358,7 +374,7 @@ export const agencyApi = {
   },
 
   async update(id: string, data: UpdateAgencyPayload) {
-    const response = await fetch(`${API_BASE_URL}/agencies/${encodeURIComponent(id)}`, {
+    const response = await authFetch(`${API_BASE_URL}/agencies/${encodeURIComponent(id)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -367,9 +383,43 @@ export const agencyApi = {
   },
 
   async delete(id: string) {
-    const response = await fetch(`${API_BASE_URL}/agencies/${encodeURIComponent(id)}`, {
+    const response = await authFetch(`${API_BASE_URL}/agencies/${encodeURIComponent(id)}`, {
       method: 'DELETE',
     });
     return handleResponse<void>(response);
+  },
+};
+
+// GTFS Export API
+export const gtfsApi = {
+  async exportZip() {
+    const token = getToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/gtfs/export`, { headers });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || JSON.stringify(errorData);
+      } catch {
+        errorMessage = await response.text();
+      }
+      throw new ApiError(response.status, errorMessage);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gtfs.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   },
 };

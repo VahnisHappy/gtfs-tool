@@ -181,7 +181,7 @@ export default function PolygonResultsPanel() {
                     <div className="p-4 border-b border-gray-200">
                         <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                                ① Select POI Categories
+                                Select POI Categories
                             </h4>
                             {availableCategories.length > 0 && (
                                 <div className="flex gap-1">
@@ -287,7 +287,7 @@ export default function PolygonResultsPanel() {
                     {/* Step 2: Set Route + Calculate */}
                     <div className="p-4">
                         <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3">
-                            ② Set Route & Plan Stations
+                            Set Route & Plan Stations
                         </h4>
 
                         {/* Point A */}

@@ -70,23 +70,43 @@ export default function StopContentDetail() {
     }
   }, [selectedStop, reset]);
 
+  // Sync lat/lng form fields when coordinates change (from map drag or initial placement)
   useEffect(() => {
-     if (
-       selectedStop?.mode === 'new' &&
-       typeof selectedStop.lat === 'number' &&
-       typeof selectedStop.lng === 'number'
-     ) {
-       setValue('stop_lat', selectedStop.lat);
-       setValue('stop_lon', selectedStop.lng);
-     }
-  }, [selectedStop, setValue]);
+    if (
+      selectedStop &&
+      typeof selectedStop.lat === 'number' &&
+      typeof selectedStop.lng === 'number'
+    ) {
+      setValue('stop_lat', selectedStop.lat);
+      setValue('stop_lon', selectedStop.lng);
+    }
+  }, [selectedStop?.lat, selectedStop?.lng, setValue]);
 
   const onSubmit = async (data: StopFormData) => {
     try {
+      // Clean up the payload: convert string select values to numbers, strip empty optionals
+      const cleanData = {
+        stop_id: data.stop_id,
+        stop_name: data.stop_name,
+        stop_lat: Number(data.stop_lat),
+        stop_lon: Number(data.stop_lon),
+        ...(data.tts_stop_name ? { tts_stop_name: data.tts_stop_name } : {}),
+        ...(data.stop_code ? { stop_code: data.stop_code } : {}),
+        ...(data.stop_desc ? { stop_desc: data.stop_desc } : {}),
+        ...(data.zone_id ? { zone_id: data.zone_id } : {}),
+        ...(data.stop_url ? { stop_url: data.stop_url } : {}),
+        ...(data.location_type != null && data.location_type !== '' as unknown ? { location_type: Number(data.location_type) } : {}),
+        ...(data.parent_station ? { parent_station: data.parent_station } : {}),
+        ...(data.stop_timezone ? { stop_timezone: data.stop_timezone } : {}),
+        ...(data.wheelchair_boarding != null && data.wheelchair_boarding !== '' as unknown ? { wheelchair_boarding: Number(data.wheelchair_boarding) } : {}),
+        ...(data.level_id ? { level_id: data.level_id } : {}),
+        ...(data.platform_code ? { platform_code: data.platform_code } : {}),
+        ...(data.stop_access != null && data.stop_access !== '' as unknown ? { stop_access: Number(data.stop_access) } : {}),
+      };
+
       if (selectedStop?.mode === 'new') {
-        // Data is ALREADY in the correct format! No need for 'stopToCreatePayload'
-        await stopsApi.create(data); 
-        
+        await stopsApi.create(cleanData);
+
         // Update the temporary marker with proper data instead of removing it
         const lastStopIndex = stops.length - 1;
         if (lastStopIndex >= 0) {
@@ -101,8 +121,8 @@ export default function StopContentDetail() {
           dispatch(StopActions.updateStop({ index: lastStopIndex, stop: savedStop }));
         }
       } else {
-        await stopsApi.update(data.stop_id, data);
-        
+        await stopsApi.update(data.stop_id, cleanData);
+
         // Update the stop in local state
         const stopIndex = stops.findIndex(s => s.id.value === data.stop_id);
         if (stopIndex !== -1) {
@@ -133,10 +153,10 @@ export default function StopContentDetail() {
 
   return (
     <aside className={`fixed right-0 top-0 h-screen w-[350px] shadow-xl z-50 bg-[#F5F7F9] ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-      
+
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
-          
+
           <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-5">
             <h3 className="text-xl font-semibold mb-4">
               {selectedStop?.mode === 'new' ? 'New Stop' : 'Edit Stop'}
@@ -148,17 +168,17 @@ export default function StopContentDetail() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <FormNumberInput 
-                name="stop_lat" 
-                label="stop lat" 
-                placeholder="latitude" 
+              <FormNumberInput
+                name="stop_lat"
+                label="stop lat"
+                placeholder="latitude"
                 step={0.000001}
                 min={-90}
                 max={90}
               />
               <FormNumberInput
-                name="stop_lon" 
-                label="stop lon" 
+                name="stop_lon"
+                label="stop lon"
                 placeholder="longitude"
                 step={0.000001}
                 min={-180}
@@ -166,14 +186,14 @@ export default function StopContentDetail() {
               />
             </div>
 
-            <StopOptional /> 
+            <StopOptional />
           </div>
 
-          <CancelSaveButton 
-             onCancel={handleCancel} 
-             // FormProvider handles the submit logic via the <form> tag
-             onSave={handleSubmit(onSubmit)}
-             disabled={false} 
+          <CancelSaveButton
+            onCancel={handleCancel}
+            // FormProvider handles the submit logic via the <form> tag
+            onSave={handleSubmit(onSubmit)}
+            disabled={false}
           />
         </form>
       </FormProvider>

@@ -34,9 +34,9 @@ export type Stop = {
 }
 
 export type StopFormState = {
-    [K in keyof Stop]-?: UnwrapType<Stop[K]> extends number 
-        ? number | undefined 
-        : string
+    [K in keyof Stop]-?: UnwrapType<Stop[K]> extends number
+    ? number | undefined
+    : string
 }
 
 export type StopIndex = number
@@ -86,7 +86,7 @@ export type Calendar = {
     exceptions?: ExceptionDate[]
 }
 
-export type ExceptionDate ={
+export type ExceptionDate = {
     id: Field<string>,
     date: Field<string | null>,
     type: Field<string>,

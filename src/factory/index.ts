@@ -1,7 +1,7 @@
 import type { Calendar, ExceptionDate, Field, Point, Route, Stop, StopTime, Time, Trip } from "../types"
 
 export function createField<T>(value: T, optional?: boolean): Field<T> {
-    return {value, error: !optional}
+    return { value, error: !optional }
 }
 
 export function createStop(point: Point): Stop {

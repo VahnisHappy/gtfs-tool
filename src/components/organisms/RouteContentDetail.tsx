@@ -71,7 +71,7 @@ export default function RouteContentDetail() {
             // Track if this is a new route being edited
             const isNewRoute = editingRouteRef.current?.id.value !== editingRoute.id.value;
             editingRouteRef.current = editingRoute;
-            
+
             if (isNewRoute || isInitialMount.current) {
                 reset({
                     route_id: editingRoute.id.value,
@@ -129,7 +129,7 @@ export default function RouteContentDetail() {
                 await routesApi.create(apiData);
 
                 dispatch(RouteActions.updateRoute({
-                    index: selectedRoute.routeIndex!, 
+                    index: selectedRoute.routeIndex!,
                     route: {
                         id: { value: data.route_id, error: false },
                         name: { value: data.route_short_name, error: false },
@@ -162,7 +162,7 @@ export default function RouteContentDetail() {
                     }));
                 }
             }
-            
+
             dispatch(closeRouteDetail());
         } catch (err) {
             console.error("Failed to save route:", err);
@@ -175,28 +175,27 @@ export default function RouteContentDetail() {
     };
 
     return (
-        <aside 
-           className={`fixed right-0 top-0 h-screen w-[350px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${
-                isOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
+        <aside
+            className={`fixed right-0 top-0 h-screen w-[350px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}
         >
             <div className="flex flex-col h-full">
                 <div className="flex justify-between items-center p-4 border-b">
                     <h3 className="text-xl font-semibold">
-                        {selectedRoute?.mode === 'new' 
-                            ? (watchedName || `new route`) 
+                        {selectedRoute?.mode === 'new'
+                            ? (watchedName || `new route`)
                             : `${watchedName} (edit)`
                         }
                     </h3>
-                    <button 
-                        onClick={handleClose} 
+                    <button
+                        onClick={handleClose}
                         className="text-gray-400 hover:text-gray-600 text-2xl"
                         type="button"
                     >
                         ✕
                     </button>
                 </div>
-                
+
                 <FormProvider {...methods}>
                     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
                         <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -208,7 +207,7 @@ export default function RouteContentDetail() {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <FormSelectInput name="route_type" label="route type" options={routeTypeOptions} placeholder="Select type"/>
+                                        <FormSelectInput name="route_type" label="route type" options={routeTypeOptions} placeholder="Select type" />
                                         <FormColorPicker name="route_color" label="route color" />
                                     </div>
 
@@ -222,11 +221,11 @@ export default function RouteContentDetail() {
                                 </div>
                             )}
                         </div>
-                        
+
                         {editingRoute && (
-                            <CancelSaveButton 
+                            <CancelSaveButton
                                 onCancel={handleClose}
-                                onSave={handleSubmit(onSubmit)} 
+                                onSave={handleSubmit(onSubmit)}
                                 disabled={false} // Use RHF's loading state
                             />
                         )}
