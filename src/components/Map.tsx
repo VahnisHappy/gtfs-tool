@@ -142,7 +142,7 @@ export default function Map() {
         <PolygonDraw />
         <StationPlanDisplay />
       </MapDisplay>
-      <PolygonToolbar />
+      {/* <PolygonToolbar /> */}
       <PolygonResultsPanel />
     </div>
   )

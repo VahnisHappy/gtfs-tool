@@ -6,8 +6,11 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { searchExternalPOIs, POI_CATEGORIES } from '../../services/mapboxPOI';
 import type { ExternalPOI } from '../../services/mapboxPOI';
 import { planStations, findOptimalStationCount } from '../../services/stationPlanner';
+import CategoryList from '../molecules/CategoryList';
 import { direction } from '../../services/useMapInteractions';
-import { createStop } from '../../factory';
+import { stopsApi } from '../../services/api';
+import type { Stop } from '../../types';
+import RoutePlannerForm from '../molecules/RoutePlannerForm';
 
 export default function PolygonResultsPanel() {
     const dispatch = useDispatch();
@@ -19,6 +22,7 @@ export default function PolygonResultsPanel() {
     const plannedStations = useSelector((state: RootState) => state.appState.plannedStations);
     const selectedPOIs = useSelector((state: RootState) => state.appState.selectedPOIs);
     const mode = useSelector((state: RootState) => state.appState.mode);
+    const stops = useSelector((state: RootState) => state.stopState.data);
 
     const [allPOIs, setAllPOIs] = useState<ExternalPOI[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
@@ -143,21 +147,52 @@ export default function PolygonResultsPanel() {
         }
     };
 
-    const handleSaveAllStops = () => {
-        for (const station of plannedStations) {
-            const stop = createStop(station.position);
-            dispatch(StopActions.addStop(stop));
+    const [saving, setSaving] = useState(false);
+    const [idPrefix, setIdPrefix] = useState('station');
+    const [namePrefix, setNamePrefix] = useState('station');
+
+    const handleSaveAllStops = async () => {
+        setSaving(true);
+        const existingCount = stops.length;
+
+        try {
+            for (let i = 0; i < plannedStations.length; i++) {
+                const station = plannedStations[i];
+                const stopNumber = existingCount + i + 1;
+                const stopId = `${idPrefix}_${String(stopNumber).padStart(3, '0')}`;
+                const stopName = `${namePrefix} ${stopNumber}`;
+
+                // Save to backend
+                await stopsApi.create({
+                    stop_id: stopId,
+                    stop_name: stopName,
+                    stop_lat: station.position.lat,
+                    stop_lon: station.position.lng,
+                });
+
+                // Add to Redux with filled fields
+                const stop: Stop = {
+                    id: { value: stopId, error: undefined },
+                    name: { value: stopName, error: undefined },
+                    lat: station.position.lat,
+                    lng: station.position.lng,
+                };
+                dispatch(StopActions.addStop(stop));
+            }
+            dispatch(clearStationPlan());
+        } catch (err) {
+            console.error('Failed to save stations:', err);
+        } finally {
+            setSaving(false);
         }
-        dispatch(clearStationPlan());
     };
 
     const handleClearPlan = () => {
         dispatch(clearStationPlan());
     };
 
-    const canCalculate = pointA && pointB && selectedPOIs.length > 0 && !calculating;
+    const canCalculate = !!(pointA && pointB && selectedPOIs.length > 0 && !calculating);
 
-    // Categories that have POIs in the polygon
     const availableCategories = POI_CATEGORIES.filter(c => categoryCounts.has(c.id));
 
     return (
@@ -168,7 +203,7 @@ export default function PolygonResultsPanel() {
             <div className="flex flex-col h-full bg-[#F5F7F9]">
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800">POI & Station Planner</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">POI</h3>
                     <button onClick={handleClose} className="p-1 rounded hover:bg-gray-200 transition-colors">
                         <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -181,7 +216,7 @@ export default function PolygonResultsPanel() {
                     <div className="p-4 border-b border-gray-200">
                         <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                                Select POI Categories
+                                select POI Categories
                             </h4>
                             {availableCategories.length > 0 && (
                                 <div className="flex gap-1">
@@ -189,14 +224,14 @@ export default function PolygonResultsPanel() {
                                         onClick={selectAllCategories}
                                         className="text-xs text-[#00A8E8] hover:underline"
                                     >
-                                        All
+                                        all
                                     </button>
                                     <span className="text-xs text-gray-300">|</span>
                                     <button
                                         onClick={deselectAllCategories}
                                         className="text-xs text-gray-400 hover:underline"
                                     >
-                                        None
+                                        none
                                     </button>
                                 </div>
                             )}
@@ -205,55 +240,29 @@ export default function PolygonResultsPanel() {
                         {loading && (
                             <div className="flex items-center justify-center py-6">
                                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#00A8E8]"></div>
-                                <span className="ml-2 text-sm text-gray-500">Searching POIs...</span>
+                                <span className="ml-2 text-sm text-gray-500">searching POIs...</span>
                             </div>
                         )}
 
                         {error && (
                             <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700 mb-2">
-                                ⚠️ {error}
+                                {error}
                             </div>
                         )}
 
                         {!loading && !error && allPOIs.length === 0 && (
-                            <p className="text-sm text-gray-400 text-center py-4">No important places found in this area</p>
+                            <p className="text-sm text-gray-400 text-center py-4">no important places found in this area</p>
                         )}
 
                         {!loading && availableCategories.length > 0 && (
-                            <div className="space-y-1.5">
-                                <p className="text-xs text-gray-400 mb-2">
-                                    {selectedPOIs.length} of {allPOIs.length} places selected
-                                </p>
-                                {availableCategories.map(cat => {
-                                    const isSelected = selectedCategories.has(cat.id);
-                                    const count = categoryCounts.get(cat.id) || 0;
-                                    return (
-                                        <button
-                                            key={cat.id}
-                                            onClick={() => toggleCategory(cat.id)}
-                                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm transition-all ${isSelected
-                                                ? 'bg-white border-l-4 shadow-sm'
-                                                : 'bg-white/50 border-gray-100 hover:border-gray-300'
-                                                }`}
-                                            style={isSelected ? { borderLeftColor: cat.color } : {}}
-                                        >
-                                            <div
-                                                className={`w-5 h-5 rounded flex items-center justify-center text-xs transition-colors ${isSelected ? 'text-white' : 'bg-gray-100'
-                                                    }`}
-                                                style={isSelected ? { backgroundColor: cat.color } : {}}
-                                            >
-                                                {isSelected ? '✓' : ''}
-                                            </div>
-                                            <span className={`flex-1 text-left font-medium ${isSelected ? 'text-gray-800' : 'text-gray-500'}`}>
-                                                {cat.label}
-                                            </span>
-                                            <span className={`text-xs px-2 py-0.5 rounded-full ${isSelected ? 'bg-blue-50 text-[#00A8E8] font-semibold' : 'bg-gray-100 text-gray-400'}`}>
-                                                {count}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <CategoryList
+                                selectedCount={selectedPOIs.length}
+                                totalCount={allPOIs.length}
+                                availableCategories={availableCategories}
+                                selectedCategories={selectedCategories}
+                                toggleCategory={toggleCategory}
+                                categoryCounts={categoryCounts}
+                            />
                         )}
                     </div>
 
@@ -261,7 +270,7 @@ export default function PolygonResultsPanel() {
                     {selectedPOIs.length > 0 && (
                         <div className="p-4 border-b border-gray-200">
                             <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                                📌 Selected Places ({selectedPOIs.length})
+                                selected places ({selectedPOIs.length})
                             </h4>
                             <div className="space-y-1 max-h-[140px] overflow-y-auto">
                                 {selectedPOIs.map(poi => {
@@ -286,71 +295,17 @@ export default function PolygonResultsPanel() {
 
                     {/* Step 2: Set Route + Calculate */}
                     <div className="p-4">
-                        <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3">
-                            Set Route & Plan Stations
-                        </h4>
-
-                        {/* Point A */}
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${pointA ? 'bg-green-500' : 'bg-gray-300'
-                                }`}>A</div>
-                            <div className="flex-1 min-w-0">
-                                {pointA ? (
-                                    <p className="text-sm text-gray-700 truncate">
-                                        {pointA.lat.toFixed(5)}, {pointA.lng.toFixed(5)}
-                                    </p>
-                                ) : (
-                                    <p className="text-sm text-gray-400">Not set</p>
-                                )}
-                            </div>
-                            <button
-                                onClick={handlePickA}
-                                className={`px-3 py-1 text-xs rounded font-medium transition-colors ${mode === 'pickA'
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                            >
-                                {mode === 'pickA' ? 'Click map...' : pointA ? 'Change' : 'Set'}
-                            </button>
-                        </div>
-
-                        {/* Point B */}
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${pointB ? 'bg-red-500' : 'bg-gray-300'
-                                }`}>B</div>
-                            <div className="flex-1 min-w-0">
-                                {pointB ? (
-                                    <p className="text-sm text-gray-700 truncate">
-                                        {pointB.lat.toFixed(5)}, {pointB.lng.toFixed(5)}
-                                    </p>
-                                ) : (
-                                    <p className="text-sm text-gray-400">Not set</p>
-                                )}
-                            </div>
-                            <button
-                                onClick={handlePickB}
-                                className={`px-3 py-1 text-xs rounded font-medium transition-colors ${mode === 'pickB'
-                                    ? 'bg-red-500 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                            >
-                                {mode === 'pickB' ? 'Click map...' : pointB ? 'Change' : 'Set'}
-                            </button>
-                        </div>
-
-                        {/* Calculate Button */}
-                        <button
-                            onClick={handleCalculate}
-                            disabled={!canCalculate}
-                            className={`w-full py-2.5 rounded-md text-sm font-medium transition-colors ${canCalculate
-                                ? 'bg-[#00A8E8] text-white hover:bg-[#009AD6]'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                }`}
-                        >
-                            {calculating
-                                ? 'Fetching route & optimizing...'
-                                : `Plan Stations (${selectedPOIs.length} POI${selectedPOIs.length !== 1 ? 's' : ''})`}
-                        </button>
+                        <RoutePlannerForm
+                            pointA={pointA}
+                            pointB={pointB}
+                            mode={mode}
+                            calculating={calculating}
+                            canCalculate={canCalculate}
+                            selectedPOICount={selectedPOIs.length}
+                            onPickA={handlePickA}
+                            onPickB={handlePickB}
+                            onCalculate={handleCalculate}
+                        />
 
                         {/* Planned Stations Results */}
                         {plannedStations.length > 0 && (
@@ -386,13 +341,41 @@ export default function PolygonResultsPanel() {
                                     ))}
                                 </div>
 
+                                {/* Customizable ID & Name Prefix */}
+                                <div className="mt-3 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <label className="text-xs text-gray-500 w-16 flex-shrink-0">ID prefix</label>
+                                        <input
+                                            type="text"
+                                            value={idPrefix}
+                                            onChange={(e) => setIdPrefix(e.target.value)}
+                                            className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:border-[#00A8E8] bg-white"
+                                            placeholder="station"
+                                        />
+                                        <span className="text-xs text-gray-400 whitespace-nowrap">→ {idPrefix}_001</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <label className="text-xs text-gray-500 w-16 flex-shrink-0">name</label>
+                                        <input
+                                            type="text"
+                                            value={namePrefix}
+                                            onChange={(e) => setNamePrefix(e.target.value)}
+                                            className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:border-[#00A8E8] bg-white"
+                                            placeholder="Station"
+                                        />
+                                        <span className="text-xs text-gray-400 whitespace-nowrap">→ {namePrefix} 1</span>
+                                    </div>
+                                </div>
+
                                 {/* Action Buttons */}
                                 <div className="flex gap-2 mt-3">
                                     <button
                                         onClick={handleSaveAllStops}
-                                        className="flex-1 py-2 bg-green-500 text-white text-sm rounded-md font-medium hover:bg-green-600 transition-colors"
+                                        disabled={saving}
+                                        className={`flex-1 py-2 text-white text-sm rounded-md font-medium transition-colors ${saving ? 'bg-green-400 cursor-wait' : 'bg-green-500 hover:bg-green-600'
+                                            }`}
                                     >
-                                        Save as Stops
+                                        {saving ? 'Saving...' : 'Save as Stops'}
                                     </button>
                                     <button
                                         onClick={handleClearPlan}

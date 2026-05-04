@@ -70,14 +70,14 @@ export default function StationPlanDisplay() {
             features.push({
                 type: 'Feature',
                 geometry: { type: 'Point', coordinates: [pointA.lng, pointA.lat] },
-                properties: { label: 'A', color: '#22C55E' },
+                properties: { label: 'A', color: '#c86bfa' },
             });
         }
         if (pointB) {
             features.push({
                 type: 'Feature',
                 geometry: { type: 'Point', coordinates: [pointB.lng, pointB.lat] },
-                properties: { label: 'B', color: '#EF4444' },
+                properties: { label: 'B', color: '#ffd500' },
             });
         }
         return { type: 'FeatureCollection' as const, features };

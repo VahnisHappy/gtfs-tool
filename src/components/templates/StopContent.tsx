@@ -8,6 +8,7 @@ import StopContentDetail from "../organisms/StopContentDetail";
 import EditDeleteButton from "../molecules/EditDeleteButton";
 import StopCard from "../molecules/StopCard";
 import { stopsApi, ApiError } from "../../services/api";
+import PolygonToolbar from "../molecules/PolygonToolbar";
 
 export default function StopContent() {
     const stops = useSelector((state: RootState) => state.stopState.data);
@@ -102,6 +103,7 @@ export default function StopContent() {
     }
 
     return ( // TODO Can search stops by name or id (searchbox)
+        
         <div className="flex h-full w-full">
             <div
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full"
@@ -115,12 +117,15 @@ export default function StopContent() {
                     />
                     <ButtonAction label="new stop" onClick={handleNewStop} />
                 </div>
+                <div className="pt-2 pb-2 border-b">
+                    <PolygonToolbar />
+                </div>
                 <div className="flex-1 overflow-y-auto">
                     <div className="py-2">
                         <h3 className="font-semibold mb-2">stop list ({stops.length})</h3>
                     </div>
                     {stops.length === 0 ? (
-                        <p className="text-gray-500 text-sm px-4">No stops created yet. Click "new stop" to add one.</p>
+                        <p className="text-gray-500 text-sm px-4">no stops created yet. click "new stop" to add one.</p>
                     ) : (
                         <ul className="space-y-0">
                             {stops.map((stop, index) => (

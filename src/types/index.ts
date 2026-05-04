@@ -144,6 +144,8 @@ export type AgencyFormData = {
     agency_email?: string,
 }
 
+export type Category = { id: string; label: string; color: string; icon?: string }
+
 // export type StopGeoJSON = GeoJSON.Feature<GeoJSON.Point, {
 //     id: string
 //     name?: string
