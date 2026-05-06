@@ -3,7 +3,8 @@ import { useForm, FormProvider } from "react-hook-form";
 import type { RootState } from "../../store";
 import { closeCalendarDetail } from "../../store/slices/appSlice";
 import { useEffect, useState } from "react";
-import type { Calendar, BooleanDays, ExceptionDate } from "../../types";
+import type { Calendar, BooleanDays, ExceptionDate, ADate } from "../../types";
+import SelectDate from "../atoms/SelectDate";
 import { days } from "../../data";
 import CancelSaveButton from "../molecules/CancelSaveButton";
 import { CalendarActions } from "../../store/actions";
@@ -30,7 +31,7 @@ export default function CalendarContentDetail() {
     const selectedCalendar = useSelector((state: RootState) => state.appState.selectedCalendar)
     const calendars = useSelector((state: RootState) => state.calendarState.data)
     const [exceptions, setExceptions] = useState<ExceptionDate[]>([])
-    
+
     const methods = useForm<CalendarFormData>({
         defaultValues: {
             service_id: '',
@@ -52,13 +53,13 @@ export default function CalendarContentDetail() {
     useEffect(() => {
         if (selectedCalendar && selectedCalendar.mode === 'edit') {
             // Convert date values to string format for date inputs
-            const startDateStr = typeof selectedCalendar.startDate.value === 'string' 
-                ? selectedCalendar.startDate.value 
+            const startDateStr = typeof selectedCalendar.startDate.value === 'string'
+                ? selectedCalendar.startDate.value
                 : '';
-            const endDateStr = typeof selectedCalendar.endDate.value === 'string' 
-                ? selectedCalendar.endDate.value 
+            const endDateStr = typeof selectedCalendar.endDate.value === 'string'
+                ? selectedCalendar.endDate.value
                 : '';
-                
+
             reset({
                 service_id: selectedCalendar.id.value,
                 sunday: selectedCalendar.days[0] ? 1 : 0,
@@ -110,13 +111,13 @@ export default function CalendarContentDetail() {
     }
 
     const handleExceptionDateChange = (id: string, date: string) => {
-        setExceptions(exceptions.map(ex => 
+        setExceptions(exceptions.map(ex =>
             ex.id.value === id ? { ...ex, date: { value: date, error: undefined } } : ex
         ))
     }
 
     const handleExceptionTypeChange = (id: string, type: string) => {
-        setExceptions(exceptions.map(ex => 
+        setExceptions(exceptions.map(ex =>
             ex.id.value === id ? { ...ex, type: { value: type, error: undefined } } : ex
         ))
     }
@@ -145,7 +146,7 @@ export default function CalendarContentDetail() {
                 // Use original service_id for API update (in case user changed it)
                 const originalServiceId = selectedCalendar.id.value;
                 await calendarsApi.update(originalServiceId, calendarApiData);
-                
+
                 // Delete all existing exception dates for this service and recreate
                 try {
                     await calendarDatesApi.deleteByServiceId(originalServiceId);
@@ -161,10 +162,10 @@ export default function CalendarContentDetail() {
             // Save exception dates to calendar_dates table
             for (const exception of exceptions) {
                 if (exception.date.value && exception.type.value) {
-                    const exceptionDate = typeof exception.date.value === 'string' 
-                        ? formatDate(exception.date.value) 
+                    const exceptionDate = typeof exception.date.value === 'string'
+                        ? formatDate(exception.date.value)
                         : '';
-                    
+
                     if (exceptionDate) {
                         await calendarDatesApi.create({
                             service_id: data.service_id,
@@ -204,7 +205,7 @@ export default function CalendarContentDetail() {
                     dispatch(CalendarActions.updateCalendar({ index: lastIndex, calendar }));
                 }
             }
-            
+
             dispatch(closeCalendarDetail());
         } catch (error) {
             console.error('Failed to save calendar:', error);
@@ -213,20 +214,19 @@ export default function CalendarContentDetail() {
 
     return (
         <aside
-            className={`fixed right-0 top-0 h-screen w-[350px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${
-                isOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
+            className={`fixed right-0 top-0 h-screen w-[350px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}
         >
             <div className="flex flex-col h-full">
                 <div className="flex justify-between items-center p-4 border-b">
                     <h3 className="text-xl font-semibold">
-                        {selectedCalendar?.mode === 'new' 
-                            ? (watchedServiceId || 'new calendar') 
+                        {selectedCalendar?.mode === 'new'
+                            ? (watchedServiceId || 'new calendar')
                             : `${watchedServiceId} (edit)`
                         }
                     </h3>
-                    <button 
-                        onClick={handleCancel} 
+                    <button
+                        onClick={handleCancel}
                         className="text-gray-400 hover:text-gray-600 text-2xl"
                         type="button"
                     >
@@ -249,26 +249,37 @@ export default function CalendarContentDetail() {
                                 <label className="block text-sm font-medium mb-2">service operates</label>
                                 <div className="grid grid-cols-7 gap-1">
                                     {days.map(({ index, key, label }) => {
-                                        const dayFieldName = key === 'sun' ? 'sunday' : 
-                                                           key === 'mon' ? 'monday' : 
-                                                           key === 'tues' ? 'tuesday' : 
-                                                           key === 'wed' ? 'wednesday' : 
-                                                           key === 'thurs' ? 'thursday' : 
-                                                           key === 'fri' ? 'friday' : 
-                                                           'saturday';
+                                        const dayFieldName = key === 'sun' ? 'sunday' :
+                                            key === 'mon' ? 'monday' :
+                                                key === 'tues' ? 'tuesday' :
+                                                    key === 'wed' ? 'wednesday' :
+                                                        key === 'thurs' ? 'thursday' :
+                                                            key === 'fri' ? 'friday' :
+                                                                'saturday';
                                         const isActive = watch(dayFieldName as keyof CalendarFormData) === 1;
-                                        
+
+                                        const dayColors: Record<string, string> = {
+                                            sun: '#f00000',
+                                            mon: '#ffe100',
+                                            tues: '#ec4899',
+                                            wed: '#22c55e',
+                                            thurs: '#f97316',
+                                            fri: '#4cc9f0',
+                                            sat: '#a855f7',
+                                        };
+                                        const color = dayColors[key] || '#69D6FF';
+
                                         return (
                                             <div key={index} className="flex flex-col items-center">
                                                 <span className="text-xs mb-1">{label}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => setValue(dayFieldName as keyof CalendarFormData, isActive ? 0 : 1)}
-                                                    className={`w-full h-12 border rounded transition-colors ${
-                                                        isActive
-                                                            ? 'bg-blue-500 border-blue-500'
-                                                            : 'bg-white border-gray-300 hover:bg-gray-50'
-                                                    }`}
+                                                    className={`w-full h-12 border rounded transition-colors cursor-pointer ${isActive
+                                                        ? ''
+                                                        : 'bg-white border-gray-300 hover:bg-gray-50'
+                                                        }`}
+                                                    style={isActive ? { backgroundColor: color, borderColor: color } : undefined}
                                                 />
                                             </div>
                                         );
@@ -278,22 +289,38 @@ export default function CalendarContentDetail() {
 
                             {/* Start and End Date */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">start date</label>
-                                    <input
-                                        type="date"
-                                        {...methods.register('start_date')}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">end date</label>
-                                    <input
-                                        type="date"
-                                        {...methods.register('end_date')}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
+                                <SelectDate
+                                    label="start date"
+                                    value={(() => {
+                                        const str = watch('start_date');
+                                        if (!str) return null;
+                                        const [y, m, d] = str.split('-').map(Number);
+                                        return (!y || isNaN(m) || !d) ? null : { date: d, month: m - 1, year: y };
+                                    })()}
+                                    onChange={(aDate: ADate | null) => {
+                                        if (!aDate) { setValue('start_date', ''); return; }
+                                        const mm = String(aDate.month + 1).padStart(2, '0');
+                                        const dd = String(aDate.date).padStart(2, '0');
+                                        setValue('start_date', `${aDate.year}-${mm}-${dd}`);
+                                    }}
+                                    placeholder="select start date"
+                                />
+                                <SelectDate
+                                    label="end date"
+                                    value={(() => {
+                                        const str = watch('end_date');
+                                        if (!str) return null;
+                                        const [y, m, d] = str.split('-').map(Number);
+                                        return (!y || isNaN(m) || !d) ? null : { date: d, month: m - 1, year: y };
+                                    })()}
+                                    onChange={(aDate: ADate | null) => {
+                                        if (!aDate) { setValue('end_date', ''); return; }
+                                        const mm = String(aDate.month + 1).padStart(2, '0');
+                                        const dd = String(aDate.date).padStart(2, '0');
+                                        setValue('end_date', `${aDate.year}-${mm}-${dd}`);
+                                    }}
+                                    placeholder="select end date"
+                                />
                             </div>
 
                             {/* Exception Section */}
@@ -306,8 +333,8 @@ export default function CalendarContentDetail() {
                             />
                         </div>
 
-                        <CancelSaveButton 
-                            onCancel={handleCancel} 
+                        <CancelSaveButton
+                            onCancel={handleCancel}
                             onSave={handleSubmit(onSubmit)}
                             disabled={false}
                         />

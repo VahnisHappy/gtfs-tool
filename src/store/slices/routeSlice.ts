@@ -40,6 +40,7 @@ const routeSlice = createSlice({
         addStopToRoute: (state, { payload }: PayloadAction<StopIndex>) => {
             const route = state.data.find(r => r.edit);
             if (!route) return;
+            if (route.stopIndexes.includes(payload)) return;
             route.stopIndexes = [...route.stopIndexes, payload];
         },
         updateRouteId: (state, { payload }: PayloadAction<string>) => {

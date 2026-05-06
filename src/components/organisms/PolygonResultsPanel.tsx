@@ -1,15 +1,15 @@
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../store';
 import { clearPolygon, setStationCount, setPlannedStations, clearStationPlan, setMode, setStationPlanRoutePath, setSelectedPOIs } from '../../store/slices/appSlice';
-import { MapActions, StopActions } from '../../store/actions';
+import { MapActions, StopActions, RouteActions } from '../../store/actions';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { searchExternalPOIs, POI_CATEGORIES } from '../../services/mapboxPOI';
 import type { ExternalPOI } from '../../services/mapboxPOI';
 import { planStations, findOptimalStationCount } from '../../services/stationPlanner';
 import CategoryList from '../molecules/CategoryList';
 import { direction } from '../../services/useMapInteractions';
-import { stopsApi } from '../../services/api';
-import type { Stop } from '../../types';
+import { stopsApi, routesApi } from '../../services/api';
+import type { Stop, Route } from '../../types';
 import RoutePlannerForm from '../molecules/RoutePlannerForm';
 
 export default function PolygonResultsPanel() {
@@ -22,13 +22,16 @@ export default function PolygonResultsPanel() {
     const plannedStations = useSelector((state: RootState) => state.appState.plannedStations);
     const selectedPOIs = useSelector((state: RootState) => state.appState.selectedPOIs);
     const mode = useSelector((state: RootState) => state.appState.mode);
+    const stationPlanRoutePath = useSelector((state: RootState) => state.appState.stationPlanRoutePath);
     const stops = useSelector((state: RootState) => state.stopState.data);
+    const routes = useSelector((state: RootState) => state.routeState.data);
 
     const [allPOIs, setAllPOIs] = useState<ExternalPOI[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
     const [calculating, setCalculating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [customStationCount, setCustomStationCount] = useState<number | null>(null);
 
     // Count POIs per category
     const categoryCounts = useMemo(() => {
@@ -121,25 +124,25 @@ export default function PolygonResultsPanel() {
             const path = await direction([pointA, pointB]);
             dispatch(setStationPlanRoutePath(path));
 
-            // Auto-determine optimal station count via SIC
-            const optimalCount = findOptimalStationCount(
+            // Use custom count if specified, otherwise auto-determine via SIC
+            const count = customStationCount ?? findOptimalStationCount(
                 pointA, pointB, selectedPOIs, path,
             );
-            dispatch(setStationCount(optimalCount));
+            dispatch(setStationCount(count));
 
             // Plan stations using only selected POIs
             const stations = planStations(
-                pointA, pointB, optimalCount, selectedPOIs, path,
+                pointA, pointB, count, selectedPOIs, path,
             );
             dispatch(setPlannedStations(stations));
         } catch (err) {
             console.error('Failed to calculate stations:', err);
-            const optimalCount = findOptimalStationCount(
+            const count = customStationCount ?? findOptimalStationCount(
                 pointA, pointB, selectedPOIs,
             );
-            dispatch(setStationCount(optimalCount));
+            dispatch(setStationCount(count));
             const stations = planStations(
-                pointA, pointB, optimalCount, selectedPOIs,
+                pointA, pointB, count, selectedPOIs,
             );
             dispatch(setPlannedStations(stations));
         } finally {
@@ -150,15 +153,20 @@ export default function PolygonResultsPanel() {
     const [saving, setSaving] = useState(false);
     const [idPrefix, setIdPrefix] = useState('station');
     const [namePrefix, setNamePrefix] = useState('station');
+    const [saveRoute, setSaveRoute] = useState(true);
+    const [routeId, setRouteId] = useState('route_001');
+    const [routeName, setRouteName] = useState('Route 1');
 
     const handleSaveAllStops = async () => {
         setSaving(true);
-        const existingCount = stops.length;
+        const existingStopCount = stops.length;
+        const savedStopIds: string[] = [];
 
         try {
+            // 1. Save all planned stations as stops
             for (let i = 0; i < plannedStations.length; i++) {
                 const station = plannedStations[i];
-                const stopNumber = existingCount + i + 1;
+                const stopNumber = existingStopCount + i + 1;
                 const stopId = `${idPrefix}_${String(stopNumber).padStart(3, '0')}`;
                 const stopName = `${namePrefix} ${stopNumber}`;
 
@@ -178,7 +186,71 @@ export default function PolygonResultsPanel() {
                     lng: station.position.lng,
                 };
                 dispatch(StopActions.addStop(stop));
+                savedStopIds.push(stopId);
             }
+
+            // 2. Optionally save the route path with linked stops
+            if (saveRoute && plannedStations.length >= 2 && stationPlanRoutePath.length >= 2) {
+                // Build stop indexes referencing the newly added stops
+                const newStopIndexes = savedStopIds.map((_, i) => existingStopCount + i);
+
+                // Extract road-following path between SIC stations.
+                // For each station, find the nearest point index on the full road path,
+                // then stitch together the road segments between consecutive stations.
+                const distSq = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) =>
+                    (a.lat - b.lat) ** 2 + (a.lng - b.lng) ** 2;
+
+                // Find the closest road path index for each station (in order)
+                let searchStart = 0;
+                const snapIndices: number[] = [];
+                for (const station of plannedStations) {
+                    let bestIdx = searchStart;
+                    let bestDist = Infinity;
+                    for (let j = searchStart; j < stationPlanRoutePath.length; j++) {
+                        const d = distSq(station.position, stationPlanRoutePath[j]);
+                        if (d < bestDist) {
+                            bestDist = d;
+                            bestIdx = j;
+                        }
+                    }
+                    snapIndices.push(bestIdx);
+                    searchStart = bestIdx; // next station must be further along the path
+                }
+
+                // Build the road-following path by stitching road segments
+                const routePath: { lat: number; lng: number }[] = [];
+                for (let i = 0; i < snapIndices.length; i++) {
+                    const startIdx = i === 0 ? snapIndices[0] : snapIndices[i - 1] + 1;
+                    const endIdx = snapIndices[i];
+                    for (let j = startIdx; j <= endIdx; j++) {
+                        routePath.push(stationPlanRoutePath[j]);
+                    }
+                }
+
+                // Save route to backend
+                await routesApi.create({
+                    route_id: routeId,
+                    route_short_name: routeName,
+                    route_type: 3, // Bus
+                    route_color: '#00A8E8',
+                    route_path: routePath,
+                });
+
+                // Add route to Redux
+                const route: Route = {
+                    id: { value: routeId, error: false },
+                    name: { value: routeName, error: false },
+                    routeType: 3,
+                    color: '#00A8E8',
+                    stopIndexes: newStopIndexes,
+                    stopIds: savedStopIds,
+                    path: routePath,
+                    edit: false,
+                    isNew: false,
+                };
+                dispatch(RouteActions.addRoute(route));
+            }
+
             dispatch(clearStationPlan());
         } catch (err) {
             console.error('Failed to save stations:', err);
@@ -302,9 +374,11 @@ export default function PolygonResultsPanel() {
                             calculating={calculating}
                             canCalculate={canCalculate}
                             selectedPOICount={selectedPOIs.length}
+                            customStationCount={customStationCount}
                             onPickA={handlePickA}
                             onPickB={handlePickB}
                             onCalculate={handleCalculate}
+                            onStationCountChange={setCustomStationCount}
                         />
 
                         {/* Planned Stations Results */}
@@ -341,8 +415,9 @@ export default function PolygonResultsPanel() {
                                     ))}
                                 </div>
 
-                                {/* Customizable ID & Name Prefix */}
+                                {/* Customizable Stop ID & Name Prefix */}
                                 <div className="mt-3 space-y-2">
+                                    <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Stop naming</p>
                                     <div className="flex items-center gap-2">
                                         <label className="text-xs text-gray-500 w-16 flex-shrink-0">ID prefix</label>
                                         <input
@@ -367,6 +442,46 @@ export default function PolygonResultsPanel() {
                                     </div>
                                 </div>
 
+                                {/* Save Route Toggle + Route ID/Name */}
+                                <div className="mt-3 space-y-2">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={saveRoute}
+                                            onChange={(e) => setSaveRoute(e.target.checked)}
+                                            className="w-3.5 h-3.5 rounded border-gray-300 text-[#00A8E8] focus:ring-[#00A8E8]"
+                                        />
+                                        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Also save route</span>
+                                    </label>
+                                    {saveRoute && (
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <label className="text-xs text-gray-500 w-16 flex-shrink-0">route ID</label>
+                                                <input
+                                                    type="text"
+                                                    value={routeId}
+                                                    onChange={(e) => setRouteId(e.target.value)}
+                                                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:border-[#00A8E8] bg-white"
+                                                    placeholder="route_001"
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <label className="text-xs text-gray-500 w-16 flex-shrink-0">route name</label>
+                                                <input
+                                                    type="text"
+                                                    value={routeName}
+                                                    onChange={(e) => setRouteName(e.target.value)}
+                                                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:border-[#00A8E8] bg-white"
+                                                    placeholder="Route 1"
+                                                />
+                                            </div>
+                                            <p className="text-[11px] text-gray-400">
+                                                The road path between A → B will be saved as a route with {plannedStations.length} linked stop{plannedStations.length !== 1 ? 's' : ''}
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
+
                                 {/* Action Buttons */}
                                 <div className="flex gap-2 mt-3">
                                     <button
@@ -375,7 +490,7 @@ export default function PolygonResultsPanel() {
                                         className={`flex-1 py-2 text-white text-sm rounded-md font-medium transition-colors ${saving ? 'bg-green-400 cursor-wait' : 'bg-green-500 hover:bg-green-600'
                                             }`}
                                     >
-                                        {saving ? 'Saving...' : 'Save as Stops'}
+                                        {saving ? 'Saving...' : saveRoute ? 'Save Stops & Route' : 'Save as Stops'}
                                     </button>
                                     <button
                                         onClick={handleClearPlan}

@@ -7,6 +7,7 @@ export type CalendarCardProps = {
 }
 
 const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const dayColors = ['#ef4444', '#ffe100', '#ec4899', '#22c55e', '#f97316', '#4cc9f0', '#a855f7'];
 
 export default function CalendarCard({ calendar, isSelected, onSelect }: CalendarCardProps) {
     return (
@@ -19,7 +20,6 @@ export default function CalendarCard({ calendar, isSelected, onSelect }: Calenda
             }`}
         >
             <div className="space-y-1">
-                {/* <div className=""> */}
                     <div className="flex items-center justify-between">
                         <span className="font-semibold text-gray-900">
                             {calendar.id.value}
@@ -31,16 +31,16 @@ export default function CalendarCard({ calendar, isSelected, onSelect }: Calenda
                                     key={idx}
                                     className={`w-6 h-6 flex items-center justify-center text-xs rounded ${
                                         isActive
-                                            ? 'bg-[#f3a80f] text-white font-medium'
+                                            ? 'text-white font-medium'
                                             : 'bg-gray-200 text-gray-400'
                                     }`}
+                                    style={isActive ? { backgroundColor: dayColors[idx] } : undefined}
                                     title={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][idx]}
                                 >
                                     {dayLabels[idx]}
                                 </div>
                             ))}
                     </div>
-                {/* </div> */}
             </div>
         </li>
     );

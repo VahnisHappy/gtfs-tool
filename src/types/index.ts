@@ -71,11 +71,11 @@ export type Route = {
 
 export type BooleanDays = [boolean, boolean, boolean, boolean, boolean, boolean, boolean];
 
-// export type ADate = {
-//     date: number,
-//     month: number,
-//     year: number,
-// }
+export type ADate = {
+    date: number,
+    month: number,
+    year: number,
+}
 
 export type Calendar = {
     id: Field<string>,

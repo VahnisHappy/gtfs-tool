@@ -19,7 +19,7 @@ export default function RouteContent() {
     const handleNewRoute = () => {
         setSelectedRouteIndex(null)
         // Generate random color for new route
-        const colors = ['#3b82f6'];
+        const colors = ['#bf0603'];
         const initialColor = colors[Math.floor(Math.random() * colors.length)];
         
         dispatch(RouteActions.createRoute(initialColor));
@@ -87,7 +87,7 @@ export default function RouteContent() {
                         <h3 className="font-semibold mb-2">route list ({routes.length})</h3>
                     </div>
                     {routes.length === 0 ? (
-                        <p className="text-gray-500 text-sm px-4">no route created yet. Click "New Route" and select at least 2 stops to add one.</p>
+                        <p className="text-gray-500 text-sm px-4">no route created yet. click "new route" and select at least 2 stops to add one.</p>
                     ) : (
                         <ul className="space-y-0">
                             {routes.map((route) => (

@@ -46,7 +46,7 @@ export default function PathDisplay({ lineWidth }: PathDisplayProps) {
                             type='line'
                             paint={{
                                 'line-width': lineWidth,
-                                'line-color': route?.color || '#3b82f6',
+                                'line-color': route?.color || '#00a8e8',
                                 'line-opacity': 0.8
                             }}
                         />

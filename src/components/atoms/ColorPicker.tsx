@@ -52,10 +52,10 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
                 className="flex items-center gap-6 h-full h-38px border border-gray-300 rounded-lg transition-colors bg-white"
             >
                 <div 
-                    className="w-10 h-7 rounded rounded-xs border-gray-200 ml-2"
+                    className="w-10 h-7 rounded rounded-xs border-gray-200 ml-2 cursor-pointer"
                     style={{ backgroundColor: value }}
                 />
-                <span className="text-sm font-mono text-gray-600">{value.toUpperCase()}</span>
+                <span className="text-sm font-mono text-gray-600">{value.toLowerCase()}</span>
                 
             </button>
 

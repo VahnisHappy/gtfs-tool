@@ -49,7 +49,7 @@ export default function RouteStopsSection({ stopIndexes }: RouteStopsSectionProp
     return (
         <div className="border-t pt-4">
             <label className="block text-sm font-medium mb-2">
-                stops ({orderedStops.length})
+                stop sequence ({orderedStops.length})
             </label>
             
             {orderedStops.length > 0 ? (
@@ -97,7 +97,7 @@ export default function RouteStopsSection({ stopIndexes }: RouteStopsSectionProp
                 </div>
             ) : (
                 <p className="text-sm text-gray-500 italic">
-                    No stops added yet. Click on the map to add stops.
+                    no stops added yet. click on the map to add stops.
                 </p>
             )}
         </div>

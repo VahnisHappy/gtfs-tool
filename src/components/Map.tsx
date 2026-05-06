@@ -38,6 +38,8 @@ export default function Map() {
 
   const currentEditedRoute = routes.find(route => route.edit)
 
+  const stopIndexesSerialized = JSON.stringify(currentEditedRoute?.stopIndexes || []);
+
   useEffect(() => {
     if (!currentEditedRoute) {
       console.log('No route being edited')
@@ -62,7 +64,7 @@ export default function Map() {
         console.error('Direction API error:', err)
       })
     }
-  }, [currentEditedRoute?.stopIndexes?.length, stops])
+  }, [stopIndexesSerialized, stops])
 
   const stopsGeoJSON = useMemo(() => {
     return {
@@ -119,8 +121,8 @@ export default function Map() {
     const currentSelected = stops[index] ? index : null;
     dispatch(StopActions.selectStop(currentSelected));
 
-    // Fly to the selected stop
-    if (currentSelected !== null) {
+    // Fly to the selected stop (skip in draw mode to avoid disrupting route building)
+    if (currentSelected !== null && mode !== 'draw') {
       const stop = stops[currentSelected];
       dispatch(MapActions.flyToLocation({ lat: stop.lat, lng: stop.lng, zoom: 16 }));
     }
@@ -138,7 +140,7 @@ export default function Map() {
     <div className="w-full h-full" style={{ position: `relative` }}>
       <MapDisplay onClick={handleMapDisplayClick} stops={stopsGeoJSON}>
         <StopDisplay onClick={handleDisplayStopClick} />
-        <PathDisplay lineWidth={3} />
+        <PathDisplay lineWidth={6} />
         <PolygonDraw />
         <StationPlanDisplay />
       </MapDisplay>

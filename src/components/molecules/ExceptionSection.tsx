@@ -1,4 +1,20 @@
-import type { ExceptionDate } from "../../types";
+import type { ADate, ExceptionDate } from "../../types";
+import SelectInput from "../atoms/SelectInput";
+import SelectDate from "../atoms/SelectDate";
+
+function stringToADate(str: string | null): ADate | null {
+    if (!str) return null;
+    const [year, month, day] = str.split('-').map(Number);
+    if (!year || isNaN(month) || !day) return null;
+    return { date: day, month: month - 1, year };
+}
+
+function aDateToString(d: ADate | null): string {
+    if (!d) return '';
+    const mm = String(d.month + 1).padStart(2, '0');
+    const dd = String(d.date).padStart(2, '0');
+    return `${d.year}-${mm}-${dd}`;
+}
 
 interface ExceptionSectionProps {
     exceptions: ExceptionDate[];
@@ -16,9 +32,8 @@ export default function ExceptionSection({
     onTypeChange
 }: ExceptionSectionProps) {
     return (
-        <div className="border-t pt-4">
-            <h4 className="text-lg font-semibold mb-4">exception</h4>
-            
+        <div className="border-t pt-3">
+            <h4 className="text-lg font-semibold mb-2">exception</h4>
             <button
                 type="button"
                 onClick={onAddException}
@@ -27,33 +42,44 @@ export default function ExceptionSection({
                 add exception date
             </button>
 
-            <div className="space-y-3">
+            {exceptions.length === 0 && (
+                <p className="text-xs text-gray-400 italic py-2">no exception dates</p>
+            )}
+
+            <div className="space-y-2">
                 {exceptions.map((exception) => (
-                    <div key={exception.id.value} className="flex items-center gap-2">
-                        <input
-                            type="date"
-                            value={typeof exception.date.value === 'string' ? exception.date.value : ''}
-                            onChange={(e) => onDateChange(exception.id.value, e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <select
+                    <div key={exception.id.value} className="flex flex-col gap-1.5 p-2 bg-gray-50 rounded-md border border-gray-100 group relative">
+                        <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                                <SelectDate
+                                    label=""
+                                    value={stringToADate(typeof exception.date.value === 'string' ? exception.date.value : null)}
+                                    onChange={(aDate) => onDateChange(exception.id.value, aDateToString(aDate))}
+                                    placeholder="select date"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => onRemoveException(exception.id.value)}
+                                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all flex-shrink-0"
+                                title="Remove exception"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        <SelectInput
+                            label=""
                             value={exception.type.value}
-                            onChange={(e) => onTypeChange(exception.id.value, e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">exception type</option>
-                            <option value="1">Service Added</option>
-                            <option value="2">Service Removed</option>
-                        </select>
-                        <button
-                            type="button"
-                            onClick={() => onRemoveException(exception.id.value)}
-                            className="p-2 text-gray-500 hover:text-red-500 transition-colors"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256">
-                                <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"/>
-                            </svg>
-                        </button>
+                            onChange={(val) => onTypeChange(exception.id.value, String(val))}
+                            options={[
+                                { value: "1", label: "Service Added" },
+                                { value: "2", label: "Service Removed" },
+                            ]}
+                            placeholder="exception type"
+                            labelClassName="hidden"
+                        />
                     </div>
                 ))}
             </div>

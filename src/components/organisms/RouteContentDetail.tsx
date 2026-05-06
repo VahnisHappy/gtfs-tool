@@ -47,7 +47,7 @@ export default function RouteContentDetail() {
             route_id: '',
             route_short_name: '',
             route_type: 3, // Default to Bus
-            route_color: '#3b82f6',
+            route_color: '',
         }
     });
 
@@ -89,7 +89,7 @@ export default function RouteContentDetail() {
                 route_id: '',
                 route_short_name: '',
                 route_type: 3,
-                route_color: '#3b82f6'
+                route_color: '#00a8e8'
             });
             setTimeout(() => {
                 isInitialMount.current = false;
@@ -217,7 +217,7 @@ export default function RouteContentDetail() {
                                 </>
                             ) : (
                                 <div className="flex items-center justify-center h-full">
-                                    <p className="text-gray-500">No route selected</p>
+                                    <p className="text-gray-500">no route selected</p>
                                 </div>
                             )}
                         </div>
