@@ -41,7 +41,6 @@ export function useLoadStops() {
       try {
         console.log('Loading stops from backend...');
         const geoJSON = await stopsApi.getAll() as GeoJSONFeatureCollection;
-        
         // Convert GeoJSON features to Stop type
         const stops: Stop[] = geoJSON.features.map((feature) => ({
           id: { value: feature.properties.id, error: undefined },

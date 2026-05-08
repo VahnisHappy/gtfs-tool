@@ -14,6 +14,7 @@ export default function StopContent() {
     const stops = useSelector((state: RootState) => state.stopState.data);
     const routes = useSelector((state: RootState) => state.routeState.data);
     const selectedStopIndex = useSelector((state: RootState) => state.stopState.selectedIndex);
+    const selectedStop = useSelector((state: RootState) => state.appState.selectedStop);
     const dispatch = useDispatch();
     const stopListRef = useRef<HTMLDivElement>(null);
 
@@ -110,19 +111,14 @@ export default function StopContent() {
                 ref={stopListRef}
             >
                 <div className="flex items-center gap-2 justify-between pb-2 border-b">
-                    <EditDeleteButton
-                        onEdit={handleEditStop}
-                        onDelete={handleDeleteStop}
-                        disabled={selectedStopIndex === null}
-                    />
+                    <PolygonToolbar />
                     <ButtonAction label="new stop" onClick={handleNewStop} />
                 </div>
-                <div className="pt-2 pb-2 border-b">
-                    <PolygonToolbar />
-                </div>
+
                 <div className="flex-1 overflow-y-auto">
-                    <div className="py-2">
-                        <h3 className="font-semibold mb-2">stop list ({stops.length})</h3>
+                    <div className="py-2 flex justify-between">
+                        <h3 className="font-semibold">stop list ({stops.length})</h3>
+                            <EditDeleteButton onEdit={handleEditStop} onDelete={handleDeleteStop} disabled={selectedStopIndex === null} isEditing={selectedStop?.mode === 'edit'} />
                     </div>
                     {stops.length === 0 ? (
                         <p className="text-gray-500 text-sm px-4">no stops created yet. click "new stop" to add one.</p>

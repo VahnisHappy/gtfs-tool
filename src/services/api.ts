@@ -2,6 +2,12 @@ import { getToken } from './authService';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
+let apiAgencyId: string | null = null;
+
+export const setApiAgencyId = (id: string | null) => {
+  apiAgencyId = id;
+};
+
 // Generic API error handler
 export class ApiError extends Error {
   status: number;
@@ -21,6 +27,9 @@ async function authFetch(url: string, init?: RequestInit): Promise<Response> {
   const headers = new Headers(init?.headers);
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
+  }
+  if (apiAgencyId) {
+    headers.set('x-agency-id', apiAgencyId);
   }
   return fetch(url, { ...init, headers });
 }
@@ -397,6 +406,9 @@ export const gtfsApi = {
     const headers: HeadersInit = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+    }
+    if (apiAgencyId) {
+      headers['x-agency-id'] = apiAgencyId;
     }
 
     const response = await fetch(`${API_BASE_URL}/gtfs/export`, { headers });

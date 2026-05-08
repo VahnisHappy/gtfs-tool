@@ -39,12 +39,12 @@ export default function SelectInput({ label, value, onChange, options = [], plac
 
     return (
         <div className="flex flex-col">
-            <label className={`mb-2 font-medium text-gray-700 ${labelClassName}`}>{label}</label>
+            <label> {label} </label>
             <div className="relative" ref={dropdownRef}>
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-left focus:outline-none flex items-center justify-between"
                 >
                     <span className={`block truncate mr-2 ${selectedOption ? 'text-gray-900' : 'text-gray-500'}`}
                         title={displayText}>

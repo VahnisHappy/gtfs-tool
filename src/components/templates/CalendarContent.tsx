@@ -15,6 +15,7 @@ export default function CalendarContent() {
     const dispatch = useDispatch()
     // const isCalendarDetailOpen = useSelector((state: RootState) => state.appState.isCalendarDetailOpen)
     const [selectedCalendarIndex, setSelectedCalendarIndex] = useState<number | null>(null)
+    const selectedCalendar = useSelector((state: RootState) => state.appState.selectedCalendar)
     const calendarListRef = useRef<HTMLDivElement>(null)
 
     const handleNewCalendar = () => {
@@ -72,17 +73,14 @@ export default function CalendarContent() {
                 ref={calendarListRef}
             >
             <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full">
-                    <div className="flex items-center gap-2 justify-between pb-2 border-b">
-                        <EditDeleteButton 
-                            onEdit={handEditCalendar}
-                            onDelete={handleDeleteCalendar}
-                            disabled={selectedCalendarIndex === null}
-                        />
+                    <div className="flex items-center gap-2 justify-end pb-2 border-b">
                         <ButtonAction label="new schedule" onClick={handleNewCalendar} />
                     </div>
                 <div className="flex-1 overflow-y-auto">
-                    <div className="py-2">
+                    <div className="py-2 flex justify-between">
                         <h3 className="font-semibold mb-2">calendar list ({calendars.length})</h3>
+                        <EditDeleteButton onEdit={handEditCalendar} onDelete={handleDeleteCalendar} disabled={selectedCalendarIndex === null} isEditing={selectedCalendar?.mode === 'edit'} />
+                    </div>
                         {calendars.length === 0 ? (
                             <p className="text-gray-500 text-sm px-4">No calendars yet. Click "new schedule" to create one.</p>
                         ) : (
@@ -97,7 +95,6 @@ export default function CalendarContent() {
                                 ))}
                             </ul>
                         )}
-                    </div>
                 </div>
             </div>
         </div>

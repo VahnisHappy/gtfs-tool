@@ -273,22 +273,26 @@ export default function TripContentDetail() {
 
     return (
         <aside
-            className={`fixed right-0 top-0 h-screen w-[350px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${
-                isOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
+            className={`fixed right-0 top-0 h-screen w-[350px] shadow-xl z-50 bg-[#F5F7F9] ${isOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}
         >
             <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
-                <div className="flex justify-between items-center p-4 border-b">
+                <div className="flex justify-between items-center p-4">
                     <h3 className="text-xl font-semibold">
-                        {isEditMode ? (watch('tripId') || 'Edit Trip') : (watch('tripName') || 'New Trip')}
+                        {isEditMode ? (watch('tripId') || 'edit trip') : (watch('tripName') || 'new trip')}
                     </h3>
-                    <button type="button" onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+                    <button
+                        onClick={handleClose}
+                        className="text-gray-400 hover:text-gray-600 text-md absolute right-4 top-4"
+                        type="button"
+                    >
+                        ✕
+                    </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {/* Route ID and Service ID */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                         <FormSelectInput
                             name="routeIndex"
                             label="route id"
@@ -309,8 +313,7 @@ export default function TripContentDetail() {
                         />
                     </div>
 
-                    {/* Trip ID and Trip Name */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                         <Controller
                             name="tripId"
                             control={control}
@@ -329,11 +332,11 @@ export default function TripContentDetail() {
                         />
                     </div>
 
-                    {/* Stop Sequence */}
+        
+                    <TripOptional />
+
                     <TripStopSequence />
 
-                    {/* Optional Fields */}
-                    <TripOptional />
                 </div>
 
                 <CancelSaveButton onCancel={handleClose} onSave={handleSubmit(onSubmit)} />

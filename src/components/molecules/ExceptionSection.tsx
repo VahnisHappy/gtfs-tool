@@ -1,5 +1,4 @@
 import type { ADate, ExceptionDate } from "../../types";
-import SelectInput from "../atoms/SelectInput";
 import SelectDate from "../atoms/SelectDate";
 
 function stringToADate(str: string | null): ADate | null {
@@ -33,7 +32,7 @@ export default function ExceptionSection({
 }: ExceptionSectionProps) {
     return (
         <div className="border-t pt-3">
-            <h4 className="text-lg font-semibold mb-2">exception</h4>
+            <h4>exception</h4>
             <button
                 type="button"
                 onClick={onAddException}
@@ -48,7 +47,7 @@ export default function ExceptionSection({
 
             <div className="space-y-2">
                 {exceptions.map((exception) => (
-                    <div key={exception.id.value} className="flex flex-col gap-1.5 p-2 bg-gray-50 rounded-md border border-gray-100 group relative">
+                    <div key={exception.id.value} className="flex flex-col gap-1.5 p-2 bg-gray-50 rounded-md border border-gray-100 group relative bg-white">
                         <div className="flex items-center gap-2">
                             <div className="flex-1">
                                 <SelectDate
@@ -69,17 +68,30 @@ export default function ExceptionSection({
                                 </svg>
                             </button>
                         </div>
-                        <SelectInput
-                            label=""
-                            value={exception.type.value}
-                            onChange={(val) => onTypeChange(exception.id.value, String(val))}
-                            options={[
-                                { value: "1", label: "Service Added" },
-                                { value: "2", label: "Service Removed" },
-                            ]}
-                            placeholder="exception type"
-                            labelClassName="hidden"
-                        />
+                        <div className="flex rounded border border-gray-300 overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => onTypeChange(exception.id.value, '1')}
+                                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${exception.type.value === '1'
+                                        ? 'bg-[#00A8E8] text-white'
+                                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                                    }`}
+                                style={{ border: 'none', borderRight: '1px solid #D1D5DB' }}
+                            >
+                                service added
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onTypeChange(exception.id.value, '2')}
+                                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${exception.type.value === '2'
+                                        ? 'bg-[#00BFA5] text-white'
+                                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                                    }`}
+                                style={{ border: 'none' }}
+                            >
+                                service removed
+                            </button>
+                        </div>
                     </div>
                 ))}
             </div>

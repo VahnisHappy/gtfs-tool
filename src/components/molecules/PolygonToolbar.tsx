@@ -16,7 +16,7 @@ export default function PolygonToolbar() {
             {!isPolygonMode ? (
                 <button
                     onClick={() => dispatch(enterPolygonMode())}
-                    className="flex items-center gap-2 px-6 py-2 bg-[#FF7A2F] rounded-md  border border-gray-200 hover:bg-[#f0691a] transition-colors text-sm font-medium text-white"
+                    className="flex items-center gap-2 px-4 py-1.75 bg-[#ff7a2f] rounded-md  border border-gray-200 hover:bg-[#f0691a] transition-colors text-sm font-medium text-white"
                     title="Draw polygon to find POIs"
                 >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -46,8 +46,8 @@ export default function PolygonToolbar() {
                             className={
                                 `px-3 py-1 text-white text-sm rounded-md transition-colors font-medium ` +
                                 (canClose
-                                    ? 'bg-[#FF7A2F] hover:bg-[#f0691a]'
-                                    : 'bg-[#FF7A2F] opacity-50 cursor-not-allowed')
+                                    ? 'bg-[#ff7a2f] hover:bg-[#f0691a]'
+                                    : 'bg-[#ff7a2f] opacity-50 cursor-not-allowed')
                             }
                         >
                             done

@@ -29,7 +29,8 @@ interface BackendRoute {
 export function useLoadRoutes() {
   const dispatch = useDispatch();
   const stops = useSelector((state: RootState) => state.stopState.data);
-  const hasLoadedRoutes = useRef(false);
+  const activeAgencyId = useSelector((state: RootState) => state.agencyState.activeAgencyId);
+  const previousAgencyId = useRef<string | null>(null);
   const [stopsReadyTimeout, setStopsReadyTimeout] = useState(false);
 
   // Fallback: if stops don't load within 500ms, proceed anyway
@@ -44,8 +45,11 @@ export function useLoadRoutes() {
   const stopsReady = stops.length > 0 || stopsReadyTimeout;
 
   useEffect(() => {
-    // Only load routes once
-    if (hasLoadedRoutes.current) return;
+    // Wait until an agency is selected
+    if (!activeAgencyId) return;
+
+    // Only load if the agency changed or we haven't loaded yet
+    if (previousAgencyId.current === activeAgencyId) return;
 
     // Wait for stops to be ready
     if (!stopsReady) {
@@ -53,8 +57,7 @@ export function useLoadRoutes() {
       return;
     }
 
-    // Mark as loaded immediately to prevent race conditions
-    hasLoadedRoutes.current = true;
+    previousAgencyId.current = activeAgencyId;
 
     const loadRoutes = async () => {
       try {
@@ -103,5 +106,5 @@ export function useLoadRoutes() {
 
     // Load routes immediately since we've already waited for stops
     loadRoutes();
-  }, [dispatch, stops, stopsReady]);
+  }, [dispatch, stops, stopsReady, activeAgencyId]);
 }

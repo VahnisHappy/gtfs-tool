@@ -1,13 +1,29 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { Stop, Trip } from '../types';
+import { getToken } from './authService';
+import type { RootState } from '../store';
 
 export const gtfsApi = createApi({
   reducerPath: 'gtfsApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:3000/' }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: 'http://localhost:3000/',
+    prepareHeaders: (headers, { getState }) => {
+      const token = getToken();
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+      const state = getState() as RootState;
+      const agencyId = state.agencyState.activeAgencyId;
+      if (agencyId) {
+        headers.set('x-agency-id', agencyId);
+      }
+      return headers;
+    },
+  }),
   tagTypes: ['Stops', 'Routes', 'Trips'], // Used for auto-refreshing
   endpoints: (builder) => ({
     // Auto-generates useGetStopsQuery hook
-    getStops: builder.query<Stop[], void>({
+    getStops: builder.query<Stop[], string>({
       query: () => 'stops',
       providesTags: ['Stops'],
     }),
@@ -21,7 +37,7 @@ export const gtfsApi = createApi({
       invalidatesTags: ['Stops'],
     }),
     // Trip endpoints
-    getTrips: builder.query<Trip[], void>({
+    getTrips: builder.query<Trip[], string>({
       query: () => 'trips',
       providesTags: ['Trips'],
     }),

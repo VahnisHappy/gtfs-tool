@@ -10,7 +10,7 @@ import CategoryList from '../molecules/CategoryList';
 import { direction } from '../../services/useMapInteractions';
 import { stopsApi, routesApi } from '../../services/api';
 import type { Stop, Route } from '../../types';
-import RoutePlannerForm from '../molecules/RoutePlannerForm';
+import RouteStopBySIC from '../molecules/RouteStopBySIC';
 
 export default function PolygonResultsPanel() {
     const dispatch = useDispatch();
@@ -287,9 +287,7 @@ export default function PolygonResultsPanel() {
                     {/* Step 1: Category Selection */}
                     <div className="p-4 border-b border-gray-200">
                         <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                                select POI Categories
-                            </h4>
+                            <h4 > select POI Categories </h4>
                             {availableCategories.length > 0 && (
                                 <div className="flex gap-1">
                                     <button
@@ -341,9 +339,7 @@ export default function PolygonResultsPanel() {
                     {/* Selected POI details (collapsible list) */}
                     {selectedPOIs.length > 0 && (
                         <div className="p-4 border-b border-gray-200">
-                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                                selected places ({selectedPOIs.length})
-                            </h4>
+                            <h4> selected places ({selectedPOIs.length}) </h4>
                             <div className="space-y-1 max-h-[140px] overflow-y-auto">
                                 {selectedPOIs.map(poi => {
                                     const cat = POI_CATEGORIES.find(c => c.id === poi.category);
@@ -365,9 +361,8 @@ export default function PolygonResultsPanel() {
                         </div>
                     )}
 
-                    {/* Step 2: Set Route + Calculate */}
                     <div className="p-4">
-                        <RoutePlannerForm
+                        <RouteStopBySIC
                             pointA={pointA}
                             pointB={pointB}
                             mode={mode}
@@ -496,7 +491,7 @@ export default function PolygonResultsPanel() {
                                         onClick={handleClearPlan}
                                         className="px-4 py-2 bg-red-50 text-red-600 text-sm rounded-md font-medium hover:bg-red-100 border border-red-200 transition-colors"
                                     >
-                                        Clear
+                                        clear
                                     </button>
                                 </div>
                             </div>

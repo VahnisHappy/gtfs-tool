@@ -21,7 +21,7 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (
-                popupRef.current && 
+                popupRef.current &&
                 !popupRef.current.contains(e.target as Node) &&
                 triggerRef.current &&
                 !triggerRef.current.contains(e.target as Node)
@@ -43,31 +43,30 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
     return (
         <div className="flex flex-col relative">
             {label && (
-                <label className="mb-2 font-medium text-gray-700">{label}</label>
+                <label>{label}</label>
             )}
             <button
                 ref={triggerRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-6 h-full h-38px border border-gray-300 rounded-lg transition-colors bg-white"
+                className="flex items-center gap-3 px-3 py-1.5 border border-gray-300 rounded-md transition-colors bg-white hover:bg-gray-50"
             >
-                <div 
-                    className="w-10 h-7 rounded rounded-xs border-gray-200 ml-2 cursor-pointer"
+                <div
+                    className="w-8 h-7 rounded-sm border border-gray-200 flex-shrink-0"
                     style={{ backgroundColor: value }}
                 />
                 <span className="text-sm font-mono text-gray-600">{value.toLowerCase()}</span>
-                
             </button>
 
             {isOpen && (
                 <>
                     {/* Backdrop */}
-                    <div 
+                    <div
                         className="fixed inset-0 bg-black/20 z-40"
                         onClick={() => setIsOpen(false)}
                     />
                     {/* Popup */}
-                    <div 
+                    <div
                         ref={popupRef}
                         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 w-72"
                     >
@@ -84,12 +83,20 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
                             </button>
                         </div>
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Custom</p>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-3">
                             <input
                                 type="color"
                                 value={value}
                                 onChange={(e) => onChange(e.target.value)}
-                                className="w-10 h-10 rounded cursor-pointer border border-gray-300"
+                                style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    padding: '2px',
+                                    border: '1px solid #D1D5DB',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    flexShrink: 0,
+                                }}
                             />
                             <div className="flex-1">
                                 <TextInput
@@ -113,10 +120,14 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
                                     key={color}
                                     type="button"
                                     onClick={() => handleSelectColor(color)}
-                                    className={`w-8 h-8 rounded-lg cursor-pointer transition-transform hover:scale-110 ${
-                                        value === color ? 'ring-2 ring-offset-2 ring-[#333333]' : ''
-                                    }`}
-                                    style={{ backgroundColor: color }}
+                                    className={`rounded-lg cursor-pointer transition-transform hover:scale-110 ${value === color ? 'ring-2 ring-offset-2 ring-[#333333]' : ''}`}
+                                    style={{
+                                        backgroundColor: color,
+                                        width: '32px',
+                                        height: '32px',
+                                        padding: 0,
+                                        border: 'none',
+                                    }}
                                     title={color}
                                 />
                             ))}

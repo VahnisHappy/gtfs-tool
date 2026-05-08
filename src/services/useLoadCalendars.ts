@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '../store';
 import { calendarsApi, calendarDatesApi } from './api';
 import { CalendarActions } from '../store/actions';
 import type { Calendar, BooleanDays, ExceptionDate } from '../types';
@@ -36,21 +37,24 @@ function formatDateForInput(dateStr: string): string {
  */
 export function useLoadCalendars() {
   const dispatch = useDispatch();
-  const hasLoadedCalendars = useRef(false);
+  const activeAgencyId = useSelector((state: RootState) => state.agencyState.activeAgencyId);
+  const previousAgencyId = useRef<string | null>(null);
 
   useEffect(() => {
-    // Only load calendars once
-    if (hasLoadedCalendars.current) return;
-    
-    // Mark as loaded immediately to prevent race conditions
-    hasLoadedCalendars.current = true;
+    // Wait until an agency is selected
+    if (!activeAgencyId) return;
+
+    // Only load if the agency changed or we haven't loaded yet
+    if (previousAgencyId.current === activeAgencyId) return;
+
+    previousAgencyId.current = activeAgencyId;
 
     const loadCalendars = async () => {
       try {
         console.log('Loading calendars from backend...');
         const backendCalendars = await calendarsApi.getAll() as BackendCalendar[];
         const backendCalendarDates = await calendarDatesApi.getAll() as BackendCalendarDate[];
-        
+
         // Group calendar dates by service_id
         const calendarDatesMap = new Map<string, BackendCalendarDate[]>();
         for (const cd of backendCalendarDates) {
@@ -91,10 +95,10 @@ export function useLoadCalendars() {
         });
 
         console.log(`Loaded ${calendars.length} calendars from backend`);
-        
+
         // Load all calendars into Redux store
         dispatch(CalendarActions.setCalendar(calendars));
-        
+
       } catch (error) {
         console.error('Failed to load calendars from backend:', error);
         // Don't throw - allow app to work with empty state
@@ -102,5 +106,5 @@ export function useLoadCalendars() {
     };
 
     loadCalendars();
-  }, [dispatch]);
+  }, [dispatch, activeAgencyId]);
 }

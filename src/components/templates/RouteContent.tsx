@@ -14,6 +14,7 @@ export default function RouteContent() {
     const dispatch = useDispatch()
     // const isRouteDetailOpen = useSelector((state: RootState) => state.appState.isRouteDetailOpen)
     const [selectedRouteIndex, setSelectedRouteIndex] = useState<number | null>(null);
+    const selectedRoute = useSelector((state: RootState) => state.appState.selectedRoute);
     const routeListRef = useRef<HTMLDivElement>(null);
 
     const handleNewRoute = () => {
@@ -74,17 +75,13 @@ export default function RouteContent() {
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full"
                 ref={routeListRef}
             >
-                <div className="flex items-center gap-2 justify-between pb-2 border-b">
-                        <EditDeleteButton
-                            onEdit={handEditRoute}
-                            onDelete={handleDelteRoute}
-                            disabled={selectedRouteIndex === null}
-                        />
+                <div className="flex items-center gap-2 justify-end pb-2 border-b">
                         <ButtonAction label="new route" onClick={handleNewRoute} />
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                    <div className="py-2">
-                        <h3 className="font-semibold mb-2">route list ({routes.length})</h3>
+                    <div className="py-2 flex justify-between">
+                        <h3 className="font-semibold">route list ({routes.length})</h3>
+                         <EditDeleteButton onEdit={handEditRoute} onDelete={handleDelteRoute} disabled={selectedRouteIndex === null} isEditing={selectedRoute?.mode === 'edit'} />
                     </div>
                     {routes.length === 0 ? (
                         <p className="text-gray-500 text-sm px-4">no route created yet. click "new route" and select at least 2 stops to add one.</p>

@@ -15,7 +15,7 @@ interface Props {
     onStationCountChange: (count: number | null) => void;
 }
 
-export default function RoutePlannerForm({
+export default function RouteStopBySIC({
     pointA,
     pointB,
     mode,
@@ -30,15 +30,12 @@ export default function RoutePlannerForm({
 }: Props) {
     return (
         <>
-            <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3">
-                Set Route & Plan Stations
-            </h4>
-
+            <h4> Set Route & Plan Stations</h4>
+ 
             <PointPicker label="A" point={pointA} activeColor="#c86bfa" isPicking={mode === 'pickA'} onPick={onPickA} />
 
             <PointPicker label="B" point={pointB} activeColor="#ffd500" isPicking={mode === 'pickB'} onPick={onPickB} />
 
-            {/* Optional Station Count */}
             <div className="mt-3 mb-2">
                 <label className="block text-xs font-medium text-gray-500 mb-1">
                     number of stations <span className="text-gray-400 font-normal">(optional)</span>
@@ -49,7 +46,7 @@ export default function RoutePlannerForm({
                         min={1}
                         max={30}
                         value={customStationCount ?? ''}
-                        placeholder="auto"
+                        placeholder="number of stations"
                         onChange={(e) => {
                             const val = e.target.value;
                             if (val === '') {
@@ -61,7 +58,7 @@ export default function RoutePlannerForm({
                                 }
                             }
                         }}
-                        className="flex-1 px-2.5 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[#00A8E8] focus:ring-1 focus:ring-[#00A8E8]/30 bg-white transition-colors"
+                        className="flex-1 px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white transition-colors"
                     />
                     {customStationCount !== null && (
                         <button
@@ -75,8 +72,8 @@ export default function RoutePlannerForm({
                 </div>
                 <p className="text-[11px] text-gray-400 mt-1">
                     {customStationCount !== null
-                        ? `Will place exactly ${customStationCount} station${customStationCount !== 1 ? 's' : ''}`
-                        : 'Auto-detected via SIC analysis'}
+                        ? `will place exactly ${customStationCount} station${customStationCount !== 1 ? 's' : ''}`
+                        : 'auto-detected via SIC analysis'}
                 </p>
             </div>
 
@@ -90,8 +87,8 @@ export default function RoutePlannerForm({
                     }`}
             >
                 {calculating
-                    ? 'Fetching route & optimizing...'
-                    : `Plan Stations (${selectedPOICount} POI${selectedPOICount !== 1 ? 's' : ''})`}
+                    ? 'fetching route & optimizing...'
+                    : `plan stations (${selectedPOICount} POI${selectedPOICount !== 1 ? 's' : ''})`}
             </button>
         </>
     );

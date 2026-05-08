@@ -16,6 +16,7 @@ export default function TripContent() {
     const dispatch = useDispatch();
     // const isTripDetailOpen = useSelector((state: RootState) => state.appState.isTripDetailOpen);
     const [selectedTrip, setSelectedTrip] = useState<number | null>(null);
+    const selectedTripDetail = useSelector((state: RootState) => state.appState.selectedTrip);
     const [deleteTrip] = useDeleteTripMutation();
     
     const handleNewTrip = () => {
@@ -56,18 +57,20 @@ export default function TripContent() {
     return (
         <div className="flex h-full w-full">
             <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full">
-                <div  className="flex items-center gap-2 justify-between pb-2 border-b">
-                    <EditDeleteButton
-                        onEdit={handleEditTrip}
-                        onDelete={handleDeleteTrip}
-                        disabled={selectedTrip === null}
-                    />
+                <div  className="flex items-center justify-end pb-2 border-b">
                     <ButtonAction label="new trip" onClick={handleNewTrip} />
                 </div>
+
             <div className="flex-1 overflow-y-auto">
-                <div className="py-2">
-                    <h3 className="font-semibold mb-2">trip list ({trips.length})</h3>
-                    <ul className="space-y-0">
+                <div className="py-2 flex justify-between">
+                    <h3 className="font-semibold">trip list ({trips.length})</h3>
+                    <EditDeleteButton onEdit={handleEditTrip} onDelete={handleDeleteTrip} disabled={selectedTrip === null} isEditing={selectedTripDetail?.mode === 'edit'} />
+                </div>
+                
+                    {trips.length === 0 ? (
+                        <p className="text-sm text-gray-500">no trips available. click "new trip" to create one.</p>
+                    ) : (
+                        <ul className="space-y-0">
                         {trips.map((trip, index) => {
                             const routeName = trip.route.value !== null ? routes[trip.route.value]?.id.value : undefined;
                             const calendarId = trip.calendar.value !== null ? calendars[trip.calendar.value]?.id.value : undefined;
@@ -84,7 +87,7 @@ export default function TripContent() {
                             );
                         })}
                     </ul>
-                </div>
+                    )} 
             </div>
             </div>
             <TripContentDetail />

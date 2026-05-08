@@ -43,7 +43,10 @@ const parseTimeString = (timeStr: string): Time | null => {
 
 export function useLoadTrips() {
   const dispatch = useDispatch();
-  const { data: tripsData, error, isLoading } = useGetTripsQuery();
+  const activeAgencyId = useSelector((state: RootState) => state.agencyState.activeAgencyId);
+  const { data: tripsData, error, isLoading } = useGetTripsQuery(activeAgencyId || '', {
+    skip: !activeAgencyId,
+  });
   
   // Get routes, calendars, and stops to map IDs to indices
   const routes = useSelector((state: RootState) => state.routeState.data);

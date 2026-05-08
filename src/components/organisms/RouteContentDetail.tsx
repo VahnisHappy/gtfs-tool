@@ -176,11 +176,11 @@ export default function RouteContentDetail() {
 
     return (
         <aside
-            className={`fixed right-0 top-0 h-screen w-[350px] bg-white shadow-xl z-50 border-l overflow-hidden transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+            className={`fixed right-0 top-0 h-screen w-[350px] shadow-xl z-50 bg-[#F5F7F9] ${isOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
         >
             <div className="flex flex-col h-full">
-                <div className="flex justify-between items-center p-4 border-b">
+                <div className="flex justify-between items-center p-4">
                     <h3 className="text-xl font-semibold">
                         {selectedRoute?.mode === 'new'
                             ? (watchedName || `new route`)
@@ -189,7 +189,7 @@ export default function RouteContentDetail() {
                     </h3>
                     <button
                         onClick={handleClose}
-                        className="text-gray-400 hover:text-gray-600 text-2xl"
+                        className="text-gray-400 hover:text-gray-600 text-md absolute right-4 top-4"
                         type="button"
                     >
                         ✕
@@ -198,7 +198,7 @@ export default function RouteContentDetail() {
 
                 <FormProvider {...methods}>
                     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-                        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {editingRoute ? (
                                 <>
                                     <div className="grid grid-cols-2 gap-3">
@@ -206,8 +206,8 @@ export default function RouteContentDetail() {
                                         <FormInput name="route_short_name" label="route name" placeholder="route name" />
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <FormSelectInput name="route_type" label="route type" options={routeTypeOptions} placeholder="Select type" />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <FormSelectInput name="route_type" label="route type" options={routeTypeOptions} placeholder="select type" />
                                         <FormColorPicker name="route_color" label="route color" />
                                     </div>
 

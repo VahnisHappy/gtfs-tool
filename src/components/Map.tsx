@@ -4,12 +4,11 @@ import { StopActions, AppActions, RouteActions, MapActions } from "../store/acti
 import { addPolygonVertex, setStationPlanPointA, setStationPlanPointB, setMode } from "../store/slices/appSlice";
 import { createStop } from "../factory";
 import type { Point, StopIndex } from "../types";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import MapDisplay from "./organisms/MapDisplay";
 import StopDisplay from "./molecules/StopDisplay";
 import PathDisplay from "./organisms/PathDisplay";
 import PolygonDraw from "./organisms/PolygonDraw";
-import PolygonToolbar from "./molecules/PolygonToolbar";
 import PolygonResultsPanel from "./organisms/PolygonResultsPanel";
 import StationPlanDisplay from "./organisms/StationPlanDisplay";
 import { direction } from "../services/useMapInteractions";
@@ -21,6 +20,31 @@ export default function Map() {
   const stops = useSelector((state: RootState) => state.stopState.data)
   const routes = useSelector((state: RootState) => state.routeState.data)
   const currentRoute = useSelector((state: RootState) => state.routeState.currentRoute)
+  const { data: agencies, activeAgencyId } = useSelector((state: RootState) => state.agencyState)
+  const { accessToken, viewState } = useSelector((state: RootState) => state.mapState)
+
+  const activeAgency = useMemo(() => agencies.find(a => a.id.value === activeAgencyId), [agencies, activeAgencyId]);
+
+  const hasInitializedMapForAgency = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!viewState && stops.length === 0 && activeAgency?.timezone?.value && accessToken) {
+      if (hasInitializedMapForAgency.current === activeAgency.id.value) return;
+
+      const timezoneName = activeAgency.timezone.value.split('/').pop()?.replace(/_/g, ' ') || activeAgency.timezone.value;
+
+      fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(timezoneName)}.json?access_token=${accessToken}&types=country,region,place`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.features && data.features.length > 0) {
+            const [lng, lat] = data.features[0].center;
+            dispatch(MapActions.flyToLocation({ lat, lng, zoom: 6 }));
+            hasInitializedMapForAgency.current = activeAgency.id.value;
+          }
+        })
+        .catch(err => console.error("Error fetching timezone location:", err));
+    }
+  }, [stops.length, activeAgency, accessToken, dispatch, viewState]);
 
   const handleMark = (point: Point) => {
     // Create empty placeholder stop with only coordinates

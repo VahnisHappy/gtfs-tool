@@ -45,7 +45,9 @@ export default function StopContentDetail() {
     }
   });
 
-  const { handleSubmit, reset, setValue } = methods;
+  const { handleSubmit, reset, watch, setValue } = methods;
+
+  const watchedName = watch("stop_name"); 
 
   useEffect(() => {
     if (selectedStop) {
@@ -156,11 +158,19 @@ export default function StopContentDetail() {
 
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-5">
-            <h3 className="text-xl font-semibold mb-4">
-              {selectedStop?.mode === 'new' ? 'New Stop' : 'Edit Stop'}
+          <div className="flex justify-between items-center p-4">
+            <h3 className="text-xl font-semibold">
+              {selectedStop?.mode === 'new' ? (watchedName || 'new stop') : (watchedName || 'edit Stop')}
             </h3>
+            <button
+              onClick={handleCancel}
+              className="text-gray-400 hover:text-gray-600 text-md absolute right-4 top-4"
+              type="button"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-5">
 
             <div className="grid grid-cols-2 gap-3">
               <FormInput name="stop_id" label="stop id" placeholder="stop id" />
@@ -191,7 +201,6 @@ export default function StopContentDetail() {
 
           <CancelSaveButton
             onCancel={handleCancel}
-            // FormProvider handles the submit logic via the <form> tag
             onSave={handleSubmit(onSubmit)}
             disabled={false}
           />

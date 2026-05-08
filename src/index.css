@@ -1,9 +1,41 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Helvetica";
-  src: local("Helvetica"), local("Helvetica Neue"), url("/fonts/helvetica.woff2") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+@theme {
+  --font-sans: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+}
+
+body {
+  font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  /* border-color: #00A8E8;
+  box-shadow: 0 0 0 1px #00A8E8; */
+}
+
+h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0D1B2A;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #0D1B2A;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 8px 12px;
 }

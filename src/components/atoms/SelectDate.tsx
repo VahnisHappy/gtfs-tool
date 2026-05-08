@@ -127,11 +127,11 @@ export default function SelectDate({ label, value, onChange, placeholder = "Sele
 
     return (
         <div className="flex flex-col relative" ref={dropdownRef}>
-            <label className="mb-2 text-sm font-medium text-gray-700">{label}</label>
+            <label>{label}</label>
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full bg-white border rounded px-3 py-2 text-sm text-left focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between ${
+                className={`w-full bg-white border rounded px-2 py-2.5 text-md text-left focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between ${
                     error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500'
                 } ${value ? 'text-gray-900' : 'text-gray-400'}`}
             >
@@ -190,7 +190,7 @@ export default function SelectDate({ label, value, onChange, placeholder = "Sele
                                 onClick={handleClear}
                                 className="w-full py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
                             >
-                                Clear
+                                clear
                             </button>
                         </div>
                     )}
