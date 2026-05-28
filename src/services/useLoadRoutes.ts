@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { routesApi } from './api';
+import { routesApi, setApiAgencyId } from './api';
 import { RouteActions } from '../store/actions';
 import type { Route } from '../types';
 import type { RootState } from '../store';
@@ -25,43 +25,28 @@ interface BackendRoute {
 
 /**
  * Hook to load routes from the backend on app initialization
+ * and reload when activeAgencyId changes
  */
 export function useLoadRoutes() {
   const dispatch = useDispatch();
   const stops = useSelector((state: RootState) => state.stopState.data);
   const activeAgencyId = useSelector((state: RootState) => state.agencyState.activeAgencyId);
-  const previousAgencyId = useRef<string | null>(null);
-  const [stopsReadyTimeout, setStopsReadyTimeout] = useState(false);
-
-  // Fallback: if stops don't load within 500ms, proceed anyway
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setStopsReadyTimeout(true);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Stops are "ready" when they've loaded OR timeout has passed
-  const stopsReady = stops.length > 0 || stopsReadyTimeout;
+  const loadedForAgency = useRef<string | null>(null);
 
   useEffect(() => {
     // Wait until an agency is selected
     if (!activeAgencyId) return;
 
-    // Only load if the agency changed or we haven't loaded yet
-    if (previousAgencyId.current === activeAgencyId) return;
-
-    // Wait for stops to be ready
-    if (!stopsReady) {
-      console.log('Waiting for stops to load before loading routes...');
-      return;
-    }
-
-    previousAgencyId.current = activeAgencyId;
+    // Wait until stops are loaded (routes depend on stops for index mapping)
+    // but don't block forever — if there are no stops, that's fine too
+    // We check if we've already loaded for this agency to prevent infinite loops
+    if (loadedForAgency.current === activeAgencyId) return;
 
     const loadRoutes = async () => {
       try {
-        console.log('Loading routes from backend...');
+        // Ensure the agency header is set before making the API call
+        setApiAgencyId(activeAgencyId);
+        console.log('Loading routes from backend for agency:', activeAgencyId);
         const backendRoutes = await routesApi.getAll() as BackendRoute[];
 
         // Convert backend route format to frontend Route type
@@ -97,6 +82,7 @@ export function useLoadRoutes() {
 
         // Load all routes into Redux store
         dispatch(RouteActions.setRoutes(routes));
+        loadedForAgency.current = activeAgencyId;
 
       } catch (error) {
         console.error('Failed to load routes from backend:', error);
@@ -104,7 +90,12 @@ export function useLoadRoutes() {
       }
     };
 
-    // Load routes immediately since we've already waited for stops
-    loadRoutes();
-  }, [dispatch, stops, stopsReady, activeAgencyId]);
+    // Only load routes once stops have loaded (or if there are no stops to load)
+    // We use a small delay to let stops settle
+    const timer = setTimeout(() => {
+      loadRoutes();
+    }, stops.length > 0 ? 0 : 500);
+
+    return () => clearTimeout(timer);
+  }, [dispatch, stops, activeAgencyId]);
 }

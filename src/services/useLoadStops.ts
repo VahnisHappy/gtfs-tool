@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { useDispatch } from 'react-redux';
-import { stopsApi } from './api';
+import { useDispatch, useSelector } from 'react-redux';
+import { stopsApi, setApiAgencyId } from './api';
 import { StopActions } from '../store/actions';
 import type { Stop } from '../types';
+import type { RootState } from '../store';
 
 interface GeoJSONFeature {
   type: 'Feature';
@@ -25,21 +26,27 @@ interface GeoJSONFeatureCollection {
 
 /**
  * Hook to load stops from the backend on app initialization
+ * and reload when activeAgencyId changes
  */
 export function useLoadStops() {
   const dispatch = useDispatch();
-  const hasLoadedStops = useRef(false);
+  const activeAgencyId = useSelector((state: RootState) => state.agencyState.activeAgencyId);
+  const previousAgencyId = useRef<string | null>(null);
 
   useEffect(() => {
-    // Only load stops once
-    if (hasLoadedStops.current) return;
-    
-    // Mark as loaded immediately to prevent race conditions
-    hasLoadedStops.current = true;
+    // Wait until an agency is selected
+    if (!activeAgencyId) return;
+
+    // Only reload if the agency changed
+    if (previousAgencyId.current === activeAgencyId) return;
+
+    previousAgencyId.current = activeAgencyId;
 
     const loadStops = async () => {
       try {
-        console.log('Loading stops from backend...');
+        // Ensure the agency header is set before making the API call
+        setApiAgencyId(activeAgencyId);
+        console.log('Loading stops from backend for agency:', activeAgencyId);
         const geoJSON = await stopsApi.getAll() as GeoJSONFeatureCollection;
         // Convert GeoJSON features to Stop type
         const stops: Stop[] = geoJSON.features.map((feature) => ({
@@ -67,5 +74,5 @@ export function useLoadStops() {
     };
 
     loadStops();
-  }, [dispatch]);
+  }, [dispatch, activeAgencyId]);
 }

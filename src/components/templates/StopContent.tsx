@@ -110,11 +110,11 @@ export default function StopContent() {
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full"
                 ref={stopListRef}
             >
-                <div className="flex items-center gap-2 justify-between pb-2 border-b">
+                <div className="flex items-center justify-between pb-2 border-b">
                     <PolygonToolbar />
                     <ButtonAction label="new stop" onClick={handleNewStop} />
-                </div>
 
+                </div>
                 <div className="flex-1 overflow-y-auto">
                     <div className="py-2 flex justify-between">
                         <h3 className="font-semibold">stop list ({stops.length})</h3>

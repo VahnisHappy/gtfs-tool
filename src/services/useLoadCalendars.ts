@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store';
-import { calendarsApi, calendarDatesApi } from './api';
+import { calendarsApi, calendarDatesApi, setApiAgencyId } from './api';
 import { CalendarActions } from '../store/actions';
 import type { Calendar, BooleanDays, ExceptionDate } from '../types';
 
@@ -51,7 +51,9 @@ export function useLoadCalendars() {
 
     const loadCalendars = async () => {
       try {
-        console.log('Loading calendars from backend...');
+        // Ensure the agency header is set before making the API call
+        setApiAgencyId(activeAgencyId);
+        console.log('Loading calendars from backend for agency:', activeAgencyId);
         const backendCalendars = await calendarsApi.getAll() as BackendCalendar[];
         const backendCalendarDates = await calendarDatesApi.getAll() as BackendCalendarDate[];
 
