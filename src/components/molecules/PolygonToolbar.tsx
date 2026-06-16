@@ -12,42 +12,38 @@ export default function PolygonToolbar() {
     const canClose = polygonVertices.length >= 3;
 
     return (
-        <div className="flex items-center gap-2 ">
-            {!isPolygonMode ? (
-                <button
-                    onClick={() => dispatch(enterPolygonMode())}
-                    className="flex items-center gap-2 px-4 py-1.75 bg-[#ff7a2f] rounded-md  border border-gray-200 hover:bg-[#f0691a] transition-colors text-sm font-medium text-white"
-                    title="Draw polygon to find POIs"
-                >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polygon points="12,2 22,8.5 18,21 6,21 2,8.5" strokeLinejoin="round" />
-                    </svg>
-                    find POI
-                </button>
-            ) : (
-                <div className="flex items-center gap-1 px-3 py-1 bg-white rounded-sm shadow-md border border-gray-200">
-                    <span className="text-sm font-medium mr-1 leading-tight">
-                        {polygonClosed ? (
-                            ' polygon closed'
-                        ) : (
-                            <>
-                                <span className="block">drawing</span>
-                                <span className="block">({polygonVertices.length} points)</span>
-                            </>
-                        )}
-                    </span>
+        <div className="relative">
+            <button
+                onClick={() => !isPolygonMode && dispatch(enterPolygonMode())}
+                className={
+                    `flex items-center gap-2 px-2 py-2 text-sm font-medium rounded-md transition-colors ` +
+                    (isPolygonMode
+                        ? 'bg-[#f0691a] border-[#f0691a] text-white cursor-default'
+                        : 'bg-[#ff7a2f] border-gray-200 text-white hover:bg-[#f0691a]')
+                }
+                title="Draw polygon to find POIs"
+            >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="12,2 22,8.5 18,21 6,21 2,8.5" strokeLinejoin="round" />
+                </svg>
+                {isPolygonMode ? (polygonClosed ? 'closed' : 'drawing...') : 'find POI'}
+            </button>
 
+            {isPolygonMode && (
+                <div className="absolute left-0 top-full mt-1 z-50 flex items-center gap-1.5 px-2 py-1.5 bg-white rounded-md shadow-lg border border-gray-200 whitespace-nowrap">
+                    <span className="text-xs text-gray-500 font-medium">
+                        {polygonClosed ? 'polygon closed' : `${polygonVertices.length} pts`}
+                    </span>
 
                     {!polygonClosed && (
                         <button
                             onClick={() => canClose && dispatch(closePolygon())}
                             disabled={!canClose}
-                            aria-disabled={!canClose}
                             className={
-                                `px-3 py-1 text-white text-sm rounded-md transition-colors font-medium ` +
+                                `px-2 py-0.5 text-xs text-white rounded transition-colors font-medium ` +
                                 (canClose
                                     ? 'bg-[#ff7a2f] hover:bg-[#f0691a]'
-                                    : 'bg-[#ff7a2f] opacity-50 cursor-not-allowed')
+                                    : 'bg-[#ff7a2f] opacity-40 cursor-not-allowed')
                             }
                         >
                             done
@@ -56,7 +52,7 @@ export default function PolygonToolbar() {
 
                     <button
                         onClick={() => dispatch(clearPolygon())}
-                        className="px-3 py-1 bg-[#00bfa5] text-white text-sm rounded-sm hover:bg-[#099481] transition-colors font-medium "
+                        className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors font-medium"
                     >
                         clear
                     </button>

@@ -5,6 +5,7 @@ import type { Content, Point } from "../../types";
 import type { modes } from "../../data";
 import type { PlannedStation } from "../../services/stationPlanner";
 import type { ExternalPOI } from "../../services/mapboxPOI";
+import type { CoverageEntry } from "../states";
 
 const initialState: AppState = {
     content: 'stops',
@@ -25,7 +26,8 @@ const initialState: AppState = {
     stationCount: 3,
     plannedStations: [],
     stationPlanRoutePath: [],
-    selectedPOIs: []
+    selectedPOIs: [],
+    coverageReport: []
 }
 
 const appSlice = createSlice({
@@ -115,6 +117,7 @@ const appSlice = createSlice({
             state.plannedStations = [];
             state.stationPlanRoutePath = [];
             state.selectedPOIs = [];
+            state.coverageReport = [];
             state.mode = 'view';
         },
         openPolygonPanel: (state) => {
@@ -141,12 +144,16 @@ const appSlice = createSlice({
             state.plannedStations = [];
             state.stationPlanRoutePath = [];
             state.stationCount = 3;
+            state.coverageReport = [];
         },
         setStationPlanRoutePath: (state, action: PayloadAction<Point[]>) => {
             state.stationPlanRoutePath = action.payload;
         },
         setSelectedPOIs: (state, action: PayloadAction<ExternalPOI[]>) => {
             state.selectedPOIs = action.payload;
+        },
+        setCoverageReport: (state, action: PayloadAction<CoverageEntry[]>) => {
+            state.coverageReport = action.payload;
         }
     }
 })
@@ -175,6 +182,7 @@ export const {
     setPlannedStations,
     clearStationPlan,
     setStationPlanRoutePath,
-    setSelectedPOIs
+    setSelectedPOIs,
+    setCoverageReport
 } = appSlice.actions;
 export default appSlice;

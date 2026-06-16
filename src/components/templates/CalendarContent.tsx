@@ -73,16 +73,16 @@ export default function CalendarContent() {
                 ref={calendarListRef}
             >
             <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full">
-                    <div className="flex items-center gap-2 justify-end pb-2 border-b">
+                    <div className="flex items-center gap-2 justify-end pb-2 border-b border-gray-300">
                         <ButtonAction label="new schedule" onClick={handleNewCalendar} />
                     </div>
                 <div className="flex-1 overflow-y-auto">
                     <div className="py-2 flex justify-between">
-                        <h3 className="font-semibold mb-2">calendar list ({calendars.length})</h3>
+                        <h3 className="font-semibold">calendar list ({calendars.length})</h3>
                         <EditDeleteButton onEdit={handEditCalendar} onDelete={handleDeleteCalendar} disabled={selectedCalendarIndex === null} isEditing={selectedCalendar?.mode === 'edit'} />
                     </div>
                         {calendars.length === 0 ? (
-                            <p className="text-gray-500 text-sm px-4">No calendars yet. Click "new schedule" to create one.</p>
+                            <p className="text-gray-500 text-sm px-4 py-4 text-center">no calendars yet. click "new schedule" to create one.</p>
                         ) : (
                             <ul className="space-y-0">
                                 {calendars.map((calendar, index) => (

@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  --font-sans: "Arimo", "Arial", sans-serif;
 }
 
 body {
-  font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-family: "Arimo", "Arial", sans-serif;
 }
 
 input:focus,
@@ -35,7 +35,6 @@ input,
 textarea,
 select {
   width: 100%;
-  border: 1px solid #D1D5DB;
   border-radius: 6px;
   padding: 8px 12px;
 }

@@ -53,21 +53,21 @@ export type Route = {
     isNew?: boolean,
 }
 
-// export type RouteFormData = {
-//     id: Field<string>,
-//     routeName: Field<string>,
-//     routeType: number,
-//     routeLongName?: Field<string>,
-//     routeDesc?: Field<string>,
-//     routeUrl?: Field<string>,
-//     routeColor?: Field<string>,
-//     routeTextColor?: Field<string>,
-//     routeSortOrder?: number,
-//     continuousPickup?: Field<string>,
-//     continuousDropOff?: Field<string>,
-//     networkId?: Field<string>,
-//     cemvSupport?: Field<string>,
-// }
+export type RouteFormData = {
+    id: Field<string>,
+    routeName: Field<string>,
+    routeType: number,
+    routeLongName?: Field<string>,
+    routeDesc?: Field<string>,
+    routeUrl?: Field<string>,
+    routeColor?: Field<string>,
+    routeTextColor?: Field<string>,
+    routeSortOrder?: number,
+    continuousPickup?: Field<string>,
+    continuousDropOff?: Field<string>,
+    networkId?: Field<string>,
+    cemvSupport?: Field<string>,
+}
 
 export type BooleanDays = [boolean, boolean, boolean, boolean, boolean, boolean, boolean];
 

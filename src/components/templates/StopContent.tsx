@@ -110,10 +110,9 @@ export default function StopContent() {
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full"
                 ref={stopListRef}
             >
-                <div className="flex items-center justify-between pb-2 border-b">
+                <div className="flex items-end justify-end flex-row gap-2 pb-2 border-b border-gray-300">
                     <PolygonToolbar />
                     <ButtonAction label="new stop" onClick={handleNewStop} />
-
                 </div>
                 <div className="flex-1 overflow-y-auto">
                     <div className="py-2 flex justify-between">
@@ -121,7 +120,7 @@ export default function StopContent() {
                             <EditDeleteButton onEdit={handleEditStop} onDelete={handleDeleteStop} disabled={selectedStopIndex === null} isEditing={selectedStop?.mode === 'edit'} />
                     </div>
                     {stops.length === 0 ? (
-                        <p className="text-gray-500 text-sm px-4">no stops created yet. click "new stop" to add one.</p>
+                        <p className="text-gray-500 text-sm px-4 py-4 text-center">no stops created yet. click "new stop" to add one.</p>
                     ) : (
                         <ul className="space-y-0">
                             {stops.map((stop, index) => (

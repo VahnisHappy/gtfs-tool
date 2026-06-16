@@ -167,14 +167,14 @@ export default function StopContentDetail() {
               className="text-gray-400 hover:text-gray-600 text-md absolute right-4 top-4"
               type="button"
             >
-              ✕
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#000000" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg>
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-5">
 
             <div className="grid grid-cols-2 gap-3">
-              <FormInput name="stop_id" label="stop id" placeholder="stop id" />
-              <FormInput name="stop_name" label="stop name" placeholder="stop name" />
+              <FormInput name="stop_id" label="stop id" placeholder="stop id"  rules={{ required: true }}/>
+              <FormInput name="stop_name" label="stop name" placeholder="stop name" rules={{ required: true }} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -185,6 +185,7 @@ export default function StopContentDetail() {
                 step={0.000001}
                 min={-90}
                 max={90}
+                rules={{ required: true }}
               />
               <FormNumberInput
                 name="stop_lon"
@@ -193,6 +194,7 @@ export default function StopContentDetail() {
                 step={0.000001}
                 min={-180}
                 max={180}
+                rules={{ required: true }}
               />
             </div>
 

@@ -18,8 +18,8 @@ export default function TextInput({ label, value, onChange, placeholder = "", er
                 onChange={onChange ? (e) => onChange(e.target.value) : undefined}
                 placeholder={placeholder}
                 disabled={disabled}
-                className={`${
-                    error ? 'border-red-500' : 'border-gray-300'
+                className={`border ${
+                    error ? 'border-red-500' : 'border-gray-300 focus:border-[#1A6EBF]'
                 } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
             />
         </div>

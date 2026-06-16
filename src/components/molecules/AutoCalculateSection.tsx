@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import NumberInput from '../atoms/NumberInput';
 import { getToken } from '../../services/authService';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store';
 
 interface StopForCalculation {
     stopId: string;
@@ -37,6 +39,7 @@ export default function AutoCalculateSection({
     const [isCalculating, setIsCalculating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const activeAgencyId = useSelector((state: RootState) => state.agencyState.activeAgencyId);
 
     // Convert 12-hour to 24-hour format for GTFS
     const getStartTime24 = (): string => {
@@ -77,6 +80,7 @@ export default function AutoCalculateSection({
                 headers: {
                     'Content-Type': 'application/json',
                     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                    ...(activeAgencyId ? { 'x-agency-id': activeAgencyId } : {}),
                 },
                 body: JSON.stringify({
                     stops: stops.map((stop, index) => ({

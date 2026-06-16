@@ -6,7 +6,7 @@ export type ButtonActionProps = {
 }
 
 export default function ButtonAction({ label, onClick, disabled, variant = 'primary' }: ButtonActionProps) {
-    const baseClass = 'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md shadow transition-colors';
+    const baseClass = 'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md shadow transition-colors min-w-[120px] justify-center';
     const variantClass = disabled
         ? 'bg-gray-300 text-white cursor-not-allowed'
         : variant === 'secondary'

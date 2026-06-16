@@ -57,7 +57,7 @@ export default function TripContent() {
     return (
         <div className="flex h-full w-full">
             <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full">
-                <div  className="flex items-center justify-end pb-2 border-b">
+                <div  className="flex items-center justify-end pb-2 border-b border-gray-300">
                     <ButtonAction label="new trip" onClick={handleNewTrip} />
                 </div>
 
@@ -68,7 +68,7 @@ export default function TripContent() {
                 </div>
                 
                     {trips.length === 0 ? (
-                        <p className="text-sm text-gray-500">no trips available. click "new trip" to create one.</p>
+                        <p className="text-gray-500 text-sm px-4 py-4 text-center">no trips available. click "new trip" to create one.</p>
                     ) : (
                         <ul className="space-y-0">
                         {trips.map((trip, index) => {

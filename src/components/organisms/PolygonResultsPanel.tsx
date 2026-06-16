@@ -1,11 +1,11 @@
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../store';
-import { clearPolygon, setStationCount, setPlannedStations, clearStationPlan, setMode, setStationPlanRoutePath, setSelectedPOIs } from '../../store/slices/appSlice';
+import { clearPolygon, setStationCount, setPlannedStations, clearStationPlan, setMode, setStationPlanRoutePath, setSelectedPOIs, setCoverageReport } from '../../store/slices/appSlice';
 import { MapActions, StopActions, RouteActions } from '../../store/actions';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { searchExternalPOIs, POI_CATEGORIES } from '../../services/mapboxPOI';
 import type { ExternalPOI } from '../../services/mapboxPOI';
-import { planStations, findOptimalStationCount } from '../../services/stationPlanner';
+import { planStations, findOptimalStationCount, haversine } from '../../services/stationPlanner';
 import CategoryList from '../molecules/CategoryList';
 import { direction } from '../../services/useMapInteractions';
 import { stopsApi, routesApi } from '../../services/api';
@@ -23,6 +23,7 @@ export default function PolygonResultsPanel() {
     const selectedPOIs = useSelector((state: RootState) => state.appState.selectedPOIs);
     const mode = useSelector((state: RootState) => state.appState.mode);
     const stationPlanRoutePath = useSelector((state: RootState) => state.appState.stationPlanRoutePath);
+    const coverageReport = useSelector((state: RootState) => state.appState.coverageReport);
     const stops = useSelector((state: RootState) => state.stopState.data);
     const routes = useSelector((state: RootState) => state.routeState.data);
 
@@ -135,6 +136,73 @@ export default function PolygonResultsPanel() {
                 pointA, pointB, count, selectedPOIs, path,
             );
             dispatch(setPlannedStations(stations));
+
+            // Compute per-category coverage
+            const pullRadius = 500;
+            const coverage = POI_CATEGORIES.map(cat => {
+                const catPOIs = selectedPOIs.filter(p => p.category === cat.id);
+                const covered = catPOIs.filter(poi =>
+                    stations.some(s => {
+                        const poiPoint = { lat: poi.coordinates[1], lng: poi.coordinates[0] };
+                        return haversine(s.position, poiPoint) <= pullRadius;
+                    })
+                );
+                return {
+                    category: cat.label,
+                    total: catPOIs.length,
+                    covered: covered.length,
+                    coverageRate: catPOIs.length > 0 ? covered.length / catPOIs.length : 0,
+                };
+            }).filter(c => c.total > 0);
+            dispatch(setCoverageReport(coverage));
+
+            // ── Sensitivity Analysis (thesis experiment — remove for production) ──
+            const sensitivityResults = [];
+            for (const radius of [400, 500, 600]) {
+                for (const threshold of [0.05, 0.10, 0.15]) {
+                    const sCount = findOptimalStationCount(
+                        pointA, pointB, selectedPOIs, path,
+                        radius,        // pullRadius
+                        15,            // maxStations
+                        threshold,     // gainThreshold
+                    );
+                    const sStations = planStations(
+                        pointA, pointB, sCount, selectedPOIs, path, radius,
+                    );
+
+                    // Per-category coverage for this combination
+                    const sCoverage = POI_CATEGORIES.map(cat => {
+                        const catPOIs = selectedPOIs.filter(p => p.category === cat.id);
+                        const covered = catPOIs.filter(poi =>
+                            sStations.some(s => {
+                                const poiPoint = { lat: poi.coordinates[1], lng: poi.coordinates[0] };
+                                return haversine(s.position, poiPoint) <= radius;
+                            })
+                        );
+                        return {
+                            category: cat.label,
+                            total: catPOIs.length,
+                            covered: covered.length,
+                            rate: catPOIs.length > 0 ? Math.round(covered.length / catPOIs.length * 100) : 0,
+                        };
+                    }).filter(c => c.total > 0);
+
+                    const avgCoverage = sCoverage.length > 0
+                        ? Math.round(sCoverage.reduce((s, c) => s + c.rate, 0) / sCoverage.length)
+                        : 0;
+
+                    sensitivityResults.push({
+                        pullRadius: radius,
+                        gainThreshold: threshold,
+                        stationCount: sCount,
+                        avgCoverage: `${avgCoverage}%`,
+                        perCategory: sCoverage.map(c => `${c.category}:${c.rate}%`).join(', '),
+                    });
+                }
+            }
+            console.log('%c── SIC Sensitivity Analysis ──', 'font-weight:bold; color:#00A8E8');
+            console.table(sensitivityResults);
+            // ── End Sensitivity Analysis ──
         } catch (err) {
             console.error('Failed to calculate stations:', err);
             const count = customStationCount ?? findOptimalStationCount(
@@ -145,6 +213,25 @@ export default function PolygonResultsPanel() {
                 pointA, pointB, count, selectedPOIs,
             );
             dispatch(setPlannedStations(stations));
+
+            // Compute per-category coverage (fallback, no road path)
+            const pullRadius = 500;
+            const coverage = POI_CATEGORIES.map(cat => {
+                const catPOIs = selectedPOIs.filter(p => p.category === cat.id);
+                const covered = catPOIs.filter(poi =>
+                    stations.some(s => {
+                        const poiPoint = { lat: poi.coordinates[1], lng: poi.coordinates[0] };
+                        return haversine(s.position, poiPoint) <= pullRadius;
+                    })
+                );
+                return {
+                    category: cat.label,
+                    total: catPOIs.length,
+                    covered: covered.length,
+                    coverageRate: catPOIs.length > 0 ? covered.length / catPOIs.length : 0,
+                };
+            }).filter(c => c.total > 0);
+            dispatch(setCoverageReport(coverage));
         } finally {
             setCalculating(false);
         }
@@ -218,14 +305,22 @@ export default function PolygonResultsPanel() {
                 }
 
                 // Build the road-following path by stitching road segments
+                // Start at first station, end at last station — no overflow beyond endpoints
                 const routePath: { lat: number; lng: number }[] = [];
                 for (let i = 0; i < snapIndices.length; i++) {
-                    const startIdx = i === 0 ? snapIndices[0] : snapIndices[i - 1] + 1;
-                    const endIdx = snapIndices[i];
-                    for (let j = startIdx; j <= endIdx; j++) {
-                        routePath.push(stationPlanRoutePath[j]);
+                    if (i === 0) {
+                        // Start exactly at first station snap point
+                        routePath.push(stationPlanRoutePath[snapIndices[0]]);
+                    } else {
+                        // Add road points between consecutive stations
+                        const startIdx = snapIndices[i - 1] + 1;
+                        const endIdx = snapIndices[i];
+                        for (let j = startIdx; j <= endIdx; j++) {
+                            routePath.push(stationPlanRoutePath[j]);
+                        }
                     }
                 }
+                // Route path ends exactly at last station — no tail beyond
 
                 // Save route to backend
                 await routesApi.create({
@@ -409,6 +504,42 @@ export default function PolygonResultsPanel() {
                                         </div>
                                     ))}
                                 </div>
+
+                                {/* Coverage Report */}
+                                {coverageReport.length > 0 && (
+                                    <div className="mt-3 p-3 bg-white rounded border border-gray-100">
+                                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">POI coverage (500m radius)</p>
+                                        <div className="space-y-1.5">
+                                            {coverageReport.map((entry) => {
+                                                const pct = Math.round(entry.coverageRate * 100);
+                                                const barColor = pct >= 75 ? '#22c55e' : pct >= 50 ? '#eab308' : '#ef4444';
+                                                return (
+                                                    <div key={entry.category}>
+                                                        <div className="flex justify-between text-xs mb-0.5">
+                                                            <span className="text-gray-600">{entry.category}</span>
+                                                            <span className="text-gray-500 font-medium">{entry.covered}/{entry.total} ({pct}%)</span>
+                                                        </div>
+                                                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full rounded-full transition-all"
+                                                                style={{ width: `${pct}%`, backgroundColor: barColor }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        {(() => {
+                                            const avg = coverageReport.reduce((s, c) => s + c.coverageRate, 0) / coverageReport.length;
+                                            const avgPct = Math.round(avg * 100);
+                                            return (
+                                                <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-100">
+                                                    overall coverage: <span className="font-semibold text-gray-700">{avgPct}%</span>
+                                                </p>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
 
                                 {/* Customizable Stop ID & Name Prefix */}
                                 <div className="mt-3 space-y-2">

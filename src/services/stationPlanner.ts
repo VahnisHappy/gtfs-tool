@@ -6,7 +6,7 @@ const EARTH_RADIUS = 6371e3; // meters
 /**
  * Haversine distance between two points in meters
  */
-function haversine(p1: Point, p2: Point): number {
+export function haversine(p1: Point, p2: Point): number {
     const toRad = (deg: number) => (deg * Math.PI) / 180;
     const dLat = toRad(p2.lat - p1.lat);
     const dLng = toRad(p2.lng - p1.lng);
@@ -110,8 +110,26 @@ function computeSIC(
 }
 
 /**
+ * AHP-inspired category multipliers for station attractiveness (wj).
+ * Separates demand weight (αi = poi.weight) from how much a POI type
+ * contributes to making a station location attractive.
+ */
+const CATEGORY_MULTIPLIERS: Record<string, number> = {
+    'hospital': 1.5,
+    'university': 1.5,
+    'education': 1.3,
+    'shopping mall': 1.3,
+    'transit hub': 1.3,
+    'government': 1.0,
+    'park': 0.6,
+};
+
+/**
  * Station attractiveness = weighted sum of POIs within pullRadius.
  * Equivalent to wj in the paper (connectivity + surroundings).
+ *
+ * poi.weight      = demand at that node (αi in paper)
+ * categoryMultiplier = stop attractiveness contribution (wj in paper)
  */
 function getStationAttractiveness(
     station: Point,
@@ -123,7 +141,8 @@ function getStationAttractiveness(
         const poiPoint: Point = { lat: poi.coordinates[1], lng: poi.coordinates[0] };
         const dist = haversine(station, poiPoint);
         if (dist <= pullRadius) {
-            attractiveness += poi.weight * (1 - dist / pullRadius);
+            const categoryMultiplier = CATEGORY_MULTIPLIERS[poi.categoryLabel] ?? 1.0;
+            attractiveness += poi.weight * categoryMultiplier * (1 - dist / pullRadius);
         }
     }
     return Math.max(attractiveness, 0.01); // avoid zero

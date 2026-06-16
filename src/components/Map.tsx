@@ -25,26 +25,41 @@ export default function Map() {
 
   const activeAgency = useMemo(() => agencies.find(a => a.id.value === activeAgencyId), [agencies, activeAgencyId]);
 
+  const prevAgencyIdForMap = useRef<string | null>(null);
+
+  // When agency changes, load that project's saved viewport
+  useEffect(() => {
+    if (!activeAgencyId) return;
+    if (prevAgencyIdForMap.current === activeAgencyId) return;
+    prevAgencyIdForMap.current = activeAgencyId;
+
+    // Load saved viewport for this project
+    dispatch(MapActions.loadAgencyViewport(activeAgencyId));
+  }, [activeAgencyId, dispatch]);
+
   const hasInitializedMapForAgency = useRef<string | null>(null);
 
+  // Fallback: if no saved viewport exists for this agency, geocode from timezone
   useEffect(() => {
-    if (!viewState && stops.length === 0 && activeAgency?.timezone?.value && accessToken) {
-      if (hasInitializedMapForAgency.current === activeAgency.id.value) return;
+    if (!activeAgencyId) return;
+    if (viewState) return; // Already have a viewport (loaded from localStorage)
+    if (stops.length > 0) return; // Stops exist, map will auto-fit
+    if (!activeAgency?.timezone?.value || !accessToken) return;
+    if (hasInitializedMapForAgency.current === activeAgencyId) return;
 
-      const timezoneName = activeAgency.timezone.value.split('/').pop()?.replace(/_/g, ' ') || activeAgency.timezone.value;
+    const timezoneName = activeAgency.timezone.value.split('/').pop()?.replace(/_/g, ' ') || activeAgency.timezone.value;
 
-      fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(timezoneName)}.json?access_token=${accessToken}&types=country,region,place`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.features && data.features.length > 0) {
-            const [lng, lat] = data.features[0].center;
-            dispatch(MapActions.flyToLocation({ lat, lng, zoom: 6 }));
-            hasInitializedMapForAgency.current = activeAgency.id.value;
-          }
-        })
-        .catch(err => console.error("Error fetching timezone location:", err));
-    }
-  }, [stops.length, activeAgency, accessToken, dispatch, viewState]);
+    fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(timezoneName)}.json?access_token=${accessToken}&types=country,region,place`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.features && data.features.length > 0) {
+          const [lng, lat] = data.features[0].center;
+          dispatch(MapActions.flyToLocation({ lat, lng, zoom: 6 }));
+          hasInitializedMapForAgency.current = activeAgencyId;
+        }
+      })
+      .catch(err => console.error("Error fetching timezone location:", err));
+  }, [stops.length, activeAgency, activeAgencyId, accessToken, dispatch, viewState]);
 
   const handleMark = (point: Point) => {
     // Create empty placeholder stop with only coordinates

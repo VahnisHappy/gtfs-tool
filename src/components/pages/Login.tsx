@@ -9,7 +9,7 @@ export default function Login() {
     <>
       <style>{`
         .login-root {
-          font-family: 'Helvetica', sans-serif;
+          font-family: 'Arimo', sans-serif;
           min-height: 100vh;
           display: flex;
         }

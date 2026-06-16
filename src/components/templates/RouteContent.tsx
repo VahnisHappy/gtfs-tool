@@ -75,7 +75,7 @@ export default function RouteContent() {
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out h-full"
                 ref={routeListRef}
             >
-                <div className="flex items-center gap-2 justify-end pb-2 border-b">
+                <div className="flex items-center gap-2 justify-end pb-2 border-b border-gray-300">
                         <ButtonAction label="new route" onClick={handleNewRoute} />
                 </div>
                 <div className="flex-1 overflow-y-auto">
@@ -84,7 +84,7 @@ export default function RouteContent() {
                          <EditDeleteButton onEdit={handEditRoute} onDelete={handleDelteRoute} disabled={selectedRouteIndex === null} isEditing={selectedRoute?.mode === 'edit'} />
                     </div>
                     {routes.length === 0 ? (
-                        <p className="text-gray-500 text-sm px-4">no route created yet. click "new route" and select at least 2 stops to add one.</p>
+                        <p className="text-gray-500 text-sm px-4 py-4 text-center">no route created yet. click "new route" and select at least 2 stops to add one.</p>
                     ) : (
                         <ul className="space-y-0">
                             {routes.map((route) => (

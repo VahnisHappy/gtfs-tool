@@ -3,7 +3,6 @@ import type { RootState } from "../../store";
 import { closeTripDetail } from "../../store/slices/appSlice";
 import tripSlice from "../../store/slices/tripSlice";
 import { useEffect } from "react";
-import TextInput from "../atoms/TextInput";
 import FormSelectInput from "../molecules/FormSelectInput";
 import CancelSaveButton from "../molecules/CancelSaveButton";
 import TripStopSequence from "../molecules/TripStopSequence";
@@ -11,6 +10,7 @@ import TripOptional from "../molecules/TripOptional";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import type { Trip, StopTime, Time } from "../../types";
 import { useAddTripMutation, useUpdateTripMutation } from "../../services/gtfsApi";
+import FormInput from "../molecules/FormInput";
 
 interface StopTimeData {
     arrivalTime: string;
@@ -287,7 +287,7 @@ export default function TripContentDetail() {
                         className="text-gray-400 hover:text-gray-600 text-md absolute right-4 top-4"
                         type="button"
                     >
-                        ✕
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#000000" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg>
                     </button>
                 </div>
 
@@ -301,6 +301,7 @@ export default function TripContentDetail() {
                                 label: id
                             }))}
                             placeholder="select route"
+                            rules={{ required: true }}
                         />
                         <FormSelectInput
                             name="calendarIndex"
@@ -310,6 +311,7 @@ export default function TripContentDetail() {
                                 label: id
                             }))}
                             placeholder="select"
+                            rules={{ required: true }}
                         />
                     </div>
 
@@ -318,7 +320,8 @@ export default function TripContentDetail() {
                             name="tripId"
                             control={control}
                             render={({ field }) => (
-                                <TextInput label="trip id" value={field.value} onChange={field.onChange} placeholder="trip id"
+                               <FormInput label="trip id" {...field} placeholder="trip id"
+                                    rules={{ required: true }}  
                                 />
                             )}
                         />
@@ -326,7 +329,8 @@ export default function TripContentDetail() {
                             name="tripName"
                             control={control}
                             render={({ field }) => (
-                                <TextInput label="trip name" value={field.value} onChange={field.onChange} placeholder="trip name"
+                                <FormInput label="trip name" {...field} placeholder="trip name"
+                                    rules={{ required: true }}  
                                 />
                             )}
                         />

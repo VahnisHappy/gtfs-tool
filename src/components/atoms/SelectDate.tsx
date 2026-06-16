@@ -131,8 +131,8 @@ export default function SelectDate({ label, value, onChange, placeholder = "Sele
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full bg-white border rounded px-2 py-2.5 text-md text-left focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between ${
-                    error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500'
+                className={`w-full bg-white border rounded px-2 py-2.5 text-md text-left focus:outline-none  flex items-center justify-between ${
+                    error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#1A6EBF]'
                 } ${value ? 'text-gray-900' : 'text-gray-400'}`}
             >
                 <span>{value ? formatDate(value) : placeholder}</span>

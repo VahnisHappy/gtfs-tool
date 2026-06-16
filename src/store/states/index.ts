@@ -3,6 +3,13 @@ import type { ViewState } from "react-map-gl/mapbox";
 import type { PlannedStation } from "../../services/stationPlanner";
 import type { ExternalPOI } from "../../services/mapboxPOI";
 
+export type CoverageEntry = {
+    category: string;
+    total: number;
+    covered: number;
+    coverageRate: number;
+};
+
 export type AppState = {
     content: Content
     isStopDetailOpen: boolean;
@@ -23,6 +30,7 @@ export type AppState = {
     plannedStations: PlannedStation[];
     stationPlanRoutePath: Point[];
     selectedPOIs: ExternalPOI[];
+    coverageReport: CoverageEntry[];
 }
 
 export type StopState = {

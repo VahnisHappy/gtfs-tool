@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, Controller } from "react-hook-form";
 import type { RootState } from "../../store";
 import { closeCalendarDetail } from "../../store/slices/appSlice";
 import { useEffect, useState } from "react";
@@ -230,18 +230,14 @@ export default function CalendarContentDetail() {
                         className="text-gray-400 hover:text-gray-600 text-md absolute right-4 top-4"
                         type="button"
                     >
-                        ✕
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#000000" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg>
                     </button>
                 </div>
 
                 <FormProvider {...methods}>
                     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
                         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                            <FormInput
-                                name="service_id"
-                                label="service id"
-                                placeholder="service id"
-                            />
+                            <FormInput name="service_id" label="service id" placeholder="service id" rules={{ required: true }} />
 
                             {/* Service Operates */}
                             <div className="flex flex-col">
@@ -288,37 +284,53 @@ export default function CalendarContentDetail() {
 
                             {/* Start and End Date */}
                             <div className="grid grid-cols-2 gap-3">
-                                <SelectDate
-                                    label="start date"
-                                    value={(() => {
-                                        const str = watch('start_date');
-                                        if (!str) return null;
-                                        const [y, m, d] = str.split('-').map(Number);
-                                        return (!y || isNaN(m) || !d) ? null : { date: d, month: m - 1, year: y };
-                                    })()}
-                                    onChange={(aDate: ADate | null) => {
-                                        if (!aDate) { setValue('start_date', ''); return; }
-                                        const mm = String(aDate.month + 1).padStart(2, '0');
-                                        const dd = String(aDate.date).padStart(2, '0');
-                                        setValue('start_date', `${aDate.year}-${mm}-${dd}`);
-                                    }}
-                                    placeholder="select start date"
+                                <Controller
+                                    name="start_date"
+                                    control={methods.control}
+                                    rules={{ required: true }}
+                                    render={({ field, fieldState: { error } }) => (
+                                        <SelectDate
+                                            label="start date"
+                                            error={!!error}
+                                            value={(() => {
+                                                const str = field.value;
+                                                if (!str) return null;
+                                                const [y, m, d] = str.split('-').map(Number);
+                                                return (!y || isNaN(m) || !d) ? null : { date: d, month: m - 1, year: y };
+                                            })()}
+                                            onChange={(aDate: ADate | null) => {
+                                                if (!aDate) { field.onChange(''); return; }
+                                                const mm = String(aDate.month + 1).padStart(2, '0');
+                                                const dd = String(aDate.date).padStart(2, '0');
+                                                field.onChange(`${aDate.year}-${mm}-${dd}`);
+                                            }}
+                                            placeholder="select start date"
+                                        />
+                                    )}
                                 />
-                                <SelectDate
-                                    label="end date"
-                                    value={(() => {
-                                        const str = watch('end_date');
-                                        if (!str) return null;
-                                        const [y, m, d] = str.split('-').map(Number);
-                                        return (!y || isNaN(m) || !d) ? null : { date: d, month: m - 1, year: y };
-                                    })()}
-                                    onChange={(aDate: ADate | null) => {
-                                        if (!aDate) { setValue('end_date', ''); return; }
-                                        const mm = String(aDate.month + 1).padStart(2, '0');
-                                        const dd = String(aDate.date).padStart(2, '0');
-                                        setValue('end_date', `${aDate.year}-${mm}-${dd}`);
-                                    }}
-                                    placeholder="select end date"
+                                <Controller
+                                    name="end_date"
+                                    control={methods.control}
+                                    rules={{ required: true }}
+                                    render={({ field, fieldState: { error } }) => (
+                                        <SelectDate
+                                            label="end date"
+                                            error={!!error}
+                                            value={(() => {
+                                                const str = field.value;
+                                                if (!str) return null;
+                                                const [y, m, d] = str.split('-').map(Number);
+                                                return (!y || isNaN(m) || !d) ? null : { date: d, month: m - 1, year: y };
+                                            })()}
+                                            onChange={(aDate: ADate | null) => {
+                                                if (!aDate) { field.onChange(''); return; }
+                                                const mm = String(aDate.month + 1).padStart(2, '0');
+                                                const dd = String(aDate.date).padStart(2, '0');
+                                                field.onChange(`${aDate.year}-${mm}-${dd}`);
+                                            }}
+                                            placeholder="select end date"
+                                        />
+                                    )}
                                 />
                             </div>
 
